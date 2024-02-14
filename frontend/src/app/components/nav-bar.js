@@ -2,34 +2,15 @@
 
 import { CircleUserRound, ShoppingBag, Search } from "lucide-react";
 import { useState } from "react";
-
+import { NavList } from "./navItem/navList";
 export default function NavBar() {
   const [isClicked, setIsClicked] = useState(false);
   return (
-    <nav className="flex justify-between items-center px-[3vw] py-6 shadow-md">
-      <h1 className="text-2xl font-bold pr-2">Phone Sine</h1>
-
-      <div className="flex justify-center space-x-14">
-        <a href="/" className="font-semibold text-neutral-600 hover:text-black">
-          Home
-        </a>
-        <a
-          href="/about-us"
-          className="font-semibold text-neutral-600 hover:text-black"
-        >
-          About Us
-        </a>
-        <a
-          href="/products"
-          className="font-semibold text-neutral-600 hover:text-black"
-        >
-          Products
-        </a>
-        <a href="/" className="font-semibold text-neutral-600 hover:text-black">
-          Contact Us
-        </a>
+    <nav className="flex justify-between items-center px-[3vw] py-2 shadow-md">
+      <h1 className="text-2xl font-bold pr-2 ">Phone Sine</h1>
+      <div>
+        <NavList />
       </div>
-
       <div className="flex items-center">
         <input
           className="border border-gray-300 rounded-3xl px-3 py-0 w-28 text-base"
