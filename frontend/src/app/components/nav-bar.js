@@ -1,27 +1,10 @@
-// Navigation Item List
-const Items = [
-  { label: "Home", link: "/" },
-  { label: "About Us", link: "/about-us" },
-  { label: "Products", link: "/products" },
-  { label: "Contact Us", link: "/" },
-];
-
+import { NavList } from "./navItem/navList";
 export default function NavBar() {
   return (
     <nav className="flex justify-between items-center px-[3vw] py-2 shadow-md">
       <h1 className="text-2xl font-bold pr-2 ">Phone Sine</h1>
-      {/* Used map function and
-       loop NavItems */}
-      <div className="flex justify-center space-x-14">
-        {Items.map((item, index) => (
-          <a
-            key={index}
-            href={item.link}
-            className="font-semibold text-neutral-600 hover:text-black"
-          >
-            {item.label}
-          </a>
-        ))}
+      <div>
+        <NavList />
       </div>
       <div className="flex items-center">
         <input
