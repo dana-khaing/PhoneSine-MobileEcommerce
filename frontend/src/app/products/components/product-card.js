@@ -3,7 +3,7 @@ import React from "react";
 export default function ProductCard({ name, brand, price }) {
   return (
     <div className="px-12 py-9">
-      <div className="px-0 py-12 bg-gray-100 flex justify-center">
+      <div className="px-0 py-12 bg-gray-100 flex justify-center shadow">
         <img
           src="/iph15-pro.jpeg"
           alt="Product Image"
