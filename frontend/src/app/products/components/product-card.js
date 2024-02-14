@@ -1,22 +1,59 @@
 import React from "react";
+import DisplayCard from "./displayCard";
 
-export default function ProductCard({ name, brand, price }) {
+const products = [
+  {
+    name: "IPHONE 14 PRO",
+    brand: "Apple",
+    price: 999,
+  },
+  {
+    name: "GALAXY S22 ULTRA",
+    brand: "Samsung",
+    price: 1299,
+  },
+  {
+    name: "PIXEL 7 PRO",
+    brand: "Google",
+    price: 899,
+  },
+  {
+    name: "IPHONE 14 PRO",
+    brand: "Apple",
+    price: 999,
+  },
+  {
+    name: "GALAXY S22 ULTRA",
+    brand: "Samsung",
+    price: 1299,
+  },
+  {
+    name: "PIXEL 7 PRO",
+    brand: "Google",
+    price: 899,
+  },
+  {
+    name: "IPHONE 14 PRO",
+    brand: "Apple",
+    price: 999,
+  },
+  {
+    name: "GALAXY S22 ULTRA",
+    brand: "Samsung",
+    price: 1299,
+  },
+];
+
+export default function ProductCard() {
   return (
-    <div className="px-12 py-9">
-      <div className="px-0 py-12 bg-gray-100 flex justify-center shadow">
-        <img
-          src="/iph15-pro.jpeg"
-          alt="Product Image"
-          className="w-36 h-auto"
+    <div className="grid grid-cols-4">
+      {products?.map((product) => (
+        <DisplayCard
+          brand={product.brand}
+          name={product.name}
+          price={product.price}
         />
-      </div>
-      <div className="p-2">
-        <p className="font-semibold">{brand}</p>
-        <p className="flex justify-between items-center">
-          <span className="text-gray-500 text-sm"> {name} </span>
-          <span className="font-medium"> ${price}</span>
-        </p>
-      </div>
+      ))}
     </div>
   );
 }
