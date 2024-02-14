@@ -1,5 +1,5 @@
-import React from "react";
-
-export const Branches = () => {
+const SidePanel = () => {
   return <div className="font-semibold">Branches</div>;
 };
+
+export default SidePanel;

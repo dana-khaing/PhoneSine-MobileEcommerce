@@ -1,5 +1,4 @@
-import React from "react";
-import DisplayCard from "./displayCard";
+import ProductCard from "./productCard";
 
 const products = [
   {
@@ -44,11 +43,11 @@ const products = [
   },
 ];
 
-export default function ProductCard() {
+export default function ProductList() {
   return (
     <div className="grid grid-cols-4">
       {products?.map((product) => (
-        <DisplayCard
+        <ProductCard
           brand={product.brand}
           name={product.name}
           price={product.price}
