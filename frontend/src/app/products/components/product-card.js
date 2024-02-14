@@ -13,8 +13,8 @@ export default function ProductCard({ name, brand, price }) {
       <div className="p-2">
         <p className="font-semibold">{brand}</p>
         <p className="flex justify-between items-center">
-          <span className="text-gray-500 text-sm"> {name} </span>
-          <span className="font-medium"> ${price}</span>
+          <span className="text-gray-500 text-sm ml-0.5"> {name} </span>
+          <span className="font-medium ml-0.5"> ${price}</span>
         </p>
       </div>
     </div>
