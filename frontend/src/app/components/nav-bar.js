@@ -6,7 +6,7 @@ import { NavList } from "./navItem/navList";
 export default function NavBar() {
   const [isClicked, setIsClicked] = useState(false);
   return (
-    <nav className="flex justify-between items-center px-[3vw] py-2 shadow-md">
+    <nav className="flex justify-between items-center px-[3vw] py-7">
       <h1 className="text-2xl font-bold pr-2 ">Phone Sine</h1>
       <div>
         <NavList />

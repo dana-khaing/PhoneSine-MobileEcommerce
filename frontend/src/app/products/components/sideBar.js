@@ -1,5 +1,5 @@
-const SidePanel = () => {
-  return <div className="font-semibold">Branches</div>;
+const SideBar = () => {
+  return <div className="font-semibold">Brands</div>;
 };
 
-export default SidePanel;
+export default SideBar;
