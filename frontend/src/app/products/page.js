@@ -7,7 +7,7 @@ export default function ProductsPage() {
   return (
     <div className="my-0 flex justify-center">
       <div className="inline-flex">
-        <div className="w-48 my-5 shadow-md border-solid border-2 px-5 py-5">
+        <div className="w-48 my-5 shadow-md border-solid border-2 px-8 py-8">
           <SideBar />
         </div>
         <div>
