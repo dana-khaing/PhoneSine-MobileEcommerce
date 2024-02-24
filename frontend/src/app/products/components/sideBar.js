@@ -1,3 +1,4 @@
+// import { PriceRange } from "./priceRange";
 import { PriceRange } from "./priceRange";
 const branchList = [
   { id: 1, branch: "Apple" },
@@ -13,7 +14,7 @@ const SideBar = () => {
   return (
     <div>
       <div className="font-bold">Branch List</div>
-      <div className="flex justify-center space-x-14">
+      <div className="px-3">
         <ul>
           {branchList.map((item) => (
             <li id={item.id} className="m-3">
@@ -23,7 +24,7 @@ const SideBar = () => {
         </ul>
       </div>
       <div className="font-bold">Category</div>
-      <div>
+      <div className="px-3">
         <ul>
           {categoryList.map((item) => (
             <li id={item.id} className="m-3">
