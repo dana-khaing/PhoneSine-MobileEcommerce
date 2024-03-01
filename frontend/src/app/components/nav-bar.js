@@ -3,8 +3,10 @@
 import { CircleUserRound, ShoppingBag, Search } from "lucide-react";
 import { useState } from "react";
 import { NavList } from "./navItem/navList";
+import LoginPage from "../login/page";
 export default function NavBar() {
   const [isClicked, setIsClicked] = useState(false);
+
   return (
     <nav className="flex justify-between items-center px-[3vw] py-7">
       <h1 className="text-2xl font-bold pr-2 ">Phone Sine</h1>
@@ -34,6 +36,11 @@ export default function NavBar() {
         >
           <CircleUserRound className="w-5 h-5  text-neutral-600 hover:text-black" />
         </button>
+        {isClicked && (
+          <div className="fixed inset-0 flex items-center justify-center z-10  bg-gray-800 bg-opacity-40 backdrop-blur-md">
+            <LoginPage />
+          </div>
+        )}
       </div>
     </nav>
   );
