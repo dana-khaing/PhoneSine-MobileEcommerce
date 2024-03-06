@@ -1,37 +1,42 @@
-// import { PriceRange } from "./priceRange";
 import { PriceRange } from "./priceRange";
-const branchList = [
-  { id: 1, branch: "Apple" },
-  { id: 2, branch: "Samsaung" },
-  { id: 3, branch: "One Plus" },
-  { is: 4, branch: "Google Pixel" },
+
+const brandList = [
+  { id: 1, brand: "All Products" },
+  { id: 2, brand: "Apple" },
+  { id: 3, brand: "Samsung" },
+  { id: 4, brand: "One Plus" },
+  { id: 5, brand: "Google Pixel" },
 ];
 const categoryList = [
   { id: 1, list: "Earphone" },
   { id: 2, list: "Phone Case" },
 ];
-const SideBar = () => {
+const SideBar = ({ onBrandClick }) => {
   return (
     <div>
-      <div className="font-bold">Branch List</div>
+      <div className="font-bold mb-2">Brand List</div>
       <div className="px-3">
-        <ul>
-          {branchList.map((item) => (
-            <li id={item.id} className="m-3">
-              {item.branch}
-            </li>
-          ))}
-        </ul>
+        {brandList.map((item) => (
+          <ul>
+            <button
+              key={item.id}
+              className="m-3"
+              onClick={() => onBrandClick(item.brand)}
+            >
+              {item.brand}
+            </button>
+          </ul>
+        ))}
       </div>
-      <div className="font-bold">Category</div>
+      <div className="font-bold mb-2">Category</div>
       <div className="px-3">
-        <ul>
-          {categoryList.map((item) => (
-            <li id={item.id} className="m-3">
+        {categoryList.map((item) => (
+          <ul>
+            <button key={item.id} className="m-3">
               {item.list}
-            </li>
-          ))}
-        </ul>
+            </button>
+          </ul>
+        ))}
       </div>
       <div>
         <PriceRange></PriceRange>
