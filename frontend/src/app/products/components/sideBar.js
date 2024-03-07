@@ -17,12 +17,8 @@ const SideBar = ({ onBrandClick }) => {
       <div className="font-bold mb-2">Brand List</div>
       <div className="px-3">
         {brandList.map((item) => (
-          <ul>
-            <button
-              key={item.id}
-              className="m-3"
-              onClick={() => onBrandClick(item.brand)}
-            >
+          <ul key={item.id}>
+            <button className="m-3" onClick={() => onBrandClick(item.brand)}>
               {item.brand}
             </button>
           </ul>
@@ -31,10 +27,8 @@ const SideBar = ({ onBrandClick }) => {
       <div className="font-bold mb-2">Category</div>
       <div className="px-3">
         {categoryList.map((item) => (
-          <ul>
-            <button key={item.id} className="m-3">
-              {item.list}
-            </button>
+          <ul key={item.id}>
+            <button className="m-3">{item.list}</button>
           </ul>
         ))}
       </div>

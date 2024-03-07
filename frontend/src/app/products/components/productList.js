@@ -51,24 +51,40 @@ const products = [
   },
 ];
 
-export default function ProductList({ filterBrand }) {
-  const [items, setitems] = useState(products);
+export default function ProductList({ filterBrand, search }) {
+  const [items, setItems] = useState(products);
 
-  const filterByBrand = (catItem) => {
+  const filterByBrand = (filterBrand) => {
     const filteredItems = products.filter((itembrand) => {
-      return itembrand.brand === catItem;
+      return itembrand.brand === filterBrand;
     });
-    setitems(filteredItems);
+    setItems(filteredItems);
+  };
+
+  const filterBySearch = (search) => {
+    const filteredItems = products.filter((item) => {
+      return item.name.toLowerCase().includes(search.toLowerCase());
+    });
+    console.log("Search Query:", search); // Check if searchQuery is a string
+    console.log("Filtered Items:", filteredItems); // Check the filtered items
+
+    setItems(filteredItems);
   };
 
   React.useEffect(() => {
     if (filterBrand === "All Products") {
-      setitems(products);
+      setItems(products);
     } else {
       filterByBrand(filterBrand);
     }
   }, [filterBrand]);
-
+  React.useEffect(() => {
+    if (search === "") {
+      setItems(products);
+    } else {
+      filterBySearch(String(search));
+    }
+  }, [search]);
   return (
     <div className="grid grid-cols-4">
       {items?.map((product) => (
