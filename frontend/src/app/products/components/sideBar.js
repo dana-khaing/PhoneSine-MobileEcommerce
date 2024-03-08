@@ -23,7 +23,7 @@ const SideBar = ({ onBrandClick, Searchlistener }) => {
         />
       </div>
       <div className="font-bold mb-2">Brand List</div>
-      <div className="px-3">
+      <div className="px-x3">
         {brandList.map((item) => (
           <ul key={item.id}>
             <button className="m-3" onClick={() => onBrandClick(item.brand)}>
@@ -41,7 +41,7 @@ const SideBar = ({ onBrandClick, Searchlistener }) => {
         ))}
       </div>
       <div>
-        <PriceRange></PriceRange>
+        <PriceRange />
       </div>
     </div>
   );

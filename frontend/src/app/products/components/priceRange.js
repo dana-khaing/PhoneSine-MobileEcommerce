@@ -28,8 +28,8 @@ export const PriceRange = () => {
           <div {...props} style={{ ...props.style, ...thumbStyle }} />
         )}
       />
-      <div className="flex justify-around">
-        <span>${values[0]}</span>
+      <div className="flex">
+        <span className="flex-1">${values[0]}</span>
         <span>${values[1]}</span>
       </div>
     </div>
