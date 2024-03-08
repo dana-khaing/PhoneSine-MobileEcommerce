@@ -51,7 +51,7 @@ const products = [
   },
 ];
 
-export default function ProductList({ filterBrand, search }) {
+export default function ProductList({ filterBrand, filterSearch, price }) {
   const [items, setItems] = useState(products);
 
   const filterByBrand = (filterBrand) => {
@@ -61,13 +61,14 @@ export default function ProductList({ filterBrand, search }) {
     setItems(filteredItems);
   };
 
-  const filterBySearch = (search) => {
+  const filterBySearch = (filterSearch) => {
     const filteredItems = products.filter((item) => {
       return (
-        item.name.toLowerCase().includes(search) ||
-        item.brand.toLowerCase().includes(search)
+        item.name.toLowerCase().includes(filterSearch) ||
+        item.brand.toLowerCase().includes(filterSearch)
       );
     });
+
     setItems(filteredItems);
   };
 
@@ -80,12 +81,19 @@ export default function ProductList({ filterBrand, search }) {
   }, [filterBrand]);
 
   React.useEffect(() => {
-    if (search === "") {
+    if (filterSearch === "") {
       setItems(products);
     } else {
-      filterBySearch(String(search).toLowerCase());
+      filterBySearch(String(filterSearch).toLowerCase());
     }
-  }, [search]);
+  }, [filterSearch]);
+
+  React.useEffect(() => {
+    const filteredItems = products.filter((item) => {
+      return item.price >= price[0] && item.price <= price[1];
+    });
+    setItems(filteredItems);
+  }, [price]);
 
   return (
     <div className="grid grid-cols-4">

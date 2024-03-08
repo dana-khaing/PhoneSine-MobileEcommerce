@@ -1,11 +1,7 @@
 import React from "react";
 import Slider from "react-slider";
-import { useState } from "react";
-const MIN = 100;
-const MAX = 2000;
 
-export const PriceRange = () => {
-  const [values, setValues] = useState([MIN, MAX]);
+export const PriceRange = ({ priceValue, priceListener, MIN, MAX }) => {
   const thumbStyle = {
     width: "17px",
     height: "17px",
@@ -20,8 +16,8 @@ export const PriceRange = () => {
       <div className="font-bold">PriceRange</div>
       <Slider
         className="w-full h-0.5 bg-slate-950 my-5"
-        onChange={setValues}
-        value={values}
+        onChange={priceListener}
+        value={priceValue}
         min={MIN}
         max={MAX}
         renderThumb={(props, state) => (
@@ -29,8 +25,8 @@ export const PriceRange = () => {
         )}
       />
       <div className="flex">
-        <span className="flex-1">${values[0]}</span>
-        <span>${values[1]}</span>
+        <span className="flex-1">${priceValue[0]}</span>
+        <span>${priceValue[1]}</span>
       </div>
     </div>
   );

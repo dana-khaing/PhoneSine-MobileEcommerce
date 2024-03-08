@@ -11,9 +11,17 @@ const categoryList = [
   { id: 1, list: "Earphone" },
   { id: 2, list: "Phone Case" },
 ];
-const SideBar = ({ onBrandClick, Searchlistener }) => {
+const SideBar = ({
+  onBrandClick,
+  Searchlistener,
+  priceValue,
+  priceListener,
+  MIN,
+  MAX,
+}) => {
   return (
     <div className="px-0 py-0">
+      <div className="font-bold mb-0">Search</div>
       <div className="flex justify-center items-center">
         <input
           className=" border border-gray-300 rounded-3xl my-3 px-5 py-0 w-[10.5rem] text-base shadow-sm"
@@ -41,7 +49,12 @@ const SideBar = ({ onBrandClick, Searchlistener }) => {
         ))}
       </div>
       <div>
-        <PriceRange />
+        <PriceRange
+          priceListener={priceListener}
+          priceValue={priceValue}
+          MIN={MIN}
+          MAX={MAX}
+        />
       </div>
     </div>
   );

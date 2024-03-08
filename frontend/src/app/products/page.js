@@ -5,15 +5,22 @@ import SideBar from "./components/sideBar.js";
 import { useState } from "react";
 
 export default function ProductsPage() {
+  const MIN = 100;
+  const MAX = 2000;
   const [filterBrand, setFilterBrand] = useState("All Products");
   const [search, setSearch] = useState("");
+  const [values, setValues] = useState([MIN, MAX]);
 
-  const handleFilterChange = (brand) => {
-    setFilterBrand(brand);
+  const handleFilterChange = (catbrand) => {
+    setFilterBrand(catbrand);
   };
 
   const handleSearchChange = (catSearch) => {
     setSearch(catSearch.target.value);
+  };
+
+  const handlePriceChange = (price) => {
+    setValues(price);
   };
 
   return (
@@ -22,6 +29,10 @@ export default function ProductsPage() {
         <SideBar
           onBrandClick={handleFilterChange}
           Searchlistener={handleSearchChange}
+          priceListener={handlePriceChange}
+          priceValue={values}
+          MIN={MIN}
+          MAX={MAX}
         />
       </div>
       <div className="flex-1">
@@ -29,7 +40,11 @@ export default function ProductsPage() {
           {filterBrand.toUpperCase()}
         </p>
         <div>
-          <ProductList filterBrand={filterBrand} search={search} />
+          <ProductList
+            filterBrand={filterBrand}
+            filterSearch={search}
+            price={values}
+          />
         </div>
       </div>
     </div>
