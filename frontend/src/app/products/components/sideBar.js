@@ -11,9 +11,17 @@ const categoryList = [
   { id: 1, list: "Earphone" },
   { id: 2, list: "Phone Case" },
 ];
-const SideBar = ({ onBrandClick }) => {
+const SideBar = ({ onBrandClick, Searchlistener }) => {
   return (
-    <div>
+    <div className="px-0 py-0">
+      <div className="flex justify-center items-center">
+        <input
+          className=" border border-gray-300 rounded-3xl my-3 px-5 py-0 w-[10.5rem] text-base shadow-sm"
+          type="text"
+          placeholder="Search"
+          onChange={Searchlistener}
+        />
+      </div>
       <div className="font-bold mb-2">Brand List</div>
       <div className="px-3">
         {brandList.map((item) => (

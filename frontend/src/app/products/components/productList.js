@@ -63,11 +63,11 @@ export default function ProductList({ filterBrand, search }) {
 
   const filterBySearch = (search) => {
     const filteredItems = products.filter((item) => {
-      return item.name.toLowerCase().includes(search.toLowerCase());
+      return (
+        item.name.toLowerCase().includes(search) ||
+        item.brand.toLowerCase().includes(search)
+      );
     });
-    console.log("Search Query:", search); // Check if searchQuery is a string
-    console.log("Filtered Items:", filteredItems); // Check the filtered items
-
     setItems(filteredItems);
   };
 
@@ -78,13 +78,15 @@ export default function ProductList({ filterBrand, search }) {
       filterByBrand(filterBrand);
     }
   }, [filterBrand]);
+
   React.useEffect(() => {
     if (search === "") {
       setItems(products);
     } else {
-      filterBySearch(String(search));
+      filterBySearch(String(search).toLowerCase());
     }
   }, [search]);
+
   return (
     <div className="grid grid-cols-4">
       {items?.map((product) => (
