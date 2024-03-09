@@ -1,58 +1,28 @@
 import ProductCard from "./productCard";
-import React, { useState } from "react";
-const products = [
-  {
-    id: 1,
-    name: "IPHONE 14 PRO",
-    brand: "Apple",
-    price: 999.99,
-  },
-  {
-    id: 2,
-    name: "GALAXY S22 ULTRA",
-    brand: "Samsung",
-    price: 1299,
-  },
-  {
-    id: 3,
-    name: "PIXEL 7 PRO",
-    brand: "Google Pixel",
-    price: 899,
-  },
-  {
-    id: 4,
-    name: "IPHONE 14 PRO",
-    brand: "Apple",
-    price: 999,
-  },
-  {
-    id: 5,
-    name: "GALAXY S22 ULTRA",
-    brand: "Samsung",
-    price: 1299,
-  },
-  {
-    id: 6,
-    name: "PIXEL 7 PRO",
-    brand: "Google Pixel",
-    price: 899,
-  },
-  {
-    id: 7,
-    name: "IPHONE 14 PRO",
-    brand: "Apple",
-    price: 999,
-  },
-  {
-    id: 8,
-    name: "GALAXY S22 ULTRA",
-    brand: "Samsung",
-    price: 1299,
-  },
-];
+import React, { useState, useEffect } from "react";
 
 export default function ProductList({ filterBrand, filterSearch, price }) {
-  const [items, setItems] = useState(products);
+  const [products, setProducts] = useState([]);
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/products");
+      const jsonData = await response.json();
+      setProducts(jsonData);
+      console.log(products);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  useEffect(() => {
+    setItems(products);
+  }, [products]);
 
   const filterByBrand = (filterBrand) => {
     const filteredItems = products.filter((itembrand) => {
@@ -89,7 +59,7 @@ export default function ProductList({ filterBrand, filterSearch, price }) {
   }, [filterSearch]);
 
   React.useEffect(() => {
-    const filteredItems = products.filter((item) => {
+    const filteredItems = products?.filter((item) => {
       return item.price >= price[0] && item.price <= price[1];
     });
     setItems(filteredItems);
