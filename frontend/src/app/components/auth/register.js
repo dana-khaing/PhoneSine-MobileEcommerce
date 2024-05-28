@@ -2,12 +2,53 @@ import { Inter } from "next/font/google";
 import clsx from "clsx";
 import { X } from "lucide-react";
 import ActionBtn from "./actionBtn";
+import { useState } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
 const Register = ({ closeallcard, handlelogin }) => {
+  const [firstname, setFirstname] = useState("");
+  const [lastname, setLastname] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmpassword, setConfirmpassword] = useState("");
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    // console.log(firstname, lastname, email, password, confirmpassword);
+    if (password !== confirmpassword) {
+      // Adapt the alert message to an appropriate message and interface
+      alert("Password does not match");
+      return;
+    }
+    const data = await fetch("http://localhost:8080/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        firstname,
+        lastname,
+        email,
+        password,
+      }),
+    });
+
+    if (data.status === 200) {
+      handlelogin();
+      // Adapt the alert message to an appropriate message and interface
+      // alert("Register success");
+    } else {
+      const error = await data.text();
+      alert("Register failed : " + error);
+    }
+  };
+
   return (
-    <form className="fixed inset-0 flex items-center justify-center z-10 bg-gray-800 bg-opacity-40 backdrop-blur-md">
+    <form
+      onSubmit={handleRegister}
+      className="fixed inset-0 flex items-center justify-center z-10 bg-gray-800 bg-opacity-40 backdrop-blur-md"
+    >
       <div
         className={clsx(
           "flex flex-col w-[25%] mx-auto h-max gap-2 rounded-2xl py-5 px-7 shadow-2xl bg-white",
@@ -25,43 +66,69 @@ const Register = ({ closeallcard, handlelogin }) => {
             <div className="pb-1">
               <label className="font-normal text-sm">First name :</label>
             </div>
+            {/* // Add the firstname state to the value attribute of the input
+            element */}
             <input
-              type="name"
+              type="text"
               className="border-[1px] p-3 h-11 w-[100%] rounded-lg border-black"
+              value={firstname}
+              onChange={(e) => setFirstname(e.target.value)}
+              required
             />
           </div>
           <div className="pl-2 w-[50%]">
             <div className="pb-1">
               <label className="font-normal text-sm">Last name :</label>
             </div>
+            {/* // Add the lastname state to the value attribute of the input
+            element */}
             <input
-              type="name"
+              type="text"
               className="border-[1px] p-3 h-11 w-[100%] rounded-lg border-black"
+              value={lastname}
+              onChange={(e) => setLastname(e.target.value)}
+              required
             />
           </div>
         </div>
         <label className="font-normal text-sm" htmlFor="emailInput">
           Email Address :
         </label>
+        {/* // Add the email state to the value attribute of the input element */}
         <input
           type="email"
           className="border-[1px] p-3 h-11 rounded-lg border-black"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
         />
         <label className="font-normal text-sm" htmlFor="passwordInput">
           Password :
         </label>
+        {/* // Add the password state to the value attribute of the input element */}
         <input
           type="password"
           className="border-[1px] p-3 h-11 rounded-lg border-black"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
         />
         <label className="font-normal text-sm" htmlFor="confirmPasswordInput">
           Confirm Password :
         </label>
+        {/* // Add the confirmpassword state to the value attribute of the input
+        element */}
         <input
           type="password"
           className="border-[1px] p-3 h-11 rounded-lg border-black"
+          value={confirmpassword}
+          onChange={(e) => setConfirmpassword(e.target.value)}
+          required
         />
-        <button className="bg-neutral-900 text-white py-3 rounded-lg mt-3">
+        <button
+          className="bg-neutral-900 text-white py-3 rounded-lg mt-3"
+          type="submit"
+        >
           Sign Up
         </button>
         <p className="mx-auto my-1 text-xs">OR</p>
