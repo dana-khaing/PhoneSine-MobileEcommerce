@@ -20,7 +20,7 @@ export const PriceRange = ({ priceValue, priceListener, MIN, MAX }) => {
         value={priceValue}
         min={MIN}
         max={MAX}
-        renderThumb={(props, state) => (
+        renderThumb={(props) => (
           <div {...props} style={{ ...props.style, ...thumbStyle }} />
         )}
       />
