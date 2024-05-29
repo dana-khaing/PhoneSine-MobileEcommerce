@@ -1,8 +1,8 @@
 import React from "react";
 const Items = [
   { label: "Home", link: "/" },
-  { label: "About Us", link: "/about-us" },
   { label: "Products", link: "/products" },
+  { label: "About Us", link: "/about-us" },
   { label: "Contact Us", link: "/" },
 ];
 

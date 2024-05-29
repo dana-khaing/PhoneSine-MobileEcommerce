@@ -2,7 +2,8 @@ import { Inter } from "next/font/google";
 import clsx from "clsx";
 import { X } from "lucide-react";
 import ActionBtn from "./actionBtn";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { AuthContext } from "@/app/contexts/authContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,6 +13,7 @@ const Register = ({ closeallcard, handlelogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmpassword, setConfirmpassword] = useState("");
+  const { setUserName, setUserEmail, setUserIsLogin } = useContext(AuthContext);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -35,7 +37,15 @@ const Register = ({ closeallcard, handlelogin }) => {
     });
 
     if (data.status === 200) {
+      // if we want to login immediately after registering
+      // const gotData = await data.json();
+      // setUserIsLogin(true);
+      // setUserName(gotData.username);
+      // setUserEmail(gotData.email);
+      // closeallcard();
+
       handlelogin();
+
       // Adapt the alert message to an appropriate message and interface
       // alert("Register success");
     } else {

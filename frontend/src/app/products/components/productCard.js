@@ -1,6 +1,6 @@
 export default function ProductCard({ name, brand, price }) {
   return (
-    <div className="px-12 py-9">
+    <div className="px-12 pb-9">
       <div className="py-12 bg-gray-100 flex justify-center">
         <img
           src="/iph15-pro.jpeg"

@@ -9,7 +9,7 @@ router.post("/register", async (req, res) => {
   if (!firstname || !lastname || !email || !password) {
     return res.status(400).send("Please fill all the fields");
   }
-  console.log(firstname, lastname, email, password);
+  //   console.log(firstname, lastname, email, password);
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
   user.push({
@@ -18,13 +18,16 @@ router.post("/register", async (req, res) => {
     email,
     password: hashedPassword,
   });
-  console.log(user);
-  res.status(200).send();
+  //   console.log(user);
+  res.status(200).json({
+    username: firstname + " " + lastname,
+    email: email,
+  });
 });
 
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  console.log(email, password);
+  //   console.log(email, password);
   if (!email || !password) {
     return res.status(400).send("Please fill all the fields");
   }
@@ -32,7 +35,11 @@ router.post("/login", async (req, res) => {
   if (!currentUser) return res.status(400).send("User not found");
   const validPassword = await bcrypt.compare(password, currentUser.password);
   if (!validPassword) return res.status(400).send("Invalid password");
-  res.status(200).send();
+  //   console.log(currentUser);
+  res.status(200).json({
+    username: currentUser.Firstname + " " + currentUser.Lastname,
+    email: currentUser.email,
+  });
 });
 
 module.exports = router;

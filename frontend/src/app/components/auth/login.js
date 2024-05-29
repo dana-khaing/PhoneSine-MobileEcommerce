@@ -3,12 +3,15 @@ import clsx from "clsx";
 import { X } from "lucide-react";
 import ActionBtn from "./actionBtn";
 import { useState } from "react";
+import { AuthContext } from "@/app/contexts/authContext";
+import { useContext } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
 const Login = ({ closeallcard, handlesignup }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { setUserName, setUserEmail, setUserIsLogin } = useContext(AuthContext);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,6 +24,10 @@ const Login = ({ closeallcard, handlesignup }) => {
     });
 
     if (data.status === 200) {
+      const gotData = await data.json();
+      setUserIsLogin(true);
+      setUserName(gotData.username);
+      setUserEmail(gotData.email);
       closeallcard();
       // Adapt the alert message to an appropriate message and interface
       // alert("Login success");
@@ -52,6 +59,7 @@ const Login = ({ closeallcard, handlesignup }) => {
           className="border-[1px] p-3 h-11 rounded-lg border-black"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
         <label className="font-normal text-sm">Password :</label>
         <input
@@ -59,6 +67,7 @@ const Login = ({ closeallcard, handlesignup }) => {
           className="border-[1px] p-3 h-11 rounded-lg border-black"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
         <div className="flex items-center py-2 text-sm">
           <input type="checkbox" className="h-4 w-4 border-2" />

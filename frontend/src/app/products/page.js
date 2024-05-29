@@ -36,7 +36,7 @@ export default function ProductsPage() {
         />
       </div>
       <div className="flex-1">
-        <p className="py-5 mx-5 flex justify-center">
+        <p className="py-[1.1rem] mx-5 flex justify-center">
           {filterBrand.toUpperCase()}
         </p>
         <div>
