@@ -18,7 +18,7 @@ router.post("/register", async (req, res) => {
     email,
     password: hashedPassword,
   });
-  //   console.log(user);
+  console.log(user);
   res.status(200).json({
     username: firstname + " " + lastname,
     email: email,

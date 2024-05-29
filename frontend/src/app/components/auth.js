@@ -1,4 +1,5 @@
 import { CircleUserRound, UserCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useState, useContext } from "react"; // Added import statement for useContext
 import Login from "./auth/login";
 import Register from "./auth/register";
@@ -30,13 +31,15 @@ const Auth = () => {
 
   return (
     <div className="flex text-sm items-center">
-      {userIsLogin ? (
-        <>
-          <button onClick={openlogincard} className="p-1.5">
-            <UserCheck className="w-5 h-5 text-neutral-600 hover:text-black" />
-          </button>
-          <button>{userName}</button>
-        </>
+      {userIsLogin == true ? (
+        <Button variant="ghost" className="p-2">
+          <div className=" flex justify-center items-center">
+            <div className="flex-auto">
+              <UserCheck className="w-5 h-5 text-neutral-600 hover:text-black" />
+            </div>
+            <div className="pl-1">{userName}</div>
+          </div>
+        </Button>
       ) : (
         <>
           <button onClick={openlogincard} className="p-1.5">

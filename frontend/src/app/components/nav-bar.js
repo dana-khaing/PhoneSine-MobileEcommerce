@@ -1,6 +1,7 @@
 "use client";
 
 import { ShoppingBag, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { NavList } from "./navItem/navList";
 import Auth from "./auth";
 
@@ -20,12 +21,12 @@ export default function NavBar({ Searchlistener }) {
           placeholder="Search"
           onChange={Searchlistener}
         />
-        <button className=" flex pl-[0.5rem] pr-1.5">
+        <Button variant="ghost" className=" flex pl-[0.5rem] pr-1.5">
           <Search className="w-5 h-5  text-neutral-600 hover:text-black" />
-        </button>
-        <button className="p-1.5">
+        </Button>
+        <Button variant="ghost" className="p-1.5">
           <ShoppingBag className="w-5 h-5  text-neutral-600 hover:text-black" />
-        </button>
+        </Button>
         <Auth />
       </div>
     </nav>
