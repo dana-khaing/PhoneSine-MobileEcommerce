@@ -15,6 +15,11 @@ const Login = ({ closeallcard, handlesignup }) => {
   const [password, setPassword] = useState("");
   const { setUserName, setUserEmail, setUserIsLogin } = useContext(AuthContext);
   const { toast } = useToast();
+  const handlekey = (e) => {
+    if (e.key === "Enter") {
+      handleLogin(e);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -49,6 +54,7 @@ const Login = ({ closeallcard, handlesignup }) => {
   return (
     <form
       onSubmit={handleLogin}
+      onKeyPress={handlekey}
       className="fixed inset-0 flex items-center justify-center z-10 bg-gray-800 bg-opacity-40 backdrop-blur-md"
     >
       <div
