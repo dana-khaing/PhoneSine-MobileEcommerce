@@ -7,7 +7,7 @@ import Auth from "./auth";
 
 export default function NavBar({ Searchlistener }) {
   return (
-    <nav className=" flex  px-5 py-7">
+    <nav className=" flex  px-5 pt-5">
       <h1 className=" flex-none text-2xl font-bold pr-2 items-center justify-normal ml-2 w-[33%]">
         Phone Sine
       </h1>

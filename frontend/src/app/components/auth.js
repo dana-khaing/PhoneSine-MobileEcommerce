@@ -1,15 +1,15 @@
 "use Client";
-import { CircleUserRound, UserCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CircleUserRound } from "lucide-react";
 import { useState, useContext } from "react"; // Added import statement for useContext
 import Login from "./auth/login";
 import Register from "./auth/register";
+import UserAvator from "./auth/userAvatar";
 import { AuthContext } from "../contexts/authContext";
 
 const Auth = () => {
   const [isClickedlogin, setIsClickedlogin] = useState(false);
   const [isClickedSignup, setIsClickedSignup] = useState(false);
-  const { userName, userIsLogin } = useContext(AuthContext);
+  const { userIsLogin } = useContext(AuthContext);
 
   const openlogincard = () => {
     setIsClickedlogin(true);
@@ -33,16 +33,7 @@ const Auth = () => {
   return (
     <div className="flex text-sm items-center">
       {userIsLogin == true ? (
-        <Button variant="ghost" className="p-2">
-          <div className=" flex justify-center items-center">
-            <div className="flex-auto">
-              <UserCheck className="w-5 h-5 text-neutral-600 hover:text-black" />
-            </div>
-            <div className="pl-1 text-neutral-600">
-              {userName.toUpperCase()}
-            </div>
-          </div>
-        </Button>
+        <UserAvator />
       ) : (
         <>
           <button onClick={openlogincard} className="p-1.5">

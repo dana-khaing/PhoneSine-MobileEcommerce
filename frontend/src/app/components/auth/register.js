@@ -3,6 +3,7 @@ import clsx from "clsx";
 import { X } from "lucide-react";
 import ActionBtn from "./actionBtn";
 import { useState, useContext } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import { AuthContext } from "@/app/contexts/authContext";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -14,13 +15,17 @@ const Register = ({ closeallcard, handlelogin }) => {
   const [password, setPassword] = useState("");
   const [confirmpassword, setConfirmpassword] = useState("");
   const { setUserName, setUserEmail, setUserIsLogin } = useContext(AuthContext);
+  const { toast } = useToast();
 
   const handleRegister = async (e) => {
     e.preventDefault();
     // console.log(firstname, lastname, email, password, confirmpassword);
     if (password !== confirmpassword) {
-      // Adapt the alert message to an appropriate message and interface
-      alert("Password does not match");
+      toast({
+        className: " bg-neutral-900 text-white",
+        title: "Passwords must be 'EQUAL' .",
+        description: "Please check your password and comfirm passward .",
+      });
       return;
     }
     const data = await fetch("http://localhost:8080/auth/register", {
@@ -38,19 +43,25 @@ const Register = ({ closeallcard, handlelogin }) => {
 
     if (data.status === 200) {
       // if we want to login immediately after registering
+
       // const gotData = await data.json();
       // setUserIsLogin(true);
       // setUserName(gotData.username);
       // setUserEmail(gotData.email);
       // closeallcard();
-
+      toast({
+        className: " bg-neutral-900 text-white",
+        title: "Register success.",
+        description: "Please login to continue .",
+      });
       handlelogin();
-
-      // Adapt the alert message to an appropriate message and interface
-      // alert("Register success");
     } else {
       const error = await data.text();
-      alert("Register failed : " + error);
+      toast({
+        className: " bg-neutral-900 text-white",
+        title: "Register failed :",
+        description: error,
+      });
     }
   };
 

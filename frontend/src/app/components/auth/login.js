@@ -6,6 +6,7 @@ import ActionBtn from "./actionBtn";
 import { useState } from "react";
 import { AuthContext } from "@/app/contexts/authContext";
 import { useContext } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -13,6 +14,7 @@ const Login = ({ closeallcard, handlesignup }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { setUserName, setUserEmail, setUserIsLogin } = useContext(AuthContext);
+  const { toast } = useToast();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -30,11 +32,17 @@ const Login = ({ closeallcard, handlesignup }) => {
       setUserName(gotData.username);
       setUserEmail(gotData.email);
       closeallcard();
-      // Adapt the alert message to an appropriate message and interface
-      // alert("Login success");
+      toast({
+        className: " bg-neutral-900 text-white ",
+        title: "Login successful .",
+        description: "Welcome To PHONE SINE.",
+      });
     } else {
-      // Adapt the alert message to an appropriate message and interface
-      alert("Login failed");
+      toast({
+        className: " bg-neutral-900 text-white",
+        title: "Login failed.",
+        description: "Please check your email and password.",
+      });
     }
   };
   return (
