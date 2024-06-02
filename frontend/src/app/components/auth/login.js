@@ -1,3 +1,4 @@
+"use Client";
 import { Inter } from "next/font/google";
 import clsx from "clsx";
 import { X } from "lucide-react";

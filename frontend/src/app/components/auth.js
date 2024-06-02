@@ -1,3 +1,4 @@
+"use Client";
 import { CircleUserRound, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useContext } from "react"; // Added import statement for useContext
@@ -37,7 +38,9 @@ const Auth = () => {
             <div className="flex-auto">
               <UserCheck className="w-5 h-5 text-neutral-600 hover:text-black" />
             </div>
-            <div className="pl-1">{userName}</div>
+            <div className="pl-1 text-neutral-600">
+              {userName.toUpperCase()}
+            </div>
           </div>
         </Button>
       ) : (
