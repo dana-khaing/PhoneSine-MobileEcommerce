@@ -11,7 +11,6 @@ export const NavList = () => {
     <div className="flex justify-center space-x-14">
       {Items.map((item, index) => (
         <Link
-          // Link
           key={index}
           href={item.link}
           className="font-semibold text-neutral-600 hover:text-black"
