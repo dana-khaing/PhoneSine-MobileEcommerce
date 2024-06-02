@@ -59,7 +59,7 @@ const Register = ({ closeallcard, handlelogin }) => {
       const error = await data.text();
       toast({
         className: " bg-neutral-900 text-white",
-        title: "Register failed :",
+        title: "Register failed .",
         description: error,
       });
     }
@@ -137,8 +137,6 @@ const Register = ({ closeallcard, handlelogin }) => {
         <label className="font-normal text-sm" htmlFor="confirmPasswordInput">
           Confirm Password :
         </label>
-        {/* // Add the confirmpassword state to the value attribute of the input
-        element */}
         <input
           type="password"
           className="border-[1px] p-3 h-11 rounded-lg border-black"
@@ -146,8 +144,16 @@ const Register = ({ closeallcard, handlelogin }) => {
           onChange={(e) => setConfirmpassword(e.target.value)}
           required
         />
+        <div className=" text-xs text-neutral-500">
+          <p>Password must contain : </p>
+          <p>- 6 character long with no space *</p>
+          <p>- at least a number *</p>
+          <p>- at least a uppercase letter *</p>
+          <p>- at least a lowercase letter *</p>
+          <p>- at least a special character *</p>
+        </div>
         <button
-          className="bg-neutral-900 text-white py-3 rounded-lg mt-3"
+          className="bg-neutral-900 text-white py-3 rounded-lg mt-1"
           type="submit"
         >
           Sign Up

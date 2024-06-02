@@ -38,10 +38,11 @@ const Login = ({ closeallcard, handlesignup }) => {
         description: "Welcome To PHONE SINE.",
       });
     } else {
+      const error = await data.text();
       toast({
         className: " bg-neutral-900 text-white",
         title: "Login failed.",
-        description: "Please check your email and password.",
+        description: error,
       });
     }
   };
