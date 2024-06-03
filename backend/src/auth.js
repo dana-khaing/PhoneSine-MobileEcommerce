@@ -4,6 +4,15 @@ const router = express.Router();
 
 const user = []; // user object
 
+// function to lowercase the email address in front of @
+function normalizeEmail(email) {
+  const [useraddress, domain] = email.split("@");
+  const lowerCaseUseraddress = useraddress.toLowerCase();
+  const normalizedEmail = `${lowerCaseUseraddress}@${domain}`;
+
+  return normalizedEmail;
+}
+
 router.post("/register", async (req, res) => {
   const { firstname, lastname, email, password } = req.body;
   if (!firstname || !lastname || !email || !password) {
@@ -88,7 +97,9 @@ router.post("/register", async (req, res) => {
   user.push({
     Firstname: firstname,
     Lastname: lastname,
-    email: email.toLower,
+    // change email address in front of @ to lowercase
+
+    email: normalizeEmail(email),
     password: hashedPassword,
   });
   console.log(user);
@@ -102,9 +113,10 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   //   console.log(email, password);
   if (!email || !password) {
-    return res.status(400).send("Please fill all the fields");
+    return res.status(400).send("Please fill all the fields .");
   }
-  const currentUser = user.find((user) => user.email === email);
+  const emailfinal = normalizeEmail(email);
+  const currentUser = user.find((user) => user.email === emailfinal);
   if (!currentUser) return res.status(400).send("User not found");
   const validPassword = await bcrypt.compare(password, currentUser.password);
   if (!validPassword) return res.status(400).send("Invalid password");

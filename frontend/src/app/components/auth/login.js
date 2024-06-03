@@ -23,6 +23,7 @@ const Login = ({ closeallcard, handlesignup }) => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
     const data = await fetch("http://localhost:8080/auth/login", {
       method: "POST",
       headers: {

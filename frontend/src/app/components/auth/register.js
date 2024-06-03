@@ -152,7 +152,7 @@ const Register = ({ closeallcard, handlelogin }) => {
         />
         <div className=" text-xs text-neutral-500">
           <p>Password must contain : </p>
-          <p>- 6 character long with no space *</p>
+          <p>- at least 6 characters with no space *</p>
           <p>- at least a number *</p>
           <p>- at least a uppercase letter *</p>
           <p>- at least a lowercase letter *</p>
