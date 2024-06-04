@@ -7,6 +7,7 @@ import { useState } from "react";
 import { AuthContext } from "@/app/contexts/authContext";
 import { useContext } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import { jwtDecode } from "jwt-decode";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -14,6 +15,7 @@ const inter = Inter({ subsets: ["latin"] });
 const Login = ({ closeallcard, handlesignup }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const { setUserName, setUserEmail, setUserIsLogin } = useContext(AuthContext);
   const { toast } = useToast();
   const handlekey = (e) => {
@@ -30,7 +32,7 @@ const Login = ({ closeallcard, handlesignup }) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, rememberMe }),
     });
 
     if (data.status === 200) {
@@ -99,8 +101,13 @@ const Login = ({ closeallcard, handlesignup }) => {
           required
         />
         <div className="flex items-center py-2 text-sm">
-          <input type="checkbox" className="h-4 w-4 border-2" />
-          <p className="mr-auto ml-2">Remember me</p>
+          <Checkbox
+            id="rememberMe"
+            onClick={() => setRememberMe(!rememberMe)}
+          />
+          <label htmlFor="rememberMe" className="mr-auto ml-2">
+            Remember me
+          </label>
           <a className="underline" href="/products">
             Forgot your password?
           </a>

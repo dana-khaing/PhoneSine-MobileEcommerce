@@ -112,8 +112,8 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  //   console.log(email, password);
+  const { email, password, rememberMe } = req.body;
+  // console.log(email, password, rememberMe);
   if (!email || !password) {
     return res.status(400).send("Please fill all the fields .");
   }
@@ -123,6 +123,18 @@ router.post("/login", async (req, res) => {
   const validPassword = await bcrypt.compare(password, currentUser.password);
   if (!validPassword) return res.status(400).send("Invalid password");
   //   console.log(currentUser);
+  if (rememberMe) {
+    const token = jwt.sign(
+      {
+        username: currentUser.Firstname + " " + currentUser.Lastname,
+        email: currentUser.email,
+      },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    res.status(200).json({ token });
+    return;
+  }
   const token = jwt.sign(
     {
       username: currentUser.Firstname + " " + currentUser.Lastname,
