@@ -11,7 +11,7 @@ export default function ProductList({ filterBrand, filterSearch, price }) {
 
   const fetchData = async () => {
     try {
-      const response = await fetch("http://localhost:8080/products");
+      const response = await fetch(process.env.NEXT_PUBLIC_PRODUCT_LIST_URL);
       const jsonData = await response.json();
       setProducts(jsonData);
       console.log(products);

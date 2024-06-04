@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -13,5 +14,5 @@ app.get("/products", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/productsList.json"));
 });
 
-const PORT = 8080;
+const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Sever started on port ${PORT}`));

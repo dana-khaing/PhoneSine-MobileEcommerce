@@ -7,6 +7,7 @@ import UserAvator from "./auth/userAvatar";
 import { useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import { AuthContext } from "../contexts/authContext";
+import { toast } from "sonner";
 
 const Auth = () => {
   const [isClickedlogin, setIsClickedlogin] = useState(false);
@@ -41,8 +42,12 @@ const Auth = () => {
         setUserName(decoded.username);
         setUserEmail(decoded.email);
         setUserIsLogin(true);
-      } catch (err) {
-        console.log(err);
+      } catch (error) {
+        toast({
+          className: " bg-neutral-900 text-white",
+          title: "Login failed.",
+          description: error,
+        });
       }
     }
   }, []);

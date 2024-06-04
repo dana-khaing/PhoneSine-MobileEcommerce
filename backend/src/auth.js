@@ -1,10 +1,10 @@
+require("dotenv").config();
 const express = require("express");
 const bcrypt = require("bcrypt");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET =
-  "0a3c64f7d8b9e2f4a7b6c8d5e3f1a2b0e4c8d3b6a5f9e2d3b7c6e1a5f3d7b4e2";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const user = []; // user object
 
@@ -104,7 +104,6 @@ router.post("/register", async (req, res) => {
     email: normalizeEmail(email),
     password: hashedPassword,
   });
-  console.log(user);
   res.status(200).json({
     username: firstname + " " + lastname,
     email: email,
@@ -113,7 +112,6 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   const { email, password, rememberMe } = req.body;
-  // console.log(email, password, rememberMe);
   if (!email || !password) {
     return res.status(400).send("Please fill all the fields .");
   }
@@ -122,7 +120,6 @@ router.post("/login", async (req, res) => {
   if (!currentUser) return res.status(400).send("User not found");
   const validPassword = await bcrypt.compare(password, currentUser.password);
   if (!validPassword) return res.status(400).send("Invalid password");
-  //   console.log(currentUser);
   if (rememberMe) {
     const token = jwt.sign(
       {

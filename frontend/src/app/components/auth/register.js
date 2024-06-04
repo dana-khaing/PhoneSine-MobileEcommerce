@@ -33,7 +33,7 @@ const Register = ({ closeallcard, handlelogin }) => {
       });
       return;
     }
-    const data = await fetch("http://localhost:8080/auth/register", {
+    const data = await fetch(process.env.NEXT_PUBLIC_API_REGISTER_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
