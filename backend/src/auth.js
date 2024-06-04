@@ -1,6 +1,10 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const router = express.Router();
+const jwt = require("jsonwebtoken");
+
+const JWT_SECRET =
+  "0a3c64f7d8b9e2f4a7b6c8d5e3f1a2b0e4c8d3b6a5f9e2d3b7c6e1a5f3d7b4e2";
 
 const user = []; // user object
 
@@ -97,8 +101,6 @@ router.post("/register", async (req, res) => {
   user.push({
     Firstname: firstname,
     Lastname: lastname,
-    // change email address in front of @ to lowercase
-
     email: normalizeEmail(email),
     password: hashedPassword,
   });
@@ -121,10 +123,15 @@ router.post("/login", async (req, res) => {
   const validPassword = await bcrypt.compare(password, currentUser.password);
   if (!validPassword) return res.status(400).send("Invalid password");
   //   console.log(currentUser);
-  res.status(200).json({
-    username: currentUser.Firstname + " " + currentUser.Lastname,
-    email: currentUser.email,
-  });
+  const token = jwt.sign(
+    {
+      username: currentUser.Firstname + " " + currentUser.Lastname,
+      email: currentUser.email,
+    },
+    JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+  res.status(200).json({ token });
 });
 
 module.exports = router;

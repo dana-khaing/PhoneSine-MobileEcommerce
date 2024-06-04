@@ -7,6 +7,7 @@ import { useState } from "react";
 import { AuthContext } from "@/app/contexts/authContext";
 import { useContext } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { jwtDecode } from "jwt-decode";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,15 +35,26 @@ const Login = ({ closeallcard, handlesignup }) => {
 
     if (data.status === 200) {
       const gotData = await data.json();
-      setUserIsLogin(true);
-      setUserName(gotData.username);
-      setUserEmail(gotData.email);
-      closeallcard();
-      toast({
-        className: " bg-neutral-900 text-white ",
-        title: "Login successful .",
-        description: "Welcome To PHONE SINE.",
-      });
+      const token = gotData.token;
+      localStorage.setItem("token", token);
+      try {
+        setUserIsLogin(true);
+        const decoded = jwtDecode(token);
+        setUserName(decoded.username);
+        setUserEmail(decoded.email);
+        closeallcard();
+        toast({
+          className: " bg-neutral-900 text-white ",
+          title: "Login successful .",
+          description: "Welcome To PHONE SINE.",
+        });
+      } catch (err) {
+        toast({
+          className: " bg-neutral-900 text-white",
+          title: "Login failed.",
+          description: "Invalid token .",
+        });
+      }
     } else {
       const error = await data.text();
       toast({

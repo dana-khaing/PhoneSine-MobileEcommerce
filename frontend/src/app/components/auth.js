@@ -4,12 +4,15 @@ import { useState, useContext } from "react"; // Added import statement for useC
 import Login from "./auth/login";
 import Register from "./auth/register";
 import UserAvator from "./auth/userAvatar";
+import { useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
 import { AuthContext } from "../contexts/authContext";
 
 const Auth = () => {
   const [isClickedlogin, setIsClickedlogin] = useState(false);
   const [isClickedSignup, setIsClickedSignup] = useState(false);
-  const { userIsLogin } = useContext(AuthContext);
+  const { userIsLogin, setUserName, setUserEmail, setUserIsLogin } =
+    useContext(AuthContext);
 
   const openlogincard = () => {
     setIsClickedlogin(true);
@@ -29,6 +32,20 @@ const Auth = () => {
     setIsClickedSignup(false);
     setIsClickedlogin(true);
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        setUserName(decoded.username);
+        setUserEmail(decoded.email);
+        setUserIsLogin(true);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  }, []);
 
   return (
     <div className="flex text-sm items-center">
