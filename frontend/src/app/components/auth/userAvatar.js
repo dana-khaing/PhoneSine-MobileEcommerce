@@ -15,6 +15,7 @@ const UserAvator = () => {
   const { userName, setUserIsLogin, setUserName, setUserEmail } =
     useContext(AuthContext);
   const handleLogout = () => {
+    localStorage.removeItem("token");
     setUserIsLogin(false);
     setUserName("");
     setUserEmail("");
@@ -33,7 +34,7 @@ const UserAvator = () => {
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="p-0">
+      <DropdownMenuContent className=" p-2">
         <DropdownMenuGroup>
           <DropdownMenuItem>My Account</DropdownMenuItem>
           <DropdownMenuItem>Settings</DropdownMenuItem>
