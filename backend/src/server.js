@@ -4,6 +4,7 @@ const cors = require("cors");
 const path = require("path");
 const app = express();
 const authRoute = require("./auth");
+const db = require("../models");
 
 app.use(cors());
 app.use(express.json());
@@ -15,4 +16,6 @@ app.get("/products", (req, res) => {
 });
 
 const PORT = process.env.PORT;
-app.listen(PORT, () => console.log(`Sever started on port ${PORT}`));
+db.sequelize.sync().then(() => {
+  app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+});
