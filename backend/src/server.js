@@ -13,20 +13,20 @@ app.use(express.static(path.join(__dirname, "../public")));
 app.use("/auth", authRoute);
 
 // test subject for sequelize database
-app.get("/insert", async (req, res) => {
-  try {
-    const user = await Userdetail.create({
-      firstname: "John",
-      lastname: "Doe",
-      email: "johndoe12@gmail.com",
-      password: "password",
-    });
-    res.send(user);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("An error occurred while inserting data");
-  }
-});
+// app.get("/insert", async (req, res) => {
+//   try {
+//     const user = await Userdetail.create({
+//       firstname: "John",
+//       lastname: "Doe",
+//       email: "johndoe12@gmail.com",
+//       password: "password",
+//     });
+//     res.send(user);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send("An error occurred while inserting data");
+//   }
+// });
 
 app.get("/showall", async (req, res) => {
   try {

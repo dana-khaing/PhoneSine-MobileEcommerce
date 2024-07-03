@@ -3,10 +3,10 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
-
+const { Userdetail } = require("../models");
 const JWT_SECRET = process.env.JWT_SECRET;
 
-const user = []; // user object
+// const user = []; // user object
 
 // function to lowercase the email address in front of @
 function normalizeEmail(email) {
@@ -98,9 +98,15 @@ router.post("/register", async (req, res) => {
   }
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
-  user.push({
-    Firstname: firstname,
-    Lastname: lastname,
+  // user.push({
+  //   Firstname: firstname,
+  //   Lastname: lastname,
+  //   email: normalizeEmail(email),
+  //   password: hashedPassword,
+  // });
+  Userdetail.create({
+    firstname: firstname,
+    lastname: lastname,
     email: normalizeEmail(email),
     password: hashedPassword,
   });
@@ -116,14 +122,19 @@ router.post("/login", async (req, res) => {
     return res.status(400).send("Please fill all the fields .");
   }
   const emailfinal = normalizeEmail(email);
-  const currentUser = user.find((user) => user.email === emailfinal);
+  // const currentUser = user.find((user) => user.email === emailfinal);
+  const currentUser = await Userdetail.findOne({
+    where: {
+      email: emailfinal,
+    },
+  });
   if (!currentUser) return res.status(400).send("User not found");
   const validPassword = await bcrypt.compare(password, currentUser.password);
   if (!validPassword) return res.status(400).send("Invalid password");
   if (rememberMe) {
     const token = jwt.sign(
       {
-        username: currentUser.Firstname + " " + currentUser.Lastname,
+        username: currentUser.firstname + " " + currentUser.lastname,
         email: currentUser.email,
       },
       JWT_SECRET,
@@ -134,7 +145,7 @@ router.post("/login", async (req, res) => {
   }
   const token = jwt.sign(
     {
-      username: currentUser.Firstname + " " + currentUser.Lastname,
+      username: currentUser.firstname + " " + currentUser.lastname,
       email: currentUser.email,
     },
     JWT_SECRET,
