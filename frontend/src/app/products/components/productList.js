@@ -14,7 +14,6 @@ export default function ProductList({ filterBrand, filterSearch, price }) {
       const response = await fetch(process.env.NEXT_PUBLIC_PRODUCT_LIST_URL);
       const jsonData = await response.json();
       setProducts(jsonData);
-      console.log(products);
     } catch (error) {
       console.error("Error fetching data:", error);
     }

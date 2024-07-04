@@ -13,7 +13,6 @@ function normalizeEmail(email) {
   const [useraddress, domain] = email.split("@");
   const lowerCaseUseraddress = useraddress.toLowerCase();
   const normalizedEmail = `${lowerCaseUseraddress}@${domain}`;
-
   return normalizedEmail;
 }
 
@@ -21,6 +20,12 @@ router.post("/register", async (req, res) => {
   const { firstname, lastname, email, password } = req.body;
   if (!firstname || !lastname || !email || !password) {
     return res.status(400).send("Please fill all the fields");
+  }
+  //Email restrictions
+  const existingUser = await Userdetail.findOne({ where: { email: email } });
+
+  if (existingUser) {
+    return res.status(400).send("User already exists");
   }
   // first name must not contain numbers
   if (firstname.search(/[0-9]/) >= 0) {
@@ -41,7 +46,6 @@ router.post("/register", async (req, res) => {
     return res.status(400).send("Last name must not contain numbers");
   }
   // last name must not contain special characters
-
   if (lastname.search(/[!@#$%^&*]/) >= 0) {
     return res
       .status(400)
@@ -50,11 +54,6 @@ router.post("/register", async (req, res) => {
   // first and last name must not contain emojis
   if (lastname.search(/[\uD800-\uDFFF]/) >= 0) {
     return res.status(400).send("Last name must not contain emojis");
-  }
-
-  // Email restrictions
-  if (user.find((user) => user.email === email)) {
-    return res.status(401).send("User already exists");
   }
 
   if (email.search(/@/) < 0) {
@@ -131,7 +130,7 @@ router.post("/login", async (req, res) => {
   if (!currentUser) return res.status(400).send("User not found");
   const validPassword = await bcrypt.compare(password, currentUser.password);
   if (!validPassword) return res.status(400).send("Invalid password");
-  if (rememberMe) {
+  if (rememberMe === true) {
     const token = jwt.sign(
       {
         username: currentUser.firstname + " " + currentUser.lastname,
