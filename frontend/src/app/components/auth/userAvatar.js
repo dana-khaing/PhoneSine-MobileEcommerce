@@ -23,7 +23,7 @@ const UserAvator = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
-        <Button variant="ghost" className="p-2">
+        <div className="p-2">
           <div className=" flex justify-center items-center">
             <div className="flex-auto">
               <UserCheck className="w-5 h-5 text-neutral-600 hover:text-black" />
@@ -32,7 +32,7 @@ const UserAvator = () => {
               {userName.toUpperCase()}
             </div>
           </div>
-        </Button>
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent className=" p-2">
         <DropdownMenuGroup>

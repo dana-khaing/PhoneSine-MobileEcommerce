@@ -24,7 +24,6 @@ const Register = ({ closeallcard, handlelogin }) => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    // console.log(firstname, lastname, email, password, confirmpassword);
     if (password !== confirmpassword) {
       toast({
         className: " bg-neutral-900 text-white",
@@ -84,19 +83,20 @@ const Register = ({ closeallcard, handlelogin }) => {
       >
         <div className="flex">
           <h3 className="flex-1 mb-2 text-3xl text-neutral-900">SIGN UP</h3>
-          <button onClick={closeallcard}>
+          <div onClick={closeallcard}>
             <X />
-          </button>
+          </div>
         </div>
         <div className="flex justify-around">
           <div className="pr-2 w-[50%]">
             <div className="pb-1">
-              <label className="font-normal text-sm">First name :</label>
+              <label className="font-normal text-sm" htmlFor="firstNameInput">
+                First name :
+              </label>
             </div>
-            {/* // Add the firstname state to the value attribute of the input
-            element */}
             <input
               type="text"
+              id="firstNameInput"
               className="border-[1px] p-3 h-11 w-[100%] rounded-lg border-black"
               value={firstname}
               onChange={(e) => setFirstname(e.target.value)}
@@ -105,12 +105,13 @@ const Register = ({ closeallcard, handlelogin }) => {
           </div>
           <div className="pl-2 w-[50%]">
             <div className="pb-1">
-              <label className="font-normal text-sm">Last name :</label>
+              <label className="font-normal text-sm" htmlFor="lastNameInput">
+                Last name :
+              </label>
             </div>
-            {/* // Add the lastname state to the value attribute of the input
-            element */}
             <input
               type="text"
+              id="lastNameInput"
               className="border-[1px] p-3 h-11 w-[100%] rounded-lg border-black"
               value={lastname}
               onChange={(e) => setLastname(e.target.value)}
@@ -121,9 +122,9 @@ const Register = ({ closeallcard, handlelogin }) => {
         <label className="font-normal text-sm" htmlFor="emailInput">
           Email Address :
         </label>
-        {/* // Add the email state to the value attribute of the input element */}
         <input
           type="email"
+          id="emailInput"
           className="border-[1px] p-3 h-11 rounded-lg border-black"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -132,9 +133,9 @@ const Register = ({ closeallcard, handlelogin }) => {
         <label className="font-normal text-sm" htmlFor="passwordInput">
           Password :
         </label>
-        {/* // Add the password state to the value attribute of the input element */}
         <input
           type="password"
+          id="passwordInput"
           className="border-[1px] p-3 h-11 rounded-lg border-black"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -145,6 +146,7 @@ const Register = ({ closeallcard, handlelogin }) => {
         </label>
         <input
           type="password"
+          id="confirmPasswordInput"
           className="border-[1px] p-3 h-11 rounded-lg border-black"
           value={confirmpassword}
           onChange={(e) => setConfirmpassword(e.target.value)}

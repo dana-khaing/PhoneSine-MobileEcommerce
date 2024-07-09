@@ -79,25 +79,35 @@ const Login = ({ closeallcard, handlesignup }) => {
       >
         <div className="flex">
           <h3 className="flex-1 mb-2 text-3xl text-neutral-900">SIGN IN</h3>
-          <button onClick={closeallcard}>
+          <div onClick={closeallcard}>
             <X />
-          </button>
+          </div>
         </div>
-        <label className="font-normal text-sm">Email Address :</label>
+        <label className="font-normal text-sm" htmlFor="email">
+          Email Address :
+        </label>
         <input
           type="email"
+          id="email"
+          name="email"
           className="border-[1px] p-3 h-11 rounded-lg border-black"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
         />
-        <label className="font-normal text-sm">Password :</label>
+        <label className="font-normal text-sm" htmlFor="password">
+          Password :
+        </label>
         <input
           type="password"
+          id="password"
+          name="password" // Add name attribute
           className="border-[1px] p-3 h-11 rounded-lg border-black"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="current-password"
         />
         <div className="flex items-center py-2 text-sm">
           <Checkbox
