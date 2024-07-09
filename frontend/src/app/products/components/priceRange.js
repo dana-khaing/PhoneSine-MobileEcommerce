@@ -11,6 +11,7 @@ export const PriceRange = ({ priceValue, priceListener, MIN, MAX }) => {
     cursor: "pointer",
     top: "-7px",
   };
+
   return (
     <div>
       <div className="font-bold">PriceRange</div>
@@ -20,9 +21,16 @@ export const PriceRange = ({ priceValue, priceListener, MIN, MAX }) => {
         value={priceValue}
         min={MIN}
         max={MAX}
-        renderThumb={(props) => (
-          <div {...props} style={{ ...props.style, ...thumbStyle }} />
-        )}
+        renderThumb={(props, state) => {
+          const { key, ...restProps } = props; // Destructure key from props
+          return (
+            <div
+              key={state.index} // Ensure key is assigned correctly
+              {...restProps}
+              style={{ ...restProps.style, ...thumbStyle }}
+            />
+          );
+        }}
       />
       <div className="flex">
         <span className="flex-1">${priceValue[0]}</span>
