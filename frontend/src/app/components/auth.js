@@ -1,15 +1,15 @@
 "use Client";
 import { CircleUserRound } from "lucide-react";
-import { useState, useContext } from "react"; // Added import statement for useContext
+import { useState, useContext, useEffect } from "react";
 import Login from "./auth/login";
 import Register from "./auth/register";
 import UserAvator from "./auth/userAvatar";
-import { useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import { AuthContext } from "../contexts/authContext";
-import { toast } from "sonner";
+import { useToast } from "@/components/ui/use-toast";
 
 const Auth = () => {
+  const { toast } = useToast();
   const [isClickedlogin, setIsClickedlogin] = useState(false);
   const [isClickedSignup, setIsClickedSignup] = useState(false);
   const { userIsLogin, setUserName, setUserEmail, setUserIsLogin } =
@@ -34,27 +34,51 @@ const Auth = () => {
     setIsClickedlogin(true);
   };
 
-  useEffect(() => {
+  const handleSessionTimeOut = () => {
     const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        setUserName(decoded.username);
-        setUserEmail(decoded.email);
-        setUserIsLogin(true);
-      } catch (error) {
+    if (!token) return;
+
+    try {
+      const decoded = jwtDecode(token);
+      const exp = new Date(decoded.exp * 1000);
+      const currentTime = new Date();
+      const timeLeft = exp - currentTime;
+
+      if (timeLeft < 0) {
+        localStorage.removeItem("token");
+        setUserIsLogin(false);
+        setUserName("");
+        setUserEmail("");
         toast({
           className: " bg-neutral-900 text-white",
           title: "Login failed.",
-          description: error,
+          description: "Token expired",
         });
+      } else {
+        setUserName(decoded.username);
+        setUserEmail(decoded.email);
+        setUserIsLogin(true);
       }
+    } catch (error) {
+      toast({
+        className: " bg-neutral-900 text-white",
+        title: "Login failed.",
+        description: "Invalid token",
+      });
+      localStorage.removeItem("token");
+      setUserIsLogin(false);
+      setUserName("");
+      setUserEmail("");
     }
+  };
+
+  useEffect(() => {
+    handleSessionTimeOut();
   }, []);
 
   return (
     <div className="flex text-sm items-center">
-      {userIsLogin == true ? (
+      {userIsLogin ? (
         <UserAvator />
       ) : (
         <>

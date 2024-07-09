@@ -5,8 +5,8 @@ const path = require("path");
 const app = express();
 const authRoute = require("./auth");
 const db = require("../models");
-
 const { Userdetail } = require("../models");
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));

@@ -6,9 +6,9 @@ import { AuthProvider } from "./contexts/authContext";
 export default function ClientApp({ children }) {
   return (
     <AuthProvider>
+      <Toaster />
       <NavBar />
       {children}
-      <Toaster />
     </AuthProvider>
   );
 }
