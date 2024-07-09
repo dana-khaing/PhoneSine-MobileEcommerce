@@ -22,33 +22,42 @@ const SideBar = ({
   return (
     <div className="px-0 py-0">
       <div className="font-bold mb-">Search</div>
-      <div className="flex justify-center items-center">
+      <div className="flex justify-center ">
         <input
-          className=" border border-gray-300 rounded-3xl my-3 px-5 py-0 w-[10.5rem] text-base shadow-sm"
+          className=" border border-gray-300 rounded-3xl my-3 px-5 py-0 w-full text-base shadow-sm"
           type="text"
           placeholder="Search"
           onChange={Searchlistener}
         />
       </div>
-      <div className="font-bold mb-2">Brand List</div>
-      <div className="px-x3">
-        {brandList.map((item) => (
-          <ul key={item.id}>
-            <button className="m-3" onClick={() => onBrandClick(item.brand)}>
-              {item.brand}
-            </button>
-          </ul>
-        ))}
+      <div className="font-bold m-2">Brand List</div>
+      <div className="px-x3 w-full text-start items-start justify-start">
+        <ul>
+          {brandList.map((item) => (
+            <li key={item.id} className="list-none">
+              <button
+                className="m-3 overflow-hidden text-ellipsis whitespace-nowrap"
+                onClick={() => onBrandClick(item.brand)}
+              >
+                {item.brand}
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
-      <div className="font-bold mb-2">Category</div>
-      <div className="px-3">
-        {categoryList.map((item) => (
-          <ul key={item.id}>
-            <button className="m-3">{item.list}</button>
-          </ul>
-        ))}
+      <div className="font-bold m-2">Category</div>
+      <div className="px-x3 w-full text-start items-start justify-start">
+        <ul>
+          {categoryList.map((item) => (
+            <li key={item.id}>
+              <button className="m-3 overflow-hidden text-ellipsis whitespace-nowrap">
+                {item.list}
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
-      <div>
+      <div className="m-3">
         <PriceRange
           priceListener={priceListener}
           priceValue={priceValue}

@@ -25,7 +25,7 @@ export default function ProductsPage() {
 
   return (
     <div className="my-0 flex justify-evenly w-screen">
-      <div className="w-[15%] my-5 mx-5 h-screen shadow-md border-solid border-2 px-5 py-5 flex-shrink-0">
+      <div className="w-[15%] my-5 mx-5 h-screen shadow-md border-solid border-2 px-5 py-5 flex-shrink-0 overflow-hidden text-ellipsis whitespace-nowrap">
         <SideBar
           onBrandClick={handleFilterChange}
           Searchlistener={handleSearchChange}
