@@ -6,6 +6,7 @@ export default function ProductList({
   filterSearch,
   price,
   paymentlistener,
+  productdetail,
 }) {
   const [products, setProducts] = useState([]);
   const [items, setItems] = useState([]);
@@ -78,6 +79,7 @@ export default function ProductList({
           name={product.name}
           price={product.price}
           paymentlistener={paymentlistener}
+          productdetail={() => productdetail(product)}
         />
       ))}
     </div>

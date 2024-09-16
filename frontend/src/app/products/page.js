@@ -12,6 +12,7 @@ export default function ProductsPage() {
   const [search, setSearch] = useState("");
   const [values, setValues] = useState([MIN, MAX]);
   const [payment, setPayment] = useState(false);
+  const [detailsProduct, setDetailsProduct] = useState([]);
 
   const handleFilterChange = (catbrand) => {
     setFilterBrand(catbrand);
@@ -30,6 +31,9 @@ export default function ProductsPage() {
   const paymentlistenerclose = () => {
     setPayment(false);
   };
+  const productDetailskey = (product) => {
+    setDetailsProduct(product);
+  };
 
   return (
     <div className="my-0 flex justify-evenly w-screen">
@@ -44,7 +48,10 @@ export default function ProductsPage() {
         />
       </div>
       {payment ? (
-        <Payment backToProduct={paymentlistenerclose} />
+        <Payment
+          backToProduct={paymentlistenerclose}
+          productdetail={detailsProduct}
+        />
       ) : (
         <div className="flex-1">
           <p className="py-[1.1rem] mx-5 flex justify-center">
@@ -56,6 +63,7 @@ export default function ProductsPage() {
               filterSearch={search}
               price={values}
               paymentlistener={paymentlisteneropen}
+              productdetail={productDetailskey}
             />
           </div>
         </div>

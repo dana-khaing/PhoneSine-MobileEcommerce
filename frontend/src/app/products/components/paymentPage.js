@@ -1,4 +1,4 @@
-export default function Payment({ backToProduct }) {
+export default function Payment({ backToProduct, productdetail }) {
   return (
     <div className="w-full p-5">
       <div>
@@ -6,6 +6,7 @@ export default function Payment({ backToProduct }) {
           className="flex-shrink-0 w-[33%] text-end underline hover:text-gray-500 cursor-pointer"
           onClick={() => backToProduct(false)}
         >
+          {console.log(productdetail)}
           &lt; Back
         </span>
         <span></span>
