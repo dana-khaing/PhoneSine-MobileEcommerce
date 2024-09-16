@@ -1,7 +1,12 @@
 import ProductCard from "./productCard";
 import React, { useState, useEffect } from "react";
 
-export default function ProductList({ filterBrand, filterSearch, price }) {
+export default function ProductList({
+  filterBrand,
+  filterSearch,
+  price,
+  paymentlistener,
+}) {
   const [products, setProducts] = useState([]);
   const [items, setItems] = useState([]);
 
@@ -72,6 +77,7 @@ export default function ProductList({ filterBrand, filterSearch, price }) {
           brand={product.brand}
           name={product.name}
           price={product.price}
+          paymentlistener={paymentlistener}
         />
       ))}
     </div>

@@ -3,6 +3,7 @@
 import ProductList from "./components/productList.js";
 import SideBar from "./components/sideBar.js";
 import { useState } from "react";
+import Payment from "./components/paymentPage.js";
 
 export default function ProductsPage() {
   const MIN = 100;
@@ -10,6 +11,7 @@ export default function ProductsPage() {
   const [filterBrand, setFilterBrand] = useState("All Products");
   const [search, setSearch] = useState("");
   const [values, setValues] = useState([MIN, MAX]);
+  const [payment, setPayment] = useState(false);
 
   const handleFilterChange = (catbrand) => {
     setFilterBrand(catbrand);
@@ -21,6 +23,12 @@ export default function ProductsPage() {
 
   const handlePriceChange = (price) => {
     setValues(price);
+  };
+  const paymentlisteneropen = () => {
+    setPayment(true);
+  };
+  const paymentlistenerclose = () => {
+    setPayment(false);
   };
 
   return (
@@ -35,18 +43,23 @@ export default function ProductsPage() {
           MAX={MAX}
         />
       </div>
-      <div className="flex-1">
-        <p className="py-[1.1rem] mx-5 flex justify-center">
-          {filterBrand.toUpperCase()}
-        </p>
-        <div>
-          <ProductList
-            filterBrand={filterBrand}
-            filterSearch={search}
-            price={values}
-          />
+      {payment ? (
+        <Payment backToProduct={paymentlistenerclose} />
+      ) : (
+        <div className="flex-1">
+          <p className="py-[1.1rem] mx-5 flex justify-center">
+            {filterBrand.toUpperCase()}
+          </p>
+          <div>
+            <ProductList
+              filterBrand={filterBrand}
+              filterSearch={search}
+              price={values}
+              paymentlistener={paymentlisteneropen}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
