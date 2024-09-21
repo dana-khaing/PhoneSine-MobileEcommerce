@@ -3,6 +3,7 @@ export default function ProductCard({
   name,
   brand,
   price,
+  description,
   paymentlistener,
   productdetail,
 }) {
@@ -15,7 +16,7 @@ export default function ProductCard({
       <div className="py-12 bg-gray-100 flex justify-center">
         <img
           src="/iph15-pro.jpeg"
-          alt="Product Image"
+          alt="iPhone 15 Pro"
           className="w-36 h-auto"
         />
       </div>

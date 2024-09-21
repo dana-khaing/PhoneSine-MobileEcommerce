@@ -15,6 +15,7 @@ export default function ProductList({
     fetchData();
   }, []);
 
+  // Just fetching the data from the backend
   const fetchData = async () => {
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_PRODUCT_LIST_URL);
@@ -29,55 +30,50 @@ export default function ProductList({
     setItems(products);
   }, [products]);
 
-  const filterByBrand = (filterBrand) => {
-    const filteredItems = products.filter((itembrand) => {
-      return itembrand.brand === filterBrand;
-    });
+  const applyFilters = () => {
+    let filteredItems = products;
+
+    // search filter
+    if (filterSearch) {
+      filteredItems = filteredItems.filter((item) => {
+        return (
+          item.name.toLowerCase().includes(filterSearch.toLowerCase()) ||
+          item.brand.toLowerCase().includes(filterSearch.toLowerCase())
+        );
+      });
+    }
+
+    // brand filter
+    if (filterBrand && filterBrand !== "All Products") {
+      filteredItems = filteredItems.filter((item) => {
+        return item.brand === filterBrand;
+      });
+    }
+
+    // price filter
+    if (price && price.length === 2) {
+      filteredItems = filteredItems.filter((item) => {
+        return item.price >= price[0] && item.price <= price[1];
+      });
+    }
+
     setItems(filteredItems);
   };
 
-  const filterBySearch = (filterSearch) => {
-    const filteredItems = products.filter((item) => {
-      return (
-        item.name.toLowerCase().includes(filterSearch) ||
-        item.brand.toLowerCase().includes(filterSearch)
-      );
-    });
-
-    setItems(filteredItems);
-  };
-
   React.useEffect(() => {
-    if (filterBrand === "All Products") {
-      setItems(products);
-    } else {
-      filterByBrand(filterBrand);
-    }
-  }, [filterBrand]);
-
-  React.useEffect(() => {
-    if (filterSearch === "") {
-      setItems(products);
-    } else {
-      filterBySearch(String(filterSearch).toLowerCase());
-    }
-  }, [filterSearch]);
-
-  React.useEffect(() => {
-    const filteredItems = products?.filter((item) => {
-      return item.price >= price[0] && item.price <= price[1];
-    });
-    setItems(filteredItems);
-  }, [price]);
+    applyFilters();
+  }, [filterSearch, filterBrand, price]);
 
   return (
     <div className="grid grid-cols-4">
+      {/* Product should have photo scr so that we can fetch this photo from the backend */}
       {items?.map((product) => (
         <ProductCard
           key={product.id}
           brand={product.brand}
           name={product.name}
           price={product.price}
+          description={product.description}
           paymentlistener={paymentlistener}
           productdetail={() => productdetail(product)}
         />
