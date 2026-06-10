@@ -1,5 +1,5 @@
 export default function ProductCard({
-  key,
+  product,
   name,
   brand,
   price,
@@ -9,7 +9,7 @@ export default function ProductCard({
 }) {
   const goToPayemnt = () => {
     paymentlistener(true);
-    productdetail(key);
+    productdetail(product);
   };
   return (
     <div className="px-12 pb-9">
