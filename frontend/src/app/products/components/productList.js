@@ -1,5 +1,6 @@
 import ProductCard from "./productCard";
 import React, { useState, useEffect } from "react";
+import { filterProducts } from "../productFilters.mjs";
 
 export default function ProductList({
   filterBrand,
@@ -27,42 +28,14 @@ export default function ProductList({
   };
 
   useEffect(() => {
-    setItems(products);
-  }, [products]);
-
-  const applyFilters = () => {
-    let filteredItems = products;
-
-    // search filter
-    if (filterSearch) {
-      filteredItems = filteredItems.filter((item) => {
-        return (
-          item.name.toLowerCase().includes(filterSearch.toLowerCase()) ||
-          item.brand.toLowerCase().includes(filterSearch.toLowerCase())
-        );
-      });
-    }
-
-    // brand filter
-    if (filterBrand && filterBrand !== "All Products") {
-      filteredItems = filteredItems.filter((item) => {
-        return item.brand === filterBrand;
-      });
-    }
-
-    // price filter
-    if (price && price.length === 2) {
-      filteredItems = filteredItems.filter((item) => {
-        return item.price >= price[0] && item.price <= price[1];
-      });
-    }
-
-    setItems(filteredItems);
-  };
-
-  React.useEffect(() => {
-    applyFilters();
-  }, [filterSearch, filterBrand, price]);
+    setItems(
+      filterProducts(products, {
+        search: filterSearch,
+        brand: filterBrand,
+        price,
+      })
+    );
+  }, [products, filterSearch, filterBrand, price]);
 
   return (
     <div className="grid grid-cols-4">
