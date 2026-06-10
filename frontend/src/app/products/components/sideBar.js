@@ -4,7 +4,7 @@ const brandList = [
   { id: 1, brand: "All Products" },
   { id: 2, brand: "Apple" },
   { id: 3, brand: "Samsung" },
-  { id: 4, brand: "One Plus" },
+  { id: 4, brand: "OnePlus" },
   { id: 5, brand: "Google Pixel" },
 ];
 const categoryList = [
@@ -12,6 +12,7 @@ const categoryList = [
   { id: 2, list: "Phone Case" },
 ];
 const SideBar = ({
+  selectedbranch,
   onBrandClick,
   Searchlistener,
   priceValue,
@@ -31,13 +32,17 @@ const SideBar = ({
         />
       </div>
       <div className="font-bold m-2">Brand List</div>
-      <div className="px-x3 w-full text-start items-start justify-start">
+      <div className=" w-full text-start items-start justify-start">
         <ul>
           {brandList.map((item) => (
             <li key={item.id} className="list-none">
               <button
-                className="m-3 overflow-hidden text-ellipsis whitespace-nowrap"
                 onClick={() => onBrandClick(item.brand)}
+                className={` m-1 py-2 px-5  overflow-hidden text-ellipsis whitespace-nowrap w-full rounded-lg text-start ${
+                  item.brand === selectedbranch
+                    ? "text-white bg-slate-900"
+                    : "text-black"
+                }`}
               >
                 {item.brand}
               </button>
@@ -46,11 +51,11 @@ const SideBar = ({
         </ul>
       </div>
       <div className="font-bold m-2">Category</div>
-      <div className="px-x3 w-full text-start items-start justify-start">
+      <div className="w-full text-start items-start justify-start">
         <ul>
           {categoryList.map((item) => (
             <li key={item.id}>
-              <button className="m-3 overflow-hidden text-ellipsis whitespace-nowrap">
+              <button className="py-2 px-5 m-1 overflow-hidden text-ellipsis whitespace-nowrap">
                 {item.list}
               </button>
             </li>

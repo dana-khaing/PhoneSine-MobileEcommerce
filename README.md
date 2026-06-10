@@ -18,3 +18,7 @@ localhost:8080/deleteall (to delete all of the user data)
 // Used MySQL for database
 // We can store the user data in the database in the machine (Local ony though)
 // Apart for machine, I'm really doubt that database can be run (I'll try to use only server)
+
+# To Run Tests
+
+Run `pnpm test` from both the `frontend` and `backend` directories.
