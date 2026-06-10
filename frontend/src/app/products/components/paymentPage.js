@@ -1,4 +1,14 @@
+"use client";
+
+import { useContext } from "react";
+import { CartContext } from "../../contexts/cartContext";
+
 export default function Payment({ backToProduct, productdetail }) {
+  const { addItem, setIsCartOpen } = useContext(CartContext);
+  const addToCart = (openCart = false) => {
+    addItem(productdetail);
+    if (openCart) setIsCartOpen(true);
+  };
   return (
     <div className="w-full p-5 flex-row">
       <div className="m-3">
@@ -31,12 +41,12 @@ export default function Payment({ backToProduct, productdetail }) {
           </div>
           <div className="flex justify-around">
             <div className="w-[45%] text-lg font-bold my-2">
-              <button className=" w-full h-12 bg-transparent border-[1px] border-black text-black hover:bg-black hover:text-white rounded-sm">
+              <button onClick={() => addToCart(true)} className=" w-full h-12 bg-transparent border-[1px] border-black text-black hover:bg-black hover:text-white rounded-sm">
                 Buy
               </button>
             </div>
             <div className="w-[45%] text-lg font-bold my-2">
-              <button className="w-full h-12 bg-transparent border-[1px] border-black text-black hover:bg-black hover:text-white rounded-sm">
+              <button onClick={() => addToCart()} className="w-full h-12 bg-transparent border-[1px] border-black text-black hover:bg-black hover:text-white rounded-sm">
                 Add to Cart
               </button>
             </div>
