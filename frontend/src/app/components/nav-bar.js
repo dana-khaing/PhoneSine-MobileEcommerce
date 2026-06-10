@@ -15,15 +15,7 @@ export default function NavBar({ Searchlistener }) {
         <NavList />
       </div>
       <div className="flex items-center justify-end w-[33%]">
-        <input
-          className="border border-gray-300 rounded-3xl px-3 py-0 w-32 text-base"
-          type="text"
-          placeholder="Search"
-          onChange={Searchlistener}
-        />
-        <Button variant="ghost" className=" flex pl-[0.5rem] pr-1.5">
-          <Search className="w-5 h-5  text-neutral-600 hover:text-black" />
-        </Button>
+        {/* <Button variant="ghost" className=" flex pl-[0.5rem] pr-1.5"></Button> */}
         <Button variant="ghost" className="p-1.5">
           <ShoppingBag className="w-5 h-5  text-neutral-600 hover:text-black" />
         </Button>

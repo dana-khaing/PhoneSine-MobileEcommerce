@@ -3,13 +3,14 @@
     "id": 1,
     "name": "IPHONE 14 PRO",
     "brand": "Apple",
-    "price": 999.99
+    "price": 999.99,
+    "description": "The iPhone 14 Pro is the latest and greatest from Apple. It features a 6.1-inch Super Retina XDR display, a powerful A16 Bionic chip, and a triple-camera system with 12MP Ultra Wide, Wide, and Telephoto cameras. It also has 5G capabilities, Face ID, and MagSafe wireless charging. The iPhone 14 Pro is available in four stunning finishes: Graphite, Gold, Silver, and Sierra Blue. Get yours today and experience the future of smartphones!"
   },
   {
     "id": 2,
-    "name": "GALAXY S22 ULTRA",
+    "name": "GALAXY S21 ULTRA",
     "brand": "Samsung",
-    "price": 1299
+    "price": 1000.99
   },
   {
     "id": 3,
@@ -25,7 +26,7 @@
   },
   {
     "id": 5,
-    "name": "GALAXY S22 ULTRA",
+    "name": "GALAXY S21 ULTRA",
     "brand": "Samsung",
     "price": 1299
   },

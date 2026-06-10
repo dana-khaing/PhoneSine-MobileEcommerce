@@ -3,6 +3,7 @@
 import ProductList from "./components/productList.js";
 import SideBar from "./components/sideBar.js";
 import { useState } from "react";
+import Payment from "./components/paymentPage.js";
 
 export default function ProductsPage() {
   const MIN = 100;
@@ -10,6 +11,8 @@ export default function ProductsPage() {
   const [filterBrand, setFilterBrand] = useState("All Products");
   const [search, setSearch] = useState("");
   const [values, setValues] = useState([MIN, MAX]);
+  const [payment, setPayment] = useState(false);
+  const [detailsProduct, setDetailsProduct] = useState([]);
 
   const handleFilterChange = (catbrand) => {
     setFilterBrand(catbrand);
@@ -22,12 +25,22 @@ export default function ProductsPage() {
   const handlePriceChange = (price) => {
     setValues(price);
   };
+  const paymentlisteneropen = () => {
+    setPayment(true);
+  };
+  const paymentlistenerclose = () => {
+    setPayment(false);
+  };
+  const productDetailskey = (product) => {
+    setDetailsProduct(product);
+  };
 
   return (
     <div className="my-0 flex justify-evenly w-screen">
       <div className="w-[15%] my-5 mx-5 h-screen shadow-md border-solid border-2 px-5 py-5 flex-shrink-0 overflow-hidden text-ellipsis whitespace-nowrap">
         <SideBar
           onBrandClick={handleFilterChange}
+          selectedbranch={filterBrand}
           Searchlistener={handleSearchChange}
           priceListener={handlePriceChange}
           priceValue={values}
@@ -35,18 +48,27 @@ export default function ProductsPage() {
           MAX={MAX}
         />
       </div>
-      <div className="flex-1">
-        <p className="py-[1.1rem] mx-5 flex justify-center">
-          {filterBrand.toUpperCase()}
-        </p>
-        <div>
-          <ProductList
-            filterBrand={filterBrand}
-            filterSearch={search}
-            price={values}
-          />
+      {payment ? (
+        <Payment
+          backToProduct={paymentlistenerclose}
+          productdetail={detailsProduct}
+        />
+      ) : (
+        <div className="flex-1">
+          <p className="py-[1.1rem] mx-5 flex justify-center">
+            {filterBrand.toUpperCase()}
+          </p>
+          <div>
+            <ProductList
+              filterBrand={filterBrand}
+              filterSearch={search}
+              price={values}
+              paymentlistener={paymentlisteneropen}
+              productdetail={productDetailskey}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

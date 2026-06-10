@@ -22,10 +22,10 @@ export const PriceRange = ({ priceValue, priceListener, MIN, MAX }) => {
         min={MIN}
         max={MAX}
         renderThumb={(props, state) => {
-          const { key, ...restProps } = props; // Destructure key from props
+          const { key, ...restProps } = props;
           return (
             <div
-              key={state.index} // Ensure key is assigned correctly
+              key={state.index}
               {...restProps}
               style={{ ...restProps.style, ...thumbStyle }}
             />
