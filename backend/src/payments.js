@@ -4,12 +4,15 @@ const {
   createStripeCheckoutBody,
   validateCheckout,
 } = require("./paymentService");
-const { calculateOrderTotal } = require("./orderService");
-const { Order, OrderItem } = require("../models");
+const { Order } = require("../models");
+const { optionalAuth } = require("./authMiddleware");
+const { createOrderWithItems } = require("./orderRepository");
+const { createCheckoutSession, retrieveCheckoutSession } = require("./stripeApi");
+const { verifyPaidCheckoutSession } = require("./orderService");
 
 const router = express.Router();
 
-router.post("/create-checkout-session", async (req, res) => {
+router.post("/create-checkout-session", optionalAuth, async (req, res) => {
   const { items, checkout } = req.body;
   let order;
 
@@ -22,44 +25,25 @@ router.post("/create-checkout-session", async (req, res) => {
 
   try {
     validateCheckout(checkout);
+    if (
+      req.user &&
+      checkout.email.toLowerCase() !== req.user.email.toLowerCase()
+    ) {
+      return res.status(400).send("Checkout email must match signed-in user");
+    }
     const checkoutItems = buildCheckoutItems(items);
-    order = await Order.create({
-      email: checkout.email,
-      status: "pending",
-      totalAmount: calculateOrderTotal(checkoutItems, checkout.deliveryMethod),
-      deliveryMethod: checkout.deliveryMethod,
-      shippingAddress: checkout,
+    order = await createOrderWithItems({
+      checkout,
+      checkoutItems,
+      userId: req.user?.userId,
     });
-    await OrderItem.bulkCreate(
-      checkoutItems.map((item) => ({
-        orderId: order.id,
-        productId: item.productId,
-        name: item.name,
-        unitAmount: item.unitAmount,
-        quantity: item.quantity,
-      }))
-    );
     const body = createStripeCheckoutBody(
       checkoutItems,
       checkout,
       process.env.FRONTEND_URL || "http://localhost:3000"
     );
     body.set("metadata[order_id]", order.id);
-    const response = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Stripe-Version": "2026-02-25.clover",
-      },
-      body,
-    });
-    const session = await response.json();
-
-    if (!response.ok) {
-      await order.destroy();
-      return res.status(502).send(session.error?.message || "Unable to create payment session");
-    }
+    const session = await createCheckoutSession(body);
 
     await order.update({ stripeSessionId: session.id });
     return res.json({ url: session.url });
@@ -67,6 +51,33 @@ router.post("/create-checkout-session", async (req, res) => {
     if (order) {
       await order.update({ status: "failed" });
     }
+    return res.status(400).send(error.message);
+  }
+});
+
+router.get("/checkout-session/:sessionId", async (req, res) => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return res.status(503).send("Stripe is not configured");
+  }
+
+  try {
+    const session = await retrieveCheckoutSession(req.params.sessionId);
+    const order = await Order.findOne({
+      where: { stripeSessionId: session.id },
+    });
+    if (!order) return res.status(404).send("Order not found");
+
+    const verified = verifyPaidCheckoutSession(session, order);
+    if (verified && order.status !== "paid") {
+      await order.update({ status: "paid" });
+    }
+
+    return res.json({
+      verified,
+      orderId: order.id,
+      status: verified ? "paid" : order.status,
+    });
+  } catch (error) {
     return res.status(400).send(error.message);
   }
 });

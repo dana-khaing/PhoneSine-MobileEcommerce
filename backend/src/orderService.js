@@ -26,4 +26,28 @@ function verifyStripeSignature(rawBody, signatureHeader, secret, now = Date.now(
     crypto.timingSafeEqual(actual, expectedBuffer);
 }
 
-module.exports = { calculateOrderTotal, verifyStripeSignature };
+function orderStatusForStripeEvent(eventType) {
+  return {
+    "checkout.session.completed": "paid",
+    "checkout.session.expired": "cancelled",
+  }[eventType];
+}
+
+function verifyPaidCheckoutSession(session, order) {
+  return Boolean(
+    session &&
+      order &&
+      session.id === order.stripeSessionId &&
+      session.payment_status === "paid" &&
+      session.status === "complete" &&
+      session.amount_total === order.totalAmount &&
+      String(session.metadata?.order_id) === String(order.id)
+  );
+}
+
+module.exports = {
+  calculateOrderTotal,
+  orderStatusForStripeEvent,
+  verifyPaidCheckoutSession,
+  verifyStripeSignature,
+};

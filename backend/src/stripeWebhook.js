@@ -1,5 +1,5 @@
-const { Order } = require("../models");
 const { verifyStripeSignature } = require("./orderService");
+const { processStripeEvent } = require("./webhookRepository");
 
 async function stripeWebhook(req, res) {
   const signature = req.headers["stripe-signature"];
@@ -19,20 +19,12 @@ async function stripeWebhook(req, res) {
   } catch {
     return res.status(400).send("Invalid webhook payload");
   }
-  const session = event.data?.object;
-  const statuses = {
-    "checkout.session.completed": "paid",
-    "checkout.session.expired": "cancelled",
-  };
-
-  if (statuses[event.type] && session?.id) {
-    await Order.update(
-      { status: statuses[event.type] },
-      { where: { stripeSessionId: session.id } }
-    );
+  if (!event.id || !event.type) {
+    return res.status(400).send("Invalid Stripe event");
   }
 
-  return res.json({ received: true });
+  const result = await processStripeEvent(event);
+  return res.json({ received: true, duplicate: result.duplicate });
 }
 
 module.exports = { stripeWebhook };
