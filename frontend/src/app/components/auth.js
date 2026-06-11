@@ -7,6 +7,7 @@ import UserAvator from "./auth/userAvatar";
 import { jwtDecode } from "jwt-decode";
 import { AuthContext } from "../contexts/authContext";
 import { useToast } from "@/components/ui/use-toast";
+import { clearSession, refreshSession } from "./auth/session.mjs";
 
 const Auth = () => {
   const { toast } = useToast();
@@ -45,14 +46,16 @@ const Auth = () => {
       const timeLeft = exp - currentTime;
 
       if (timeLeft < 0) {
-        localStorage.removeItem("token");
-        setUserIsLogin(false);
-        setUserName("");
-        setUserEmail("");
-        toast({
-          className: " bg-neutral-900 text-white",
-          title: "Login failed.",
-          description: "Token expired",
+        refreshSession().then(handleSessionTimeOut).catch(() => {
+          clearSession();
+          setUserIsLogin(false);
+          setUserName("");
+          setUserEmail("");
+          toast({
+            className: " bg-neutral-900 text-white",
+            title: "Login failed.",
+            description: "Session expired",
+          });
         });
       } else {
         setUserName(decoded.username);
@@ -65,7 +68,7 @@ const Auth = () => {
         title: "Login failed.",
         description: "Invalid token",
       });
-      localStorage.removeItem("token");
+      clearSession();
       setUserIsLogin(false);
       setUserName("");
       setUserEmail("");
