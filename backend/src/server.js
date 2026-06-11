@@ -4,6 +4,7 @@ const cors = require("cors");
 const path = require("path");
 const app = express();
 const authRoute = require("./auth");
+const paymentRoute = require("./payments");
 const db = require("../models");
 const { Userdetail } = require("../models");
 
@@ -11,6 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 app.use("/auth", authRoute);
+app.use("/payments", paymentRoute);
 
 // test subject for sequelize database
 // app.get("/insert", async (req, res) => {

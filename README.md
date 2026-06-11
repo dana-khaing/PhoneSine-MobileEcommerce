@@ -22,3 +22,9 @@ localhost:8080/deleteall (to delete all of the user data)
 # To Run Tests
 
 Run `pnpm test` from both the `frontend` and `backend` directories.
+
+# Stripe Checkout
+
+Set `STRIPE_SECRET_KEY` and `FRONTEND_URL` in `backend/.env`, then set
+`NEXT_PUBLIC_API_PAYMENT_URL` to the backend `/payments/create-checkout-session`
+endpoint in `frontend/.env.local`.
