@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { Userdetail } = require("../models");
 
 function readUser(req) {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, "");
@@ -27,15 +28,15 @@ function optionalAuth(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-  return requireAuth(req, res, () => {
-    const admins = (process.env.ADMIN_EMAILS || "")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean);
-    if (!admins.includes(req.user.email.toLowerCase())) {
-      return res.status(403).send("Admin access required");
+  return requireAuth(req, res, async () => {
+    try {
+      const user = await Userdetail.findByPk(req.user.userId);
+      if (!user || user.role !== "admin") return res.status(403).send("Admin access required");
+      req.user.role = user.role;
+      return next();
+    } catch {
+      return res.status(500).send("Unable to verify admin access");
     }
-    return next();
   });
 }
 
