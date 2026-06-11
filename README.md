@@ -69,3 +69,9 @@ running checkout locally.
   a webhook through the real HTTP route.
 - `/admin/health/payments`, `/admin/reconcile`, and `/admin/audit-logs` provide
   payment monitoring, reconciliation, and audit history.
+
+## Account security
+
+New accounts receive a verification link through `EMAIL_WEBHOOK_URL`, or in the
+backend console during local development. Users must verify their email before
+signing in.
