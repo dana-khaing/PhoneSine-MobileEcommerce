@@ -16,6 +16,8 @@ const initialDetails = {
   address: "",
   city: "",
   postcode: "",
+  country: "GB",
+  promotionCode: "",
 };
 
 export default function CheckoutPage() {
@@ -24,6 +26,7 @@ export default function CheckoutPage() {
   const [deliveryMethod, setDeliveryMethod] = useState("standard");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [quote, setQuote] = useState(null);
   const total = checkoutTotal(subtotal, deliveryMethod);
 
   const updateDetails = (event) => {
@@ -71,6 +74,24 @@ export default function CheckoutPage() {
     }
   };
 
+  const updateQuote = async () => {
+    setMessage("");
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_PAYMENT_QUOTE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items,
+          checkout: { ...details, deliveryMethod },
+        }),
+      });
+      if (!response.ok) throw new Error(await response.text());
+      setQuote(await response.json());
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
   if (items.length === 0) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-20 text-center">
@@ -98,7 +119,13 @@ export default function CheckoutPage() {
           <input className="rounded border p-3 sm:col-span-2" name="address" placeholder="Address" value={details.address} onChange={updateDetails} />
           <input className="rounded border p-3" name="city" placeholder="City" value={details.city} onChange={updateDetails} />
           <input className="rounded border p-3" name="postcode" placeholder="Postcode" value={details.postcode} onChange={updateDetails} />
+          <input className="rounded border p-3" name="country" maxLength="2" placeholder="Country code (GB)" value={details.country} onChange={updateDetails} />
+          <input className="rounded border p-3" name="promotionCode" placeholder="Promotion code" value={details.promotionCode} onChange={updateDetails} />
         </section>
+
+        <button className="rounded border px-5 py-3" type="button" onClick={updateQuote}>
+          Update tax and promotion
+        </button>
 
         <section className="space-y-3 rounded-lg border p-6">
           <h2 className="text-xl font-bold">Delivery</h2>
@@ -132,7 +159,9 @@ export default function CheckoutPage() {
         <div className="space-y-2 border-t pt-4">
           <div className="flex justify-between"><span>Subtotal</span><span>£{subtotal.toFixed(2)}</span></div>
           <div className="flex justify-between"><span>Delivery</span><span>£{deliveryOptions[deliveryMethod].price.toFixed(2)}</span></div>
-          <div className="flex justify-between text-lg font-bold"><span>Total</span><span>£{total.toFixed(2)}</span></div>
+          {quote && <div className="flex justify-between"><span>Discount</span><span>-£{(quote.discountAmount / 100).toFixed(2)}</span></div>}
+          {quote && <div className="flex justify-between"><span>Tax ({quote.taxRate}%)</span><span>£{(quote.taxAmount / 100).toFixed(2)}</span></div>}
+          <div className="flex justify-between text-lg font-bold"><span>Total</span><span>£{quote ? (quote.totalAmount / 100).toFixed(2) : total.toFixed(2)}</span></div>
         </div>
       </aside>
     </main>
