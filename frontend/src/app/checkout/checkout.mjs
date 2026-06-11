@@ -15,6 +15,7 @@ export function validateCheckoutDetails(details) {
     "address",
     "city",
     "postcode",
+    "country",
   ];
 
   if (requiredFields.some((field) => !details[field]?.trim())) {

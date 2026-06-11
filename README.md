@@ -41,3 +41,16 @@ endpoint for authenticated order history.
 
 Copy the included `.env.example` files and replace placeholder values before
 running checkout locally.
+
+## Commerce Operations
+
+- Products, stock, reservations, promotions, VAT, order events, and notification
+  outbox records are database-backed.
+- `WELCOME10` is seeded as an example 10% promotion.
+- Set `ADMIN_EMAILS` to a comma-separated list of admin accounts.
+- Set `EMAIL_WEBHOOK_URL` to a provider endpoint accepting
+  `{ to, subject, text }`; without it, notifications are logged locally.
+- Admin operations are available under `/admin` and the frontend `/admin` page.
+- The backend runs reservation cleanup and notification delivery every 10
+  minutes; admins can also trigger both operations manually.
+- Admin refund amounts are expressed in the smallest currency unit (pence).

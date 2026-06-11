@@ -6,6 +6,16 @@ import { useEffect, useState } from "react";
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [message, setMessage] = useState("Loading orders...");
+  const cancelOrder = async (orderId) => {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_ORDERS_URL}/${orderId}/cancel`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
+    setMessage(response.ok ? "Cancellation/refund request submitted." : await response.text());
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -50,6 +60,19 @@ export default function OrdersPage() {
                 </li>
               ))}
             </ul>
+            <div className="mt-4 border-t pt-4">
+              <h3 className="font-semibold">Timeline</h3>
+              {order.events?.map((event) => (
+                <p key={event.id} className="py-1 text-sm text-neutral-600">
+                  {new Date(event.createdAt).toLocaleString()} · {event.message}
+                </p>
+              ))}
+            </div>
+            {!["cancelled", "refunded", "partially_refunded"].includes(order.status) && (
+              <button onClick={() => cancelOrder(order.id)} className="mt-4 rounded border px-4 py-2">
+                Cancel or request refund
+              </button>
+            )}
           </article>
         ))}
       </div>

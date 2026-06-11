@@ -9,6 +9,7 @@ const validDetails = {
   address: "1 High Street",
   city: "London",
   postcode: "SW1A 1AA",
+  country: "GB",
 };
 
 test("adds the selected delivery price to checkout totals", () => {
