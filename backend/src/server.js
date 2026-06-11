@@ -3,6 +3,7 @@ const db = require("../models");
 const { createApp } = require("./app");
 const { cleanupAbandonedOrders } = require("./orderOperations");
 const { deliverPendingNotifications } = require("./notificationService");
+const { reconcilePayments } = require("./reconciliationService");
 
 const PORT = process.env.PORT;
 db.sequelize.authenticate().then(() => {
@@ -11,6 +12,7 @@ db.sequelize.authenticate().then(() => {
     try {
       await cleanupAbandonedOrders();
       await deliverPendingNotifications();
+      await reconcilePayments();
     } catch (error) {
       console.error("Commerce maintenance failed:", error.message);
     }

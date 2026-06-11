@@ -54,3 +54,18 @@ running checkout locally.
 - The backend runs reservation cleanup and notification delivery every 10
   minutes; admins can also trigger both operations manually.
 - Admin refund amounts are expressed in the smallest currency unit (pence).
+
+## Payment production operations
+
+- Every checkout request must send an `Idempotency-Key` header. Stripe checkout
+  and refund calls also receive deterministic idempotency keys.
+- Supported checkout currencies are GBP, USD, and EUR. Override conversion
+  rates with `CURRENCY_RATES_JSON`; production deployments should update these
+  rates from a trusted source.
+- Configure Stripe to send checkout completion/expiration/asynchronous payment,
+  refund, and `charge.dispute.*` events to `/payments/webhook`.
+- Run `stripe listen --forward-to localhost:8080/payments/webhook` for Stripe CLI
+  webhook testing. The backend integration suite also signs, sends, and retries
+  a webhook through the real HTTP route.
+- `/admin/health/payments`, `/admin/reconcile`, and `/admin/audit-logs` provide
+  payment monitoring, reconciliation, and audit history.
