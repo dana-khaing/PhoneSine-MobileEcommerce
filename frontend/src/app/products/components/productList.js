@@ -59,6 +59,7 @@ export default function ProductList({
           name={product.name}
           price={product.price}
           description={product.description}
+          availableStock={product.availableStock}
           paymentlistener={paymentlistener}
           productdetail={() => productdetail(product)}
         />

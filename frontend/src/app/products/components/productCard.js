@@ -4,6 +4,7 @@ export default function ProductCard({
   brand,
   price,
   description,
+  availableStock,
   paymentlistener,
   productdetail,
 }) {
@@ -29,10 +30,11 @@ export default function ProductCard({
             <div className="w-full text-center">
               {/* U can add the detail page button HERE */}
               <button
-                className=" w-16 bg-transparent border-[1px] border-black text-black hover:bg-black hover:text-white rounded-sm"
+                disabled={availableStock === 0}
+                className=" w-16 bg-transparent border-[1px] border-black text-black hover:bg-black hover:text-white rounded-sm disabled:cursor-not-allowed disabled:opacity-40"
                 onClick={goToPayemnt}
               >
-                Buy
+                {availableStock === 0 ? "Sold" : "Buy"}
               </button>
             </div>
           </span>
