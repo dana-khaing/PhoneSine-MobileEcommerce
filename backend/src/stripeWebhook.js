@@ -23,8 +23,13 @@ async function stripeWebhook(req, res) {
     return res.status(400).send("Invalid Stripe event");
   }
 
-  const result = await processStripeEvent(event);
-  return res.json({ received: true, duplicate: result.duplicate });
+  try {
+    const result = await processStripeEvent(event);
+    return res.json({ received: true, duplicate: result.duplicate });
+  } catch (error) {
+    console.error("Stripe webhook processing failed:", event.id, error.message);
+    return res.status(500).send("Webhook processing failed");
+  }
 }
 
 module.exports = { stripeWebhook };

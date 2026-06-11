@@ -16,6 +16,8 @@ test("calculates server-side order totals including delivery", () => {
 
 test("maps supported Stripe events to order statuses", () => {
   assert.equal(orderStatusForStripeEvent("checkout.session.completed"), "paid");
+  assert.equal(orderStatusForStripeEvent("checkout.session.async_payment_succeeded"), "paid");
+  assert.equal(orderStatusForStripeEvent("checkout.session.async_payment_failed"), "failed");
   assert.equal(orderStatusForStripeEvent("checkout.session.expired"), "cancelled");
   assert.equal(orderStatusForStripeEvent("payment_intent.created"), undefined);
 });

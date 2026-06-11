@@ -26,6 +26,7 @@ router.post("/quote", async (req, res) => {
 router.post("/create-checkout-session", optionalAuth, async (req, res) => {
   const { items, checkout } = req.body;
   let order;
+  const idempotencyKey = req.headers["idempotency-key"];
 
   if (!process.env.STRIPE_SECRET_KEY) {
     return res.status(503).send("Stripe is not configured");
@@ -33,8 +34,17 @@ router.post("/create-checkout-session", optionalAuth, async (req, res) => {
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).send("Cart and checkout details are required");
   }
+  if (!idempotencyKey || !/^[a-zA-Z0-9_-]{12,255}$/.test(idempotencyKey)) {
+    return res.status(400).send("A valid Idempotency-Key header is required");
+  }
 
   try {
+    const existing = await Order.findOne({ where: { idempotencyKey } });
+    if (existing?.stripeSessionId) {
+      const session = await retrieveCheckoutSession(existing.stripeSessionId);
+      return res.json({ url: session.url, reused: true });
+    }
+    if (existing) return res.status(409).send("Checkout request is already being processed");
     validateCheckout(checkout);
     if (
       req.user &&
@@ -46,6 +56,7 @@ router.post("/create-checkout-session", optionalAuth, async (req, res) => {
       checkout,
       cartItems: items,
       userId: req.user?.userId,
+      idempotencyKey,
     });
     order = created.order;
     const checkoutItems = created.checkoutItems;
@@ -65,11 +76,13 @@ router.post("/create-checkout-session", optionalAuth, async (req, res) => {
       } else {
         body.set("customer_creation", "always");
       }
-      body.set("payment_intent_data[setup_future_usage]", "off_session");
+      if (checkout.savePaymentMethod === true) {
+        body.set("payment_intent_data[setup_future_usage]", "off_session");
+      }
     }
     body.set("metadata[tax_amount]", order.taxAmount);
     body.set("metadata[discount_amount]", order.discountAmount);
-    const session = await createCheckoutSession(body);
+    const session = await createCheckoutSession(body, `checkout-${idempotencyKey}`);
 
     await order.update({ stripeSessionId: session.id });
     return res.json({ url: session.url });

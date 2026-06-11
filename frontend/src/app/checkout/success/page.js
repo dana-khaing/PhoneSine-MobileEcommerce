@@ -27,6 +27,7 @@ export default function CheckoutSuccessPage() {
         if (!payment.verified) throw new Error("Payment has not been confirmed.");
         clearCart();
         sessionStorage.removeItem("phone-sine-checkout");
+        sessionStorage.removeItem("phone-sine-payment-key");
         setResult({
           status: "success",
           message: `Payment confirmed for order #${payment.orderId}.`,

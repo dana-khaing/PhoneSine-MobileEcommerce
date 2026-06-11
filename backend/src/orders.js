@@ -1,5 +1,5 @@
 const express = require("express");
-const { Order, OrderEvent, OrderItem } = require("../models");
+const { Order, OrderEvent, OrderItem, Refund } = require("../models");
 const { requireAuth } = require("./authMiddleware");
 const { Op } = require("sequelize");
 const { cancelOrRefundOrder } = require("./orderOperations");
@@ -19,6 +19,7 @@ router.get("/", requireAuth, async (req, res) => {
       },
       include: [
         { model: OrderItem, as: "items" },
+        { model: Refund, as: "refunds" },
         {
           model: OrderEvent,
           as: "events",
