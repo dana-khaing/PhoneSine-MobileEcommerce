@@ -11,6 +11,7 @@ const {
 } = require("./authValidation");
 const JWT_SECRET = process.env.JWT_SECRET;
 const { issueEmailVerification, verifyEmailToken } = require("./emailVerificationService");
+const { issuePasswordReset, resetPassword } = require("./passwordResetService");
 
 router.post("/register", async (req, res) => {
   const { firstname, lastname, email, password } = req.body;
@@ -106,6 +107,25 @@ router.post("/resend-verification", async (req, res) => {
     return res.json({ sent: true });
   } catch {
     return res.status(503).send("Unable to send verification email");
+  }
+});
+
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const user = await Userdetail.findOne({ where: { email: normalizeEmail(req.body.email) } });
+    if (user) await issuePasswordReset(user);
+    return res.json({ sent: true });
+  } catch {
+    return res.status(503).send("Unable to send password reset email");
+  }
+});
+
+router.post("/reset-password", async (req, res) => {
+  try {
+    await resetPassword(req.body.token, req.body.password);
+    return res.json({ reset: true });
+  } catch (error) {
+    return res.status(400).send(error.message);
   }
 });
 
