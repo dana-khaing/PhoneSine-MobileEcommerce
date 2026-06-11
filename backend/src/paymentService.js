@@ -1,5 +1,31 @@
 const products = require("../public/productsList.json");
 const deliveryPrices = { standard: 0, express: 1250 };
+const requiredCheckoutFields = [
+  "email",
+  "firstName",
+  "lastName",
+  "address",
+  "city",
+  "postcode",
+  "deliveryMethod",
+];
+
+function validateCheckout(checkout) {
+  if (
+    !checkout ||
+    requiredCheckoutFields.some(
+      (field) => typeof checkout[field] !== "string" || !checkout[field].trim()
+    )
+  ) {
+    throw new Error("Complete checkout details are required");
+  }
+  if (!checkout.email.includes("@")) {
+    throw new Error("A valid checkout email is required");
+  }
+  if (deliveryPrices[checkout.deliveryMethod] === undefined) {
+    throw new Error("Invalid delivery method");
+  }
+}
 
 function buildCheckoutItems(cartItems) {
   return cartItems.map((cartItem) => {
@@ -54,4 +80,4 @@ function createStripeCheckoutBody(items, { email, deliveryMethod }, frontendUrl)
   return body;
 }
 
-module.exports = { buildCheckoutItems, createStripeCheckoutBody };
+module.exports = { buildCheckoutItems, createStripeCheckoutBody, validateCheckout };

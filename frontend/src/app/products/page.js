@@ -36,8 +36,8 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="my-0 flex justify-evenly w-screen">
-      <div className="w-[15%] my-5 mx-5 h-screen shadow-md border-solid border-2 px-5 py-5 flex-shrink-0 overflow-hidden text-ellipsis whitespace-nowrap">
+    <div className="my-0 flex w-full flex-col justify-evenly lg:flex-row">
+      <div className="m-5 overflow-hidden text-ellipsis whitespace-nowrap border-2 px-5 py-5 shadow-md lg:h-screen lg:w-[20%] lg:flex-shrink-0">
         <SideBar
           onBrandClick={handleFilterChange}
           selectedbranch={filterBrand}
