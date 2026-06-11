@@ -14,6 +14,7 @@ function buildCheckoutItems(cartItems) {
     }
 
     return {
+      productId: product.id,
       name: product.name,
       unitAmount: Math.round(product.price * 100),
       quantity,
@@ -28,6 +29,7 @@ function createStripeCheckoutBody(items, { email, deliveryMethod }, frontendUrl)
     cancel_url: `${frontendUrl}/checkout/cancel`,
     customer_email: email,
     "metadata[delivery_method]": deliveryMethod,
+    "metadata[order_id]": "",
   });
 
   items.forEach((item, index) => {

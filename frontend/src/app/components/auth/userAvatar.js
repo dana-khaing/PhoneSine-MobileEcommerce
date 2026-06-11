@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import Link from "next/link";
 
 const UserAvator = () => {
   const { userName, setUserIsLogin, setUserName, setUserEmail } =
@@ -36,7 +37,9 @@ const UserAvator = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent className=" p-2">
         <DropdownMenuGroup>
-          <DropdownMenuItem>My Account</DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link href="/orders">My Orders</Link>
+          </DropdownMenuItem>
           <DropdownMenuItem>Settings</DropdownMenuItem>
           <DropdownMenuItem>Support</DropdownMenuItem>
           <DropdownMenuSeparator />

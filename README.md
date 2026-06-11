@@ -28,3 +28,7 @@ Run `pnpm test` from both the `frontend` and `backend` directories.
 Set `STRIPE_SECRET_KEY` and `FRONTEND_URL` in `backend/.env`, then set
 `NEXT_PUBLIC_API_PAYMENT_URL` to the backend `/payments/create-checkout-session`
 endpoint in `frontend/.env.local`.
+
+Set `STRIPE_WEBHOOK_SECRET` in `backend/.env` and point Stripe webhooks to
+`/payments/webhook`. Set `NEXT_PUBLIC_API_ORDERS_URL` to the backend `/orders`
+endpoint for authenticated order history.
