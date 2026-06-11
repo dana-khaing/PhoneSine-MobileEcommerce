@@ -1,5 +1,5 @@
 const express = require("express");
-const { AuditLog, Notification, Order, OrderEvent, OrderItem, Product, Promotion, Refund } = require("../models");
+const { AuditLog, Notification, Order, OrderEvent, OrderItem, Product, Promotion, Refund, Userdetail } = require("../models");
 const { requireAdmin } = require("./authMiddleware");
 const {
   cancelOrRefundOrder,
@@ -120,6 +120,30 @@ router.get("/health/payments", async (_req, res) => {
     Notification.count({ where: { status: "failed" } }),
   ]);
   res.json({ pending, reviews, disputes, failedNotifications });
+});
+
+router.get("/users", async (_req, res) => {
+  res.json(await Userdetail.findAll({
+    attributes: ["id", "firstname", "lastname", "email", "role", "emailVerifiedAt", "createdAt"],
+    order: [["createdAt", "DESC"]],
+  }));
+});
+
+router.patch("/users/:id/role", async (req, res) => {
+  try {
+    if (!["admin", "customer"].includes(req.body.role)) throw new Error("Role must be admin or customer");
+    const user = await Userdetail.findByPk(req.params.id);
+    if (!user) return res.status(404).send("User not found");
+    if (user.role === "admin" && req.body.role !== "admin") {
+      const adminCount = await Userdetail.count({ where: { role: "admin" } });
+      if (adminCount <= 1) throw new Error("Cannot remove the last admin");
+    }
+    await user.update({ role: req.body.role });
+    await audit(req.user.email, "user_role_updated", "user", user.id, { role: user.role });
+    return res.json({ id: user.id, email: user.email, role: user.role });
+  } catch (error) {
+    return res.status(400).send(error.message);
+  }
 });
 
 router.get("/notifications", async (_req, res) => {

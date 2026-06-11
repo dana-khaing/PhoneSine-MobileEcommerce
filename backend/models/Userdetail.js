@@ -23,6 +23,11 @@ module.exports = (sequelize, DataTypes) => {
     emailVerifiedAt: {
       type: DataTypes.DATE,
     },
+    role: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "customer",
+    },
   });
 
   Userdetail.associate = ({ Order }) => {
