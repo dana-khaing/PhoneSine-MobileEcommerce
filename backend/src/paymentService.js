@@ -70,7 +70,7 @@ function createStripeCheckoutBody(
   });
 
   if (orderAmounts) {
-    body.set("line_items[0][price_data][currency]", "gbp");
+    body.set("line_items[0][price_data][currency]", orderAmounts.currency || "gbp");
     body.set("line_items[0][price_data][product_data][name]", "Phone Sine order");
     body.set("line_items[0][price_data][unit_amount]", orderAmounts.totalAmount);
     body.set("line_items[0][quantity]", 1);

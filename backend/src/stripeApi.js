@@ -1,18 +1,19 @@
 const STRIPE_API_URL = "https://api.stripe.com/v1";
 const STRIPE_VERSION = "2026-02-25.clover";
 
-function stripeHeaders(contentType) {
+function stripeHeaders(contentType, idempotencyKey) {
   return {
     Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
     ...(contentType ? { "Content-Type": contentType } : {}),
     "Stripe-Version": STRIPE_VERSION,
+    ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
   };
 }
 
-async function createCheckoutSession(body) {
+async function createCheckoutSession(body, idempotencyKey) {
   const response = await fetch(`${STRIPE_API_URL}/checkout/sessions`, {
     method: "POST",
-    headers: stripeHeaders("application/x-www-form-urlencoded"),
+    headers: stripeHeaders("application/x-www-form-urlencoded", idempotencyKey),
     body,
   });
   const session = await response.json();
@@ -42,7 +43,7 @@ async function retrieveCheckoutSession(sessionId) {
   return session;
 }
 
-async function createRefund(paymentIntentId, amount, metadata = {}) {
+async function createRefund(paymentIntentId, amount, metadata = {}, idempotencyKey) {
   const body = new URLSearchParams({
     payment_intent: paymentIntentId,
     ...(amount ? { amount: String(amount) } : {}),
@@ -52,12 +53,40 @@ async function createRefund(paymentIntentId, amount, metadata = {}) {
   );
   const response = await fetch(`${STRIPE_API_URL}/refunds`, {
     method: "POST",
-    headers: stripeHeaders("application/x-www-form-urlencoded"),
+    headers: stripeHeaders("application/x-www-form-urlencoded", idempotencyKey),
     body,
   });
   const refund = await response.json();
   if (!response.ok) throw new Error(refund.error?.message || "Unable to create refund");
   return refund;
+}
+
+async function listPaymentMethods(customerId) {
+  return stripeGet("/payment_methods", { customer: customerId, type: "card" });
+}
+
+async function detachPaymentMethod(paymentMethodId) {
+  if (!/^pm_[a-zA-Z0-9_]+$/.test(paymentMethodId)) throw new Error("Invalid payment method");
+  return stripePost(`/payment_methods/${encodeURIComponent(paymentMethodId)}/detach`);
+}
+
+async function stripeGet(path, params = {}) {
+  const query = new URLSearchParams(params);
+  const response = await fetch(`${STRIPE_API_URL}${path}?${query}`, { headers: stripeHeaders() });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error?.message || "Stripe request failed");
+  return result;
+}
+
+async function stripePost(path, body = new URLSearchParams(), idempotencyKey) {
+  const response = await fetch(`${STRIPE_API_URL}${path}`, {
+    method: "POST",
+    headers: stripeHeaders("application/x-www-form-urlencoded", idempotencyKey),
+    body,
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error?.message || "Stripe request failed");
+  return result;
 }
 
 async function expireCheckoutSession(sessionId) {
@@ -73,6 +102,8 @@ async function expireCheckoutSession(sessionId) {
 module.exports = {
   createCheckoutSession,
   createRefund,
+  detachPaymentMethod,
   expireCheckoutSession,
+  listPaymentMethods,
   retrieveCheckoutSession,
 };

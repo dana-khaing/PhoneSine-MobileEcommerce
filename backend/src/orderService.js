@@ -29,6 +29,8 @@ function verifyStripeSignature(rawBody, signatureHeader, secret, now = Date.now(
 function orderStatusForStripeEvent(eventType) {
   return {
     "checkout.session.completed": "paid",
+    "checkout.session.async_payment_succeeded": "paid",
+    "checkout.session.async_payment_failed": "failed",
     "checkout.session.expired": "cancelled",
     "charge.refunded": "refunded",
   }[eventType];
