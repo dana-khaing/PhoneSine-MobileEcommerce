@@ -1,12 +1,44 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const crypto = require("crypto");
-const { calculateOrderTotal, verifyStripeSignature } = require("../src/orderService");
+const {
+  calculateOrderTotal,
+  orderStatusForStripeEvent,
+  verifyPaidCheckoutSession,
+  verifyStripeSignature,
+} = require("../src/orderService");
 
 test("calculates server-side order totals including delivery", () => {
   const items = [{ unitAmount: 10000, quantity: 2 }];
   assert.equal(calculateOrderTotal(items, "standard"), 20000);
   assert.equal(calculateOrderTotal(items, "express"), 21250);
+});
+
+test("maps supported Stripe events to order statuses", () => {
+  assert.equal(orderStatusForStripeEvent("checkout.session.completed"), "paid");
+  assert.equal(orderStatusForStripeEvent("checkout.session.expired"), "cancelled");
+  assert.equal(orderStatusForStripeEvent("payment_intent.created"), undefined);
+});
+
+test("verifies paid sessions against the stored order", () => {
+  const order = { id: 42, stripeSessionId: "cs_test_123", totalAmount: 10000 };
+  const session = {
+    id: "cs_test_123",
+    payment_status: "paid",
+    status: "complete",
+    amount_total: 10000,
+    metadata: { order_id: "42" },
+  };
+
+  assert.equal(verifyPaidCheckoutSession(session, order), true);
+  assert.equal(
+    verifyPaidCheckoutSession({ ...session, amount_total: 9999 }, order),
+    false
+  );
+  assert.equal(
+    verifyPaidCheckoutSession({ ...session, payment_status: "unpaid" }, order),
+    false
+  );
 });
 
 test("verifies Stripe webhook signatures and rejects stale signatures", () => {

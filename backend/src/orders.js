@@ -1,13 +1,21 @@
 const express = require("express");
 const { Order, OrderItem } = require("../models");
 const { requireAuth } = require("./authMiddleware");
+const { Op } = require("sequelize");
 
 const router = express.Router();
 
 router.get("/", requireAuth, async (req, res) => {
   try {
+    const ownerConditions = [{ email: req.user.email }];
+    if (req.user.userId) {
+      ownerConditions.unshift({ userId: req.user.userId });
+    }
+
     const orders = await Order.findAll({
-      where: { email: req.user.email },
+      where: {
+        [Op.or]: ownerConditions,
+      },
       include: [{ model: OrderItem, as: "items" }],
       order: [["createdAt", "DESC"]],
     });
