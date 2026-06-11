@@ -6,7 +6,7 @@ pnpm run dev
 
 # To Run Backend
 
-nodemon src/server.js
+pnpm run dev
 
 // .env is for the backend and can be request at the groupchat
 
@@ -32,3 +32,6 @@ endpoint in `frontend/.env.local`.
 Set `STRIPE_WEBHOOK_SECRET` in `backend/.env` and point Stripe webhooks to
 `/payments/webhook`. Set `NEXT_PUBLIC_API_ORDERS_URL` to the backend `/orders`
 endpoint for authenticated order history.
+
+Copy the included `.env.example` files and replace placeholder values before
+running checkout locally.

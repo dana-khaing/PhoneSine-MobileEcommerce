@@ -8,7 +8,7 @@ const Items = [
 
 export const NavList = () => {
   return (
-    <div className="flex justify-center space-x-14">
+    <div className="flex flex-wrap justify-center gap-5 md:gap-10">
       {Items.map((item, index) => (
         <Link
           key={index}

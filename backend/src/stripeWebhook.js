@@ -13,7 +13,12 @@ async function stripeWebhook(req, res) {
     return res.status(400).send("Invalid Stripe signature");
   }
 
-  const event = JSON.parse(rawBody);
+  let event;
+  try {
+    event = JSON.parse(rawBody);
+  } catch {
+    return res.status(400).send("Invalid webhook payload");
+  }
   const session = event.data?.object;
   const statuses = {
     "checkout.session.completed": "paid",

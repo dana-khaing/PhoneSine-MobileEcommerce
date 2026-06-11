@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const {
   buildCheckoutItems,
   createStripeCheckoutBody,
+  validateCheckout,
 } = require("../src/paymentService");
 
 test("rebuilds checkout prices from the server catalogue", () => {
@@ -10,6 +11,22 @@ test("rebuilds checkout prices from the server catalogue", () => {
   assert.deepEqual(items, [
     { productId: 1, name: "IPHONE 14 PRO", unitAmount: 99999, quantity: 2 },
   ]);
+});
+
+test("validates complete checkout details before creating payments", () => {
+  const checkout = {
+    email: "buyer@example.com",
+    firstName: "Dana",
+    lastName: "Khaing",
+    address: "1 High Street",
+    city: "London",
+    postcode: "SW1A 1AA",
+    deliveryMethod: "standard",
+  };
+
+  assert.doesNotThrow(() => validateCheckout(checkout));
+  assert.throws(() => validateCheckout({ ...checkout, address: "" }), /Complete checkout/);
+  assert.throws(() => validateCheckout({ ...checkout, email: "invalid" }), /valid checkout email/);
 });
 
 test("rejects unknown products and invalid quantities", () => {
