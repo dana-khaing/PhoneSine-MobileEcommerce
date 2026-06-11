@@ -12,7 +12,7 @@ export default function ProductCard({
     productdetail(product);
   };
   return (
-    <div className="px-12 pb-9">
+    <div className="px-4 pb-9 sm:px-8">
       <div className="py-12 bg-gray-100 flex justify-center">
         <img
           src="/iph15-pro.jpeg"

@@ -2,6 +2,7 @@ const express = require("express");
 const {
   buildCheckoutItems,
   createStripeCheckoutBody,
+  validateCheckout,
 } = require("./paymentService");
 const { calculateOrderTotal } = require("./orderService");
 const { Order, OrderItem } = require("../models");
@@ -10,17 +11,19 @@ const router = express.Router();
 
 router.post("/create-checkout-session", async (req, res) => {
   const { items, checkout } = req.body;
+  let order;
 
   if (!process.env.STRIPE_SECRET_KEY) {
     return res.status(503).send("Stripe is not configured");
   }
-  if (!Array.isArray(items) || items.length === 0 || !checkout?.email) {
+  if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).send("Cart and checkout details are required");
   }
 
   try {
+    validateCheckout(checkout);
     const checkoutItems = buildCheckoutItems(items);
-    const order = await Order.create({
+    order = await Order.create({
       email: checkout.email,
       status: "pending",
       totalAmount: calculateOrderTotal(checkoutItems, checkout.deliveryMethod),
@@ -61,6 +64,9 @@ router.post("/create-checkout-session", async (req, res) => {
     await order.update({ stripeSessionId: session.id });
     return res.json({ url: session.url });
   } catch (error) {
+    if (order) {
+      await order.update({ status: "failed" });
+    }
     return res.status(400).send(error.message);
   }
 });
