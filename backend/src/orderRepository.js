@@ -1,16 +1,56 @@
-const { Order, OrderItem, sequelize } = require("../models");
-const { calculateOrderTotal } = require("./orderService");
+const { Order, OrderEvent, OrderItem, Product, Promotion, sequelize } = require("../models");
+const { calculateAmounts, validateAddress, validatePromotion } = require("./commerceService");
+const { reserveInventory } = require("./inventoryService");
+const { deliveryAmountFor } = require("./paymentService");
 
-async function createOrderWithItems({ checkout, checkoutItems, userId = null }) {
+async function loadCheckoutItems(cartItems, transaction) {
+  const items = [];
+  for (const cartItem of cartItems) {
+    const product = await Product.findByPk(cartItem.id, {
+      transaction,
+      lock: transaction.LOCK?.UPDATE,
+    });
+    const quantity = Number(cartItem.quantity);
+    if (!product || !product.active) throw new Error(`Unknown product: ${cartItem.id}`);
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
+      throw new Error(`Invalid quantity for product: ${cartItem.id}`);
+    }
+    items.push({
+      productId: product.id,
+      name: product.name,
+      unitAmount: product.priceAmount,
+      quantity,
+    });
+  }
+  return items;
+}
+
+async function createOrderWithItems({ checkout, cartItems, userId = null }) {
   return sequelize.transaction(async (transaction) => {
+    const checkoutItems = await loadCheckoutItems(cartItems, transaction);
+    const address = validateAddress(checkout);
+    const promotion = checkout.promotionCode
+      ? await Promotion.findOne({
+          where: { code: checkout.promotionCode.toUpperCase() },
+          transaction,
+        })
+      : null;
+    const percentOff = promotion ? validatePromotion(promotion) : 0;
+    const amounts = calculateAmounts(checkoutItems, {
+      country: address.country,
+      deliveryAmount: deliveryAmountFor(checkout.deliveryMethod),
+      percentOff,
+    });
+
     const order = await Order.create(
       {
         userId,
         email: checkout.email,
         status: "pending",
-        totalAmount: calculateOrderTotal(checkoutItems, checkout.deliveryMethod),
+        ...amounts,
+        promotionCode: promotion?.code,
         deliveryMethod: checkout.deliveryMethod,
-        shippingAddress: checkout,
+        shippingAddress: address,
       },
       { transaction }
     );
@@ -26,8 +66,42 @@ async function createOrderWithItems({ checkout, checkoutItems, userId = null }) 
       { transaction }
     );
 
-    return order;
+    await reserveInventory(
+      order.id,
+      checkoutItems,
+      transaction,
+      new Date(Date.now() + 30 * 60 * 1000)
+    );
+    await OrderEvent.create(
+      {
+        orderId: order.id,
+        type: "order_created",
+        message: "Order created and stock reserved",
+      },
+      { transaction }
+    );
+
+    return { order, checkoutItems };
   });
 }
 
-module.exports = { createOrderWithItems };
+async function quoteOrder({ checkout, cartItems }) {
+  return sequelize.transaction(async (transaction) => {
+    const checkoutItems = await loadCheckoutItems(cartItems, transaction);
+    const address = validateAddress(checkout);
+    const promotion = checkout.promotionCode
+      ? await Promotion.findOne({
+          where: { code: checkout.promotionCode.toUpperCase() },
+          transaction,
+        })
+      : null;
+    const percentOff = promotion ? validatePromotion(promotion) : 0;
+    return calculateAmounts(checkoutItems, {
+      country: address.country,
+      deliveryAmount: deliveryAmountFor(checkout.deliveryMethod),
+      percentOff,
+    });
+  });
+}
+
+module.exports = { createOrderWithItems, loadCheckoutItems, quoteOrder };

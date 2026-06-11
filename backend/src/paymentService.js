@@ -27,6 +27,12 @@ function validateCheckout(checkout) {
   }
 }
 
+function deliveryAmountFor(method) {
+  const amount = deliveryPrices[method];
+  if (amount === undefined) throw new Error("Invalid delivery method");
+  return amount;
+}
+
 function buildCheckoutItems(cartItems) {
   return cartItems.map((cartItem) => {
     const product = products.find((candidate) => candidate.id === cartItem.id);
@@ -48,7 +54,12 @@ function buildCheckoutItems(cartItems) {
   });
 }
 
-function createStripeCheckoutBody(items, { email, deliveryMethod }, frontendUrl) {
+function createStripeCheckoutBody(
+  items,
+  { email, deliveryMethod },
+  frontendUrl,
+  orderAmounts
+) {
   const body = new URLSearchParams({
     mode: "payment",
     success_url: `${frontendUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
@@ -58,13 +69,20 @@ function createStripeCheckoutBody(items, { email, deliveryMethod }, frontendUrl)
     "metadata[order_id]": "",
   });
 
+  if (orderAmounts) {
+    body.set("line_items[0][price_data][currency]", "gbp");
+    body.set("line_items[0][price_data][product_data][name]", "Phone Sine order");
+    body.set("line_items[0][price_data][unit_amount]", orderAmounts.totalAmount);
+    body.set("line_items[0][quantity]", 1);
+    return body;
+  }
+
   items.forEach((item, index) => {
     body.set(`line_items[${index}][price_data][currency]`, "gbp");
     body.set(`line_items[${index}][price_data][product_data][name]`, item.name);
     body.set(`line_items[${index}][price_data][unit_amount]`, item.unitAmount);
     body.set(`line_items[${index}][quantity]`, item.quantity);
   });
-
   const deliveryAmount = deliveryPrices[deliveryMethod];
   if (deliveryAmount === undefined) {
     throw new Error("Invalid delivery method");
@@ -80,4 +98,9 @@ function createStripeCheckoutBody(items, { email, deliveryMethod }, frontendUrl)
   return body;
 }
 
-module.exports = { buildCheckoutItems, createStripeCheckoutBody, validateCheckout };
+module.exports = {
+  buildCheckoutItems,
+  createStripeCheckoutBody,
+  deliveryAmountFor,
+  validateCheckout,
+};
