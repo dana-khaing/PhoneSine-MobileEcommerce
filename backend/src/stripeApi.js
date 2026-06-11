@@ -42,4 +42,37 @@ async function retrieveCheckoutSession(sessionId) {
   return session;
 }
 
-module.exports = { createCheckoutSession, retrieveCheckoutSession };
+async function createRefund(paymentIntentId, amount, metadata = {}) {
+  const body = new URLSearchParams({
+    payment_intent: paymentIntentId,
+    ...(amount ? { amount: String(amount) } : {}),
+  });
+  Object.entries(metadata).forEach(([key, value]) =>
+    body.set(`metadata[${key}]`, String(value))
+  );
+  const response = await fetch(`${STRIPE_API_URL}/refunds`, {
+    method: "POST",
+    headers: stripeHeaders("application/x-www-form-urlencoded"),
+    body,
+  });
+  const refund = await response.json();
+  if (!response.ok) throw new Error(refund.error?.message || "Unable to create refund");
+  return refund;
+}
+
+async function expireCheckoutSession(sessionId) {
+  const response = await fetch(
+    `${STRIPE_API_URL}/checkout/sessions/${encodeURIComponent(sessionId)}/expire`,
+    { method: "POST", headers: stripeHeaders("application/x-www-form-urlencoded") }
+  );
+  const session = await response.json();
+  if (!response.ok) throw new Error(session.error?.message || "Unable to cancel checkout");
+  return session;
+}
+
+module.exports = {
+  createCheckoutSession,
+  createRefund,
+  expireCheckoutSession,
+  retrieveCheckoutSession,
+};
