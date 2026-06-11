@@ -38,6 +38,10 @@ test("validates international addresses and promotions", () => {
   assert.throws(() => validateAddress({ country: "United Kingdom" }), /Complete/);
   assert.equal(validatePromotion({ active: true, percentOff: 10 }), 10);
   assert.throws(
+    () => validatePromotion({ active: true, percentOff: 10, maxUses: 2, useCount: 2 }),
+    /usage limit/
+  );
+  assert.throws(
     () => validatePromotion({ active: true, percentOff: 10, expiresAt: "2020-01-01" }),
     /expired/
   );

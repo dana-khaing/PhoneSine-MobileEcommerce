@@ -6,6 +6,7 @@ const subjects = {
   shipped: "Your Phone Sine order has shipped",
   delivered: "Your Phone Sine order was delivered",
   refund: "Your Phone Sine refund update",
+  dispute: "Action required: payment dispute update",
 };
 
 async function queueNotification(order, type, message, transaction) {

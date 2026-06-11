@@ -16,12 +16,18 @@ module.exports = (sequelize, DataTypes) => {
     refundAmount: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     trackingNumber: { type: DataTypes.STRING },
     carrier: { type: DataTypes.STRING },
+    currency: { type: DataTypes.STRING, allowNull: false, defaultValue: "gbp" },
+    idempotencyKey: { type: DataTypes.STRING, unique: true },
+    disputeId: { type: DataTypes.STRING },
+    disputeStatus: { type: DataTypes.STRING },
+    reconciledAt: { type: DataTypes.DATE },
   });
 
-  Order.associate = ({ OrderItem, Userdetail, OrderEvent }) => {
+  Order.associate = ({ OrderItem, Userdetail, OrderEvent, Refund }) => {
     Order.hasMany(OrderItem, { as: "items", foreignKey: "orderId" });
     Order.hasMany(OrderEvent, { as: "events", foreignKey: "orderId" });
     Order.belongsTo(Userdetail, { as: "user", foreignKey: "userId" });
+    Order.hasMany(Refund, { as: "refunds", foreignKey: "orderId" });
   };
 
   return Order;
