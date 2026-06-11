@@ -9,6 +9,7 @@ import { useContext } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { jwtDecode } from "jwt-decode";
+import { storeSession } from "./session.mjs";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,7 +38,7 @@ const Login = ({ closeallcard, handlesignup }) => {
     if (data.status === 200) {
       const gotData = await data.json();
       const token = gotData.token;
-      localStorage.setItem("token", token);
+      storeSession(gotData);
       try {
         setUserIsLogin(true);
         const decoded = jwtDecode(token);

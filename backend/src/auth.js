@@ -2,16 +2,15 @@ require("dotenv").config();
 const express = require("express");
 const bcrypt = require("bcrypt");
 const router = express.Router();
-const jwt = require("jsonwebtoken");
 const { Userdetail } = require("../models");
 const {
   normalizeEmail,
   validateLoginInput,
   validateRegistrationInput,
 } = require("./authValidation");
-const JWT_SECRET = process.env.JWT_SECRET;
 const { issueEmailVerification, verifyEmailToken } = require("./emailVerificationService");
 const { issuePasswordReset, resetPassword } = require("./passwordResetService");
+const { createSession, revokeSession, rotateSession } = require("./sessionService");
 
 router.post("/register", async (req, res) => {
   const { firstname, lastname, email, password } = req.body;
@@ -66,29 +65,10 @@ router.post("/login", async (req, res) => {
   if (!currentUser.emailVerifiedAt) {
     return res.status(403).send("Verify your email before signing in");
   }
-  if (rememberMe === true) {
-    const token = jwt.sign(
-      {
-        userId: currentUser.id,
-        username: currentUser.firstname + " " + currentUser.lastname,
-        email: currentUser.email,
-      },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-    res.status(200).json({ token });
-    return;
-  }
-  const token = jwt.sign(
-    {
-      userId: currentUser.id,
-      username: currentUser.firstname + " " + currentUser.lastname,
-      email: currentUser.email,
-    },
-    JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-  res.status(200).json({ token });
+  res.status(200).json(await createSession(currentUser, {
+    rememberMe,
+    userAgent: req.headers["user-agent"],
+  }));
 });
 
 router.post("/verify-email", async (req, res) => {
@@ -127,6 +107,19 @@ router.post("/reset-password", async (req, res) => {
   } catch (error) {
     return res.status(400).send(error.message);
   }
+});
+
+router.post("/refresh", async (req, res) => {
+  try {
+    return res.json(await rotateSession(req.body.refreshToken, req.headers["user-agent"]));
+  } catch (error) {
+    return res.status(401).send(error.message);
+  }
+});
+
+router.post("/logout", async (req, res) => {
+  await revokeSession(req.body.refreshToken);
+  return res.status(204).end();
 });
 
 module.exports = router;

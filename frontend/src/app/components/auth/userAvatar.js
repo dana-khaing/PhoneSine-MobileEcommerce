@@ -11,12 +11,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { clearSession } from "./session.mjs";
 
 const UserAvator = () => {
   const { userName, setUserIsLogin, setUserName, setUserEmail } =
     useContext(AuthContext);
-  const handleLogout = () => {
-    localStorage.removeItem("token");
+  const handleLogout = async () => {
+    await clearSession();
     setUserIsLogin(false);
     setUserName("");
     setUserEmail("");
