@@ -1,5 +1,5 @@
 const express = require("express");
-const { Notification, Order, OrderEvent, OrderItem, Product } = require("../models");
+const { AuditLog, Notification, Order, OrderEvent, OrderItem, Product, Promotion, Refund } = require("../models");
 const { requireAdmin } = require("./authMiddleware");
 const {
   cancelOrRefundOrder,
@@ -7,6 +7,8 @@ const {
   updateFulfillment,
 } = require("./orderOperations");
 const { deliverPendingNotifications } = require("./notificationService");
+const { reconcilePayments } = require("./reconciliationService");
+const { audit } = require("./auditService");
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -15,6 +17,7 @@ router.get("/orders", async (_req, res) => {
   const orders = await Order.findAll({
     include: [
       { model: OrderItem, as: "items" },
+      { model: Refund, as: "refunds" },
       {
         model: OrderEvent,
         as: "events",
@@ -69,6 +72,54 @@ router.get("/products", async (_req, res) => {
 
 router.post("/cleanup", async (_req, res) => {
   res.json({ cleaned: await cleanupAbandonedOrders() });
+});
+
+router.post("/reconcile", async (_req, res) => {
+  res.json({ results: await reconcilePayments() });
+});
+
+router.get("/audit-logs", async (_req, res) => {
+  res.json(await AuditLog.findAll({ limit: 100, order: [["createdAt", "DESC"]] }));
+});
+
+router.get("/promotions", async (_req, res) => {
+  res.json(await Promotion.findAll({ order: [["createdAt", "DESC"]] }));
+});
+
+router.post("/promotions", async (req, res) => {
+  try {
+    const percentOff = Number(req.body.percentOff);
+    const maxUses = req.body.maxUses == null ? null : Number(req.body.maxUses);
+    const perCustomerLimit = Number(req.body.perCustomerLimit || 1);
+    if (!String(req.body.code || "").trim() || !Number.isInteger(percentOff) || percentOff < 1 || percentOff > 100) {
+      throw new Error("Promotion code and percent between 1 and 100 are required");
+    }
+    if ((maxUses != null && (!Number.isInteger(maxUses) || maxUses < 1)) || !Number.isInteger(perCustomerLimit) || perCustomerLimit < 1) {
+      throw new Error("Promotion usage limits must be positive integers");
+    }
+    const promotion = await Promotion.create({
+      code: String(req.body.code || "").trim().toUpperCase(),
+      percentOff,
+      maxUses,
+      perCustomerLimit,
+      expiresAt: req.body.expiresAt || null,
+      active: req.body.active !== false,
+    });
+    await audit(req.user.email, "promotion_created", "promotion", promotion.id, { code: promotion.code });
+    return res.status(201).json(promotion);
+  } catch (error) {
+    return res.status(400).send(error.message);
+  }
+});
+
+router.get("/health/payments", async (_req, res) => {
+  const [pending, reviews, disputes, failedNotifications] = await Promise.all([
+    Order.count({ where: { status: "pending" } }),
+    Order.count({ where: { status: "payment_review" } }),
+    Order.count({ where: { status: "disputed" } }),
+    Notification.count({ where: { status: "failed" } }),
+  ]);
+  res.json({ pending, reviews, disputes, failedNotifications });
 });
 
 router.get("/notifications", async (_req, res) => {
