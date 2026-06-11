@@ -23,12 +23,12 @@ export default function Payment({ backToProduct, productdetail }) {
         <span className="w-[33%] shrink-0 text-xl"></span>
         <span className="w-[33%] shrink-0"></span>
       </div>
-      <div className="flex justify-around items-center w-full h-screen">
-        <div className="p-[0.8] w-[45%] h-[100%]">
+      <div className="flex w-full flex-col items-center justify-around lg:h-screen lg:flex-row">
+        <div className="w-full p-2 lg:h-full lg:w-[45%]">
           {/* {we can loop all the photo of product} */}
           <img src="/iph15-pro.jpeg" alt="iPhone 15 Pro" />
         </div>
-        <div className="w-[55%] p-3 m-3 h-screen">
+        <div className="m-3 w-full p-3 lg:h-screen lg:w-[55%]">
           <div className="text-start text-3xl font-bold my-2 h-[6%]">
             {productdetail.name}
           </div>

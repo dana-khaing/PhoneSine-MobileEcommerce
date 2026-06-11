@@ -11,14 +11,14 @@ export default function NavBar() {
   const { itemCount, setIsCartOpen } = useContext(CartContext);
 
   return (
-    <nav className=" flex  px-5 pt-5">
-      <h1 className=" flex-none text-2xl font-bold pr-2 items-center justify-normal ml-2 w-[33%]">
+    <nav className="flex flex-wrap items-center gap-4 px-5 pt-5">
+      <h1 className="mr-auto flex-none text-2xl font-bold">
         Phone Sine
       </h1>
-      <div className=" flex-auto w-[33%]">
+      <div className="order-3 w-full md:order-none md:w-auto md:flex-auto">
         <NavList />
       </div>
-      <div className="flex items-center justify-end w-[33%]">
+      <div className="flex items-center justify-end">
         {/* <Button variant="ghost" className=" flex pl-[0.5rem] pr-1.5"></Button> */}
         <Button
           variant="ghost"

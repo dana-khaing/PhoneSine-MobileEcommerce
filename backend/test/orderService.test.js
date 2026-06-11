@@ -21,4 +21,5 @@ test("verifies Stripe webhook signatures and rejects stale signatures", () => {
 
   assert.equal(verifyStripeSignature(rawBody, header, secret, timestamp * 1000), true);
   assert.equal(verifyStripeSignature(rawBody, header, secret, (timestamp + 301) * 1000), false);
+  assert.equal(verifyStripeSignature(rawBody, "invalid", secret, timestamp * 1000), false);
 });

@@ -8,8 +8,11 @@ export default function CheckoutSuccessPage() {
   const { clearCart } = useContext(CartContext);
 
   useEffect(() => {
-    clearCart();
-    sessionStorage.removeItem("phone-sine-checkout");
+    const sessionId = new URLSearchParams(window.location.search).get("session_id");
+    if (sessionId) {
+      clearCart();
+      sessionStorage.removeItem("phone-sine-checkout");
+    }
   }, []);
 
   return (
