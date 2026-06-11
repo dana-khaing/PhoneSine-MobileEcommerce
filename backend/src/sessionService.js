@@ -5,7 +5,7 @@ const { createAccountToken, hashAccountToken } = require("./accountTokenService"
 
 function accessTokenFor(user) {
   return jwt.sign(
-    { userId: user.id, username: `${user.firstname} ${user.lastname}`, email: user.email },
+    { userId: user.id, username: `${user.firstname} ${user.lastname}`, email: user.email, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: "15m" }
   );
