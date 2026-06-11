@@ -74,4 +74,6 @@ running checkout locally.
 
 New accounts receive a verification link through `EMAIL_WEBHOOK_URL`, or in the
 backend console during local development. Users must verify their email before
-signing in.
+signing in. Access tokens are short-lived and backed by rotating, revocable
+refresh sessions. Admin authorization uses the database `role` field; set
+`ADMIN_EMAILS` before the role migration to seed the first admin accounts.
