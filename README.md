@@ -15,9 +15,12 @@ pnpm run dev
 localhost:8080/showall (to view all userdata api)
 localhost:8080/deleteall (to delete all of the user data)
 
-// Used MySQL for database
-// We can store the user data in the database in the machine (Local ony though)
-// Apart for machine, I'm really doubt that database can be run (I'll try to use only server)
+Run `pnpm run db:migrate` from `backend` before starting the API. Use a fresh
+database when applying the initial migration to an older `sequelize.sync()`
+database.
+
+The initial migration safely adopts existing tables and intentionally cannot be
+automatically rolled back because doing so could delete pre-migration data.
 
 # To Run Tests
 
@@ -28,6 +31,9 @@ Run `pnpm test` from both the `frontend` and `backend` directories.
 Set `STRIPE_SECRET_KEY` and `FRONTEND_URL` in `backend/.env`, then set
 `NEXT_PUBLIC_API_PAYMENT_URL` to the backend `/payments/create-checkout-session`
 endpoint in `frontend/.env.local`.
+
+Set `NEXT_PUBLIC_API_PAYMENT_STATUS_URL` to the backend
+`/payments/checkout-session` endpoint so the success page verifies payment.
 
 Set `STRIPE_WEBHOOK_SECRET` in `backend/.env` and point Stripe webhooks to
 `/payments/webhook`. Set `NEXT_PUBLIC_API_ORDERS_URL` to the backend `/orders`

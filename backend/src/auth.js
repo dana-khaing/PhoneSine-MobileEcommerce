@@ -62,6 +62,7 @@ router.post("/login", async (req, res) => {
   if (rememberMe === true) {
     const token = jwt.sign(
       {
+        userId: currentUser.id,
         username: currentUser.firstname + " " + currentUser.lastname,
         email: currentUser.email,
       },
@@ -73,6 +74,7 @@ router.post("/login", async (req, res) => {
   }
   const token = jwt.sign(
     {
+      userId: currentUser.id,
       username: currentUser.firstname + " " + currentUser.lastname,
       email: currentUser.email,
     },

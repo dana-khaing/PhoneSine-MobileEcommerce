@@ -52,7 +52,12 @@ export default function CheckoutPage() {
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_API_PAYMENT_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(localStorage.getItem("token")
+            ? { Authorization: `Bearer ${localStorage.getItem("token")}` }
+            : {}),
+        },
         body: JSON.stringify({ items, checkout }),
       });
       if (!response.ok) {
