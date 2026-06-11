@@ -3,6 +3,8 @@ const {
   buildCheckoutItems,
   createStripeCheckoutBody,
 } = require("./paymentService");
+const { calculateOrderTotal } = require("./orderService");
+const { Order, OrderItem } = require("../models");
 
 const router = express.Router();
 
@@ -18,11 +20,28 @@ router.post("/create-checkout-session", async (req, res) => {
 
   try {
     const checkoutItems = buildCheckoutItems(items);
+    const order = await Order.create({
+      email: checkout.email,
+      status: "pending",
+      totalAmount: calculateOrderTotal(checkoutItems, checkout.deliveryMethod),
+      deliveryMethod: checkout.deliveryMethod,
+      shippingAddress: checkout,
+    });
+    await OrderItem.bulkCreate(
+      checkoutItems.map((item) => ({
+        orderId: order.id,
+        productId: item.productId,
+        name: item.name,
+        unitAmount: item.unitAmount,
+        quantity: item.quantity,
+      }))
+    );
     const body = createStripeCheckoutBody(
       checkoutItems,
       checkout,
       process.env.FRONTEND_URL || "http://localhost:3000"
     );
+    body.set("metadata[order_id]", order.id);
     const response = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
       headers: {
@@ -35,9 +54,11 @@ router.post("/create-checkout-session", async (req, res) => {
     const session = await response.json();
 
     if (!response.ok) {
+      await order.destroy();
       return res.status(502).send(session.error?.message || "Unable to create payment session");
     }
 
+    await order.update({ stripeSessionId: session.id });
     return res.json({ url: session.url });
   } catch (error) {
     return res.status(400).send(error.message);
