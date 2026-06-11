@@ -7,8 +7,9 @@ module.exports = (sequelize, DataTypes) => {
     quantity: { type: DataTypes.INTEGER, allowNull: false },
   });
 
-  OrderItem.associate = ({ Order }) => {
+  OrderItem.associate = ({ Order, Product }) => {
     OrderItem.belongsTo(Order, { foreignKey: "orderId" });
+    OrderItem.belongsTo(Product, { foreignKey: "productId" });
   };
 
   return OrderItem;
