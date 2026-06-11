@@ -7,7 +7,9 @@ const {
 
 test("rebuilds checkout prices from the server catalogue", () => {
   const items = buildCheckoutItems([{ id: 1, price: 1, quantity: 2 }]);
-  assert.deepEqual(items, [{ name: "IPHONE 14 PRO", unitAmount: 99999, quantity: 2 }]);
+  assert.deepEqual(items, [
+    { productId: 1, name: "IPHONE 14 PRO", unitAmount: 99999, quantity: 2 },
+  ]);
 });
 
 test("rejects unknown products and invalid quantities", () => {

@@ -5,14 +5,18 @@ const path = require("path");
 const app = express();
 const authRoute = require("./auth");
 const paymentRoute = require("./payments");
+const orderRoute = require("./orders");
+const { stripeWebhook } = require("./stripeWebhook");
 const db = require("../models");
 const { Userdetail } = require("../models");
 
 app.use(cors());
+app.post("/payments/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 app.use("/auth", authRoute);
 app.use("/payments", paymentRoute);
+app.use("/orders", orderRoute);
 
 // test subject for sequelize database
 // app.get("/insert", async (req, res) => {
