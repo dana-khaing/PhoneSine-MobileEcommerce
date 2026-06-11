@@ -20,6 +20,9 @@ module.exports = (sequelize, DataTypes) => {
     stripeCustomerId: {
       type: DataTypes.STRING,
     },
+    emailVerifiedAt: {
+      type: DataTypes.DATE,
+    },
   });
 
   Userdetail.associate = ({ Order }) => {
