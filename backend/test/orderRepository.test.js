@@ -8,6 +8,10 @@ test("creates an order and its items in the same transaction", async () => {
   const originalTransaction = models.sequelize.transaction;
   const originalCreate = models.Order.create;
   const originalBulkCreate = models.OrderItem.bulkCreate;
+  const originalFindByPk = models.Product.findByPk;
+  const originalFindPromotion = models.Promotion.findOne;
+  const originalReservationCreate = models.InventoryReservation.create;
+  const originalEventCreate = models.OrderEvent.create;
   const calls = [];
 
   models.sequelize.transaction = async (callback) => callback(transaction);
@@ -18,20 +22,34 @@ test("creates an order and its items in the same transaction", async () => {
   models.OrderItem.bulkCreate = async (records, options) => {
     calls.push({ type: "items", records, options });
   };
+  models.Product.findByPk = async () => ({
+    id: 1,
+    name: "Phone",
+    priceAmount: 10000,
+    stockQuantity: 5,
+    reservedQuantity: 0,
+    active: true,
+    increment: async () => {},
+  });
+  models.Promotion.findOne = async () => null;
+  models.InventoryReservation.create = async () => {};
+  models.OrderEvent.create = async () => {};
 
   try {
-    const order = await createOrderWithItems({
+    const result = await createOrderWithItems({
       checkout: {
         email: "buyer@example.com",
+        address: "1 High Street",
+        city: "London",
+        postcode: "SW1A 1AA",
+        country: "GB",
         deliveryMethod: "standard",
       },
-      checkoutItems: [
-        { productId: 1, name: "Phone", unitAmount: 10000, quantity: 1 },
-      ],
+      cartItems: [{ id: 1, quantity: 1 }],
       userId: 7,
     });
 
-    assert.equal(order.id, 42);
+    assert.equal(result.order.id, 42);
     assert.equal(calls[0].options.transaction, transaction);
     assert.equal(calls[1].options.transaction, transaction);
     assert.equal(calls[1].records[0].orderId, 42);
@@ -40,5 +58,9 @@ test("creates an order and its items in the same transaction", async () => {
     models.sequelize.transaction = originalTransaction;
     models.Order.create = originalCreate;
     models.OrderItem.bulkCreate = originalBulkCreate;
+    models.Product.findByPk = originalFindByPk;
+    models.Promotion.findOne = originalFindPromotion;
+    models.InventoryReservation.create = originalReservationCreate;
+    models.OrderEvent.create = originalEventCreate;
   }
 });

@@ -26,4 +26,17 @@ function optionalAuth(req, res, next) {
   }
 }
 
-module.exports = { optionalAuth, requireAuth };
+function requireAdmin(req, res, next) {
+  return requireAuth(req, res, () => {
+    const admins = (process.env.ADMIN_EMAILS || "")
+      .split(",")
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean);
+    if (!admins.includes(req.user.email.toLowerCase())) {
+      return res.status(403).send("Admin access required");
+    }
+    return next();
+  });
+}
+
+module.exports = { optionalAuth, requireAdmin, requireAuth };
