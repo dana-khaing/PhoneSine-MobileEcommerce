@@ -23,6 +23,7 @@ export default function CheckoutPage() {
   const [details, setDetails] = useState(initialDetails);
   const [deliveryMethod, setDeliveryMethod] = useState("standard");
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const total = checkoutTotal(subtotal, deliveryMethod);
 
   const updateDetails = (event) => {
@@ -32,7 +33,7 @@ export default function CheckoutPage() {
     }));
   };
 
-  const saveCheckout = (event) => {
+  const saveCheckout = async (event) => {
     event.preventDefault();
     const error = validateCheckoutDetails(details);
     if (error) {
@@ -40,11 +41,29 @@ export default function CheckoutPage() {
       return;
     }
 
+    const checkout = { ...details, deliveryMethod };
     sessionStorage.setItem(
       "phone-sine-checkout",
-      JSON.stringify({ details, deliveryMethod })
+      JSON.stringify(checkout)
     );
-    setMessage("Shipping details saved. You can continue to payment.");
+    setIsSubmitting(true);
+    setMessage("");
+
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_API_PAYMENT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items, checkout }),
+      });
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      const session = await response.json();
+      window.location.assign(session.url);
+    } catch (error) {
+      setMessage(error.message || "Unable to start payment.");
+      setIsSubmitting(false);
+    }
   };
 
   if (items.length === 0) {
@@ -90,8 +109,8 @@ export default function CheckoutPage() {
         </section>
 
         {message && <p role="status" className="rounded bg-neutral-100 p-3">{message}</p>}
-        <button className="w-full rounded bg-neutral-900 py-3 font-semibold text-white" type="submit">
-          Save and continue
+        <button disabled={isSubmitting} className="w-full rounded bg-neutral-900 py-3 font-semibold text-white disabled:opacity-60" type="submit">
+          {isSubmitting ? "Opening secure payment..." : "Continue to secure payment"}
         </button>
       </form>
 
