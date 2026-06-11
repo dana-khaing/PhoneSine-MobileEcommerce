@@ -117,7 +117,7 @@ const Login = ({ closeallcard, handlesignup }) => {
           <label htmlFor="rememberMe" className="mr-auto ml-2">
             Remember me
           </label>
-          <a className="underline" href="/products">
+          <a className="underline" href="/forgot-password">
             Forgot your password?
           </a>
         </div>
