@@ -56,7 +56,7 @@ const Register = ({ closeallcard, handlelogin }) => {
       toast({
         className: " bg-neutral-900 text-white",
         title: "Register success.",
-        description: "Please login to continue .",
+        description: "Check your email and verify your account before signing in.",
       });
       handlelogin();
     } else {
