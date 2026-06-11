@@ -30,6 +30,7 @@ function orderStatusForStripeEvent(eventType) {
   return {
     "checkout.session.completed": "paid",
     "checkout.session.expired": "cancelled",
+    "charge.refunded": "refunded",
   }[eventType];
 }
 
