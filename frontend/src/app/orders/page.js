@@ -50,7 +50,7 @@ export default function OrdersPage() {
               <span className="capitalize">{order.status}</span>
             </div>
             <p className="mt-2 text-sm text-neutral-500">
-              {new Date(order.createdAt).toLocaleDateString()} · £{(order.totalAmount / 100).toFixed(2)}
+              {new Date(order.createdAt).toLocaleDateString()} · {(order.currency || "gbp").toUpperCase()} {(order.totalAmount / 100).toFixed(2)}
             </p>
             <ul className="mt-4 border-t pt-4">
               {order.items.map((item) => (
@@ -60,6 +60,14 @@ export default function OrdersPage() {
                 </li>
               ))}
             </ul>
+            {order.refunds?.length > 0 && (
+              <div className="mt-4 border-t pt-4 text-sm">
+                <h3 className="font-semibold">Refunds</h3>
+                {order.refunds.map((refund) => (
+                  <p key={refund.id}>{refund.currency.toUpperCase()} {(refund.amount / 100).toFixed(2)} · {refund.status}</p>
+                ))}
+              </div>
+            )}
             <div className="mt-4 border-t pt-4">
               <h3 className="font-semibold">Timeline</h3>
               {order.events?.map((event) => (

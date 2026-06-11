@@ -18,6 +18,8 @@ const initialDetails = {
   postcode: "",
   country: "GB",
   promotionCode: "",
+  currency: "gbp",
+  savePaymentMethod: false,
 };
 
 export default function CheckoutPage() {
@@ -32,7 +34,7 @@ export default function CheckoutPage() {
   const updateDetails = (event) => {
     setDetails((current) => ({
       ...current,
-      [event.target.name]: event.target.value,
+      [event.target.name]: event.target.type === "checkbox" ? event.target.checked : event.target.value,
     }));
   };
 
@@ -53,10 +55,16 @@ export default function CheckoutPage() {
     setMessage("");
 
     try {
+      let idempotencyKey = sessionStorage.getItem("phone-sine-payment-key");
+      if (!idempotencyKey) {
+        idempotencyKey = crypto.randomUUID();
+        sessionStorage.setItem("phone-sine-payment-key", idempotencyKey);
+      }
       const response = await fetch(process.env.NEXT_PUBLIC_API_PAYMENT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey,
           ...(localStorage.getItem("token")
             ? { Authorization: `Bearer ${localStorage.getItem("token")}` }
             : {}),
@@ -121,6 +129,15 @@ export default function CheckoutPage() {
           <input className="rounded border p-3" name="postcode" placeholder="Postcode" value={details.postcode} onChange={updateDetails} />
           <input className="rounded border p-3" name="country" maxLength="2" placeholder="Country code (GB)" value={details.country} onChange={updateDetails} />
           <input className="rounded border p-3" name="promotionCode" placeholder="Promotion code" value={details.promotionCode} onChange={updateDetails} />
+          <select className="rounded border p-3" name="currency" value={details.currency} onChange={updateDetails}>
+            <option value="gbp">GBP</option>
+            <option value="usd">USD</option>
+            <option value="eur">EUR</option>
+          </select>
+          <label className="flex items-center gap-2 sm:col-span-2">
+            <input type="checkbox" name="savePaymentMethod" checked={details.savePaymentMethod} onChange={updateDetails} />
+            Securely save this payment method with Stripe for future purchases
+          </label>
         </section>
 
         <button className="rounded border px-5 py-3" type="button" onClick={updateQuote}>
@@ -161,7 +178,7 @@ export default function CheckoutPage() {
           <div className="flex justify-between"><span>Delivery</span><span>£{deliveryOptions[deliveryMethod].price.toFixed(2)}</span></div>
           {quote && <div className="flex justify-between"><span>Discount</span><span>-£{(quote.discountAmount / 100).toFixed(2)}</span></div>}
           {quote && <div className="flex justify-between"><span>Tax ({quote.taxRate}%)</span><span>£{(quote.taxAmount / 100).toFixed(2)}</span></div>}
-          <div className="flex justify-between text-lg font-bold"><span>Total</span><span>£{quote ? (quote.totalAmount / 100).toFixed(2) : total.toFixed(2)}</span></div>
+          <div className="flex justify-between text-lg font-bold"><span>Total</span><span>{quote ? `${quote.currency.toUpperCase()} ${(quote.totalAmount / 100).toFixed(2)}` : `GBP ${total.toFixed(2)}`}</span></div>
         </div>
       </aside>
     </main>
