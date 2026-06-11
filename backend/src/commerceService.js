@@ -51,6 +51,9 @@ function validatePromotion(promotion, now = new Date()) {
   if (promotion.percentOff < 1 || promotion.percentOff > 100) {
     throw new Error("Promotion discount is invalid");
   }
+  if (promotion.maxUses != null && promotion.useCount >= promotion.maxUses) {
+    throw new Error("Promotion usage limit reached");
+  }
   return promotion.percentOff;
 }
 

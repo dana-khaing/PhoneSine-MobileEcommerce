@@ -1,7 +1,8 @@
-const { Order, OrderEvent, OrderItem, Product, Promotion, sequelize } = require("../models");
+const { Order, OrderEvent, OrderItem, Product, Promotion, PromotionUsage, sequelize } = require("../models");
 const { calculateAmounts, validateAddress, validatePromotion } = require("./commerceService");
 const { reserveInventory } = require("./inventoryService");
 const { deliveryAmountFor } = require("./paymentService");
+const { convertAmounts, normalizeCurrency } = require("./currencyService");
 
 async function loadCheckoutItems(cartItems, transaction) {
   const items = [];
@@ -25,7 +26,7 @@ async function loadCheckoutItems(cartItems, transaction) {
   return items;
 }
 
-async function createOrderWithItems({ checkout, cartItems, userId = null }) {
+async function createOrderWithItems({ checkout, cartItems, userId = null, idempotencyKey }) {
   return sequelize.transaction(async (transaction) => {
     const checkoutItems = await loadCheckoutItems(cartItems, transaction);
     const address = validateAddress(checkout);
@@ -33,14 +34,22 @@ async function createOrderWithItems({ checkout, cartItems, userId = null }) {
       ? await Promotion.findOne({
           where: { code: checkout.promotionCode.toUpperCase() },
           transaction,
+          lock: transaction.LOCK?.UPDATE,
         })
       : null;
     const percentOff = promotion ? validatePromotion(promotion) : 0;
-    const amounts = calculateAmounts(checkoutItems, {
+    if (promotion?.perCustomerLimit) {
+      const uses = await PromotionUsage.count({
+        where: { promotionId: promotion.id, email: checkout.email.toLowerCase() },
+        transaction,
+      });
+      if (uses >= promotion.perCustomerLimit) throw new Error("Promotion customer limit reached");
+    }
+    const amounts = convertAmounts(calculateAmounts(checkoutItems, {
       country: address.country,
       deliveryAmount: deliveryAmountFor(checkout.deliveryMethod),
       percentOff,
-    });
+    }), normalizeCurrency(checkout.currency));
 
     const order = await Order.create(
       {
@@ -51,10 +60,18 @@ async function createOrderWithItems({ checkout, cartItems, userId = null }) {
         promotionCode: promotion?.code,
         deliveryMethod: checkout.deliveryMethod,
         shippingAddress: address,
+        currency: amounts.currency,
+        idempotencyKey,
       },
       { transaction }
     );
-
+    if (promotion) {
+      await PromotionUsage.create(
+        { promotionId: promotion.id, orderId: order.id, email: checkout.email.toLowerCase() },
+        { transaction }
+      );
+      await promotion.increment("useCount", { by: 1, transaction });
+    }
     await OrderItem.bulkCreate(
       checkoutItems.map((item) => ({
         orderId: order.id,
@@ -96,11 +113,11 @@ async function quoteOrder({ checkout, cartItems }) {
         })
       : null;
     const percentOff = promotion ? validatePromotion(promotion) : 0;
-    return calculateAmounts(checkoutItems, {
+    return convertAmounts(calculateAmounts(checkoutItems, {
       country: address.country,
       deliveryAmount: deliveryAmountFor(checkout.deliveryMethod),
       percentOff,
-    });
+    }), normalizeCurrency(checkout.currency));
   });
 }
 
