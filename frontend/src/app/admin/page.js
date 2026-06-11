@@ -10,6 +10,7 @@ export default function AdminPage() {
   const [health, setHealth] = useState(null);
   const [promotions, setPromotions] = useState([]);
   const [promotion, setPromotion] = useState({ code: "", percentOff: 10, maxUses: 100, perCustomerLimit: 1 });
+  const [users, setUsers] = useState([]);
   const [message, setMessage] = useState("Loading admin orders...");
   const api = process.env.NEXT_PUBLIC_API_ADMIN_URL;
   const headers = () => ({
@@ -42,12 +43,17 @@ export default function AdminPage() {
     fetch(`${api}/promotions`, { headers: headers() })
       .then((response) => response.json())
       .then(setPromotions);
+  const loadUsers = () =>
+    fetch(`${api}/users`, { headers: headers() })
+      .then((response) => response.json())
+      .then(setUsers);
 
   useEffect(() => {
     loadOrders();
     loadProducts();
     loadHealth();
     loadPromotions();
+    loadUsers();
   }, []);
 
   const action = async (path, method = "POST", body) => {
@@ -61,6 +67,7 @@ export default function AdminPage() {
     await loadProducts();
     await loadHealth();
     await loadPromotions();
+    await loadUsers();
   };
 
   return (
@@ -93,6 +100,17 @@ export default function AdminPage() {
           <button className="rounded border px-3 py-2" onClick={() => action("/promotions", "POST", promotion)}>Create promotion</button>
         </div>
         {promotions.map((item) => <p key={item.id} className="mt-2 text-sm">{item.code}: {item.percentOff}% · {item.useCount}/{item.maxUses || "unlimited"} uses</p>)}
+      </section>
+      <section className="mb-8 rounded border p-5">
+        <h2 className="text-xl font-bold">User roles</h2>
+        {users.map((user) => (
+          <div key={user.id} className="mt-3 flex items-center justify-between border p-3">
+            <span>{user.email} · {user.role} · {user.emailVerifiedAt ? "verified" : "unverified"}</span>
+            <button className="rounded border px-3 py-2" onClick={() => action(`/users/${user.id}/role`, "PATCH", { role: user.role === "admin" ? "customer" : "admin" })}>
+              Make {user.role === "admin" ? "customer" : "admin"}
+            </button>
+          </div>
+        ))}
       </section>
       <div className="space-y-5">
         {orders.map((order) => (
