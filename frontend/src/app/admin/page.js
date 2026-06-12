@@ -266,6 +266,7 @@ export default function AdminPage() {
                 <button key={status} className="rounded border px-3 py-2" onClick={() => action(`/orders/${order.id}/fulfillment`, "PATCH", { status, ...tracking[order.id] })}>{status}</button>
               ))}
               <button className="rounded border px-3 py-2" onClick={() => action(`/orders/${order.id}/refund`, "POST", refunds[order.id] ? { amount: Number(refunds[order.id]) } : {})}>Refund</button>
+              <button className="rounded border px-3 py-2" onClick={() => action(`/../shipping/orders/${order.id}`, "POST", { carrier: tracking[order.id]?.carrier || "PhoneSine Shipping", service: "standard" })}>Create shipping label</button>
             </div>
             {order.refunds?.map((refund) => <p key={refund.id} className="mt-2 text-sm">Refund {refund.stripeRefundId}: {refund.amount} · {refund.status}</p>)}
           </article>
