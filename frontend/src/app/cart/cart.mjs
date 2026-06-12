@@ -1,22 +1,27 @@
+export function cartItemKey(item) {
+  return item.variantId ? `${item.id}:${item.variantId}` : String(item.id);
+}
+
 export function addCartItem(items, product) {
-  const existingItem = items.find((item) => item.id === product.id);
+  const key = cartItemKey(product);
+  const existingItem = items.find((item) => cartItemKey(item) === key);
 
   if (existingItem) {
     return items.map((item) =>
-      item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+      cartItemKey(item) === key ? { ...item, quantity: item.quantity + 1 } : item
     );
   }
 
   return [...items, { ...product, quantity: 1 }];
 }
 
-export function updateCartItemQuantity(items, productId, quantity) {
+export function updateCartItemQuantity(items, key, quantity) {
   if (quantity <= 0) {
-    return items.filter((item) => item.id !== productId);
+    return items.filter((item) => cartItemKey(item) !== String(key));
   }
 
   return items.map((item) =>
-    item.id === productId ? { ...item, quantity } : item
+    cartItemKey(item) === String(key) ? { ...item, quantity } : item
   );
 }
 

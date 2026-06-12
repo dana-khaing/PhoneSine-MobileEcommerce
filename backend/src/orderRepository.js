@@ -1,4 +1,4 @@
-const { Order, OrderEvent, OrderItem, Product, Promotion, PromotionUsage, sequelize } = require("../models");
+const { Order, OrderEvent, OrderItem, Product, ProductVariant, Promotion, PromotionUsage, sequelize } = require("../models");
 const { calculateAmounts, validateAddress, validatePromotion } = require("./commerceService");
 const { reserveInventory } = require("./inventoryService");
 const { deliveryAmountFor } = require("./paymentService");
@@ -16,10 +16,19 @@ async function loadCheckoutItems(cartItems, transaction) {
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
       throw new Error(`Invalid quantity for product: ${cartItem.id}`);
     }
+    const variant = cartItem.variantId
+      ? await ProductVariant.findOne({
+          where: { id: cartItem.variantId, productId: product.id, active: true },
+          transaction,
+          lock: transaction.LOCK?.UPDATE,
+        })
+      : null;
+    if (cartItem.variantId && !variant) throw new Error(`Unknown product variant: ${cartItem.variantId}`);
     items.push({
       productId: product.id,
-      name: product.name,
-      unitAmount: product.priceAmount,
+      variantId: variant?.id || null,
+      name: variant ? `${product.name} - ${variant.name}` : product.name,
+      unitAmount: variant?.priceAmount ?? product.priceAmount,
       quantity,
     });
   }
@@ -76,6 +85,7 @@ async function createOrderWithItems({ checkout, cartItems, userId = null, idempo
       checkoutItems.map((item) => ({
         orderId: order.id,
         productId: item.productId,
+        variantId: item.variantId,
         name: item.name,
         unitAmount: item.unitAmount,
         quantity: item.quantity,

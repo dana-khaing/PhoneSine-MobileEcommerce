@@ -8,6 +8,7 @@ import {
   deliveryOptions,
   validateCheckoutDetails,
 } from "./checkout.mjs";
+import { cartItemKey } from "../cart/cart.mjs";
 
 const initialDetails = {
   email: "",
@@ -167,8 +168,8 @@ export default function CheckoutPage() {
         <h2 className="text-xl font-bold">Order summary</h2>
         <div className="divide-y">
           {items.map((item) => (
-            <div key={item.id} className="flex justify-between py-4 text-sm">
-              <span>{item.name} × {item.quantity}</span>
+            <div key={cartItemKey(item)} className="flex justify-between py-4 text-sm">
+              <span>{item.name}{item.variantName ? ` - ${item.variantName}` : ""} × {item.quantity}</span>
               <span>£{(item.price * item.quantity).toFixed(2)}</span>
             </div>
           ))}

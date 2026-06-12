@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Minus, Plus, Trash2, X } from "lucide-react";
 import { useContext } from "react";
 import { CartContext } from "../contexts/cartContext";
+import { cartItemKey } from "./cart.mjs";
 
 export default function CartDrawer() {
   const {
@@ -35,20 +36,21 @@ export default function CartDrawer() {
             <p className="text-center text-neutral-500">Your cart is empty.</p>
           ) : (
             items.map((item) => (
-              <div key={item.id} className="flex gap-4 border-b py-4">
-                <img src="/iph15-pro.jpeg" alt={item.name} className="h-20 w-20 object-contain" />
+              <div key={cartItemKey(item)} className="flex gap-4 border-b py-4">
+                <img src={item.imageUrl || "/iph15-pro.jpeg"} alt={item.name} className="h-20 w-20 object-contain" />
                 <div className="flex-1">
                   <p className="font-semibold">{item.name}</p>
+                  {item.variantName && <p className="text-sm text-neutral-500">{item.variantName}</p>}
                   <p className="text-sm text-neutral-500">£{item.price.toFixed(2)}</p>
                   <div className="mt-2 flex items-center gap-3">
-                    <button aria-label={`Decrease ${item.name}`} onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                    <button aria-label={`Decrease ${item.name}`} onClick={() => updateQuantity(cartItemKey(item), item.quantity - 1)}>
                       <Minus className="h-4 w-4" />
                     </button>
                     <span>{item.quantity}</span>
-                    <button aria-label={`Increase ${item.name}`} onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                    <button aria-label={`Increase ${item.name}`} onClick={() => updateQuantity(cartItemKey(item), item.quantity + 1)}>
                       <Plus className="h-4 w-4" />
                     </button>
-                    <button className="ml-auto" aria-label={`Remove ${item.name}`} onClick={() => removeItem(item.id)}>
+                    <button className="ml-auto" aria-label={`Remove ${item.name}`} onClick={() => removeItem(cartItemKey(item))}>
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>

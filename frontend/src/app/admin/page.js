@@ -5,13 +5,16 @@ import { useEffect, useState } from "react";
 export default function AdminPage() {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [categoryName, setCategoryName] = useState("");
+  const [variantForm, setVariantForm] = useState({ productId: "", sku: "", name: "", priceAmount: "", stockQuantity: "", options: "{}" });
   const [tracking, setTracking] = useState({});
   const [refunds, setRefunds] = useState({});
   const [health, setHealth] = useState(null);
   const [promotions, setPromotions] = useState([]);
   const [promotion, setPromotion] = useState({ code: "", percentOff: 10, maxUses: 100, perCustomerLimit: 1 });
   const [users, setUsers] = useState([]);
-  const emptyProduct = { name: "", brand: "", description: "", priceAmount: "", stockQuantity: "" };
+  const emptyProduct = { name: "", brand: "", description: "", priceAmount: "", stockQuantity: "", categoryId: "", specifications: "{}" };
   const [productForm, setProductForm] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
   const [message, setMessage] = useState("Loading admin orders...");
@@ -37,6 +40,10 @@ export default function AdminPage() {
     fetch(`${api}/products`, { headers: headers() })
       .then((response) => response.json())
       .then(setProducts);
+  const loadCategories = () =>
+    fetch(`${api}/categories`, { headers: headers() })
+      .then((response) => response.json())
+      .then(setCategories);
 
   const loadHealth = () =>
     fetch(`${api}/health/payments`, { headers: headers() })
@@ -54,6 +61,7 @@ export default function AdminPage() {
   useEffect(() => {
     loadOrders();
     loadProducts();
+    loadCategories();
     loadHealth();
     loadPromotions();
     loadUsers();
@@ -68,6 +76,7 @@ export default function AdminPage() {
     setMessage(response.ok ? "Admin action completed." : await response.text());
     await loadOrders();
     await loadProducts();
+    await loadCategories();
     await loadHealth();
     await loadPromotions();
     await loadUsers();
@@ -82,6 +91,8 @@ export default function AdminPage() {
         ...productForm,
         priceAmount: Number(productForm.priceAmount),
         stockQuantity: Number(productForm.stockQuantity),
+        categoryId: productForm.categoryId || null,
+        specifications: productForm.specifications,
       }
     );
     setProductForm(emptyProduct);
@@ -96,7 +107,19 @@ export default function AdminPage() {
       description: product.description || "",
       priceAmount: product.priceAmount,
       stockQuantity: product.stockQuantity,
+      categoryId: product.categoryId || "",
+      specifications: JSON.stringify(product.specifications || {}, null, 2),
     });
+  };
+
+  const saveVariant = async (event) => {
+    event.preventDefault();
+    await action(`/products/${variantForm.productId}/variants`, "POST", {
+      ...variantForm,
+      priceAmount: Number(variantForm.priceAmount),
+      stockQuantity: Number(variantForm.stockQuantity),
+    });
+    setVariantForm({ productId: "", sku: "", name: "", priceAmount: "", stockQuantity: "", options: "{}" });
   };
 
   const uploadImage = async (productId, file) => {
@@ -131,15 +154,35 @@ export default function AdminPage() {
             <input key={field} className="rounded border p-2" type={field.includes("Amount") || field.includes("Quantity") ? "number" : "text"} placeholder={field} value={productForm[field]} onChange={(event) => setProductForm((current) => ({ ...current, [field]: event.target.value }))} required />
           ))}
           <textarea className="rounded border p-2 md:col-span-2" placeholder="description" value={productForm.description} onChange={(event) => setProductForm((current) => ({ ...current, description: event.target.value }))} />
+          <select className="rounded border p-2" value={productForm.categoryId} onChange={(event) => setProductForm((current) => ({ ...current, categoryId: event.target.value }))}>
+            <option value="">No category</option>
+            {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+          </select>
+          <textarea className="rounded border p-2" placeholder='Specifications JSON, e.g. {"screen":"6.1 inch"}' value={productForm.specifications} onChange={(event) => setProductForm((current) => ({ ...current, specifications: event.target.value }))} />
           <div className="flex gap-2 md:col-span-2">
             <button className="rounded border px-3 py-2">{editingProductId ? "Save product" : "Create product"}</button>
             {editingProductId && <button type="button" className="rounded border px-3 py-2" onClick={() => { setEditingProductId(null); setProductForm(emptyProduct); }}>Cancel edit</button>}
           </div>
         </form>
+        <div className="mt-5 flex gap-2">
+          <input className="rounded border p-2" placeholder="New category name" value={categoryName} onChange={(event) => setCategoryName(event.target.value)} />
+          <button className="rounded border px-3 py-2" onClick={async () => { await action("/categories", "POST", { name: categoryName }); setCategoryName(""); }}>Create category</button>
+        </div>
+        <form onSubmit={saveVariant} className="mt-5 grid gap-2 md:grid-cols-3">
+          <select className="rounded border p-2" value={variantForm.productId} onChange={(event) => setVariantForm((current) => ({ ...current, productId: event.target.value }))} required>
+            <option value="">Select product for variant</option>
+            {products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}
+          </select>
+          {["sku", "name", "priceAmount", "stockQuantity", "options"].map((field) => (
+            <input key={field} className="rounded border p-2" type={field.includes("Amount") || field.includes("Quantity") ? "number" : "text"} placeholder={field === "options" ? 'options JSON, e.g. {"color":"Blue"}' : field} value={variantForm[field]} onChange={(event) => setVariantForm((current) => ({ ...current, [field]: event.target.value }))} required />
+          ))}
+          <button className="rounded border px-3 py-2">Create variant</button>
+        </form>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           {products.map((product) => (
             <div key={product.id} className="border p-3">
               <p>{product.name} · {product.stockQuantity} stock / {product.reservedQuantity} reserved · {product.active ? "active" : "archived"}</p>
+              <p className="text-sm text-neutral-500">{product.category?.name || "Uncategorized"}</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button className="rounded border px-3 py-1" onClick={() => editProduct(product)}>Edit</button>
                 <button className="rounded border px-3 py-1" onClick={() => action(`/products/${product.id}`, "PATCH", { stockQuantity: product.stockQuantity + 5 })}>+5 stock</button>
@@ -156,6 +199,12 @@ export default function AdminPage() {
                   </button>
                 ))}
               </div>
+              {product.variants?.map((variant) => (
+                <div key={variant.id} className="mt-2 flex items-center justify-between rounded bg-neutral-100 p-2 text-sm">
+                  <span>{variant.name} · {variant.sku} · {variant.stockQuantity} stock · £{(variant.priceAmount / 100).toFixed(2)} · {variant.active ? "active" : "archived"}</span>
+                  {variant.active && <button className="rounded border px-2 py-1" onClick={() => action(`/products/${product.id}/variants/${variant.id}`, "DELETE")}>Archive</button>}
+                </div>
+              ))}
             </div>
           ))}
         </div>
