@@ -14,6 +14,7 @@ export default function AdminPage() {
   const [promotions, setPromotions] = useState([]);
   const [promotion, setPromotion] = useState({ code: "", percentOff: 10, maxUses: 100, perCustomerLimit: 1 });
   const [users, setUsers] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const emptyProduct = { name: "", brand: "", description: "", priceAmount: "", stockQuantity: "", categoryId: "", specifications: "{}" };
   const [productForm, setProductForm] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
@@ -57,6 +58,7 @@ export default function AdminPage() {
     fetch(`${api}/users`, { headers: headers() })
       .then((response) => response.json())
       .then(setUsers);
+  const loadReviews = () => fetch(`${api}/reviews`, { headers: headers() }).then((response) => response.json()).then(setReviews);
 
   useEffect(() => {
     loadOrders();
@@ -65,6 +67,7 @@ export default function AdminPage() {
     loadHealth();
     loadPromotions();
     loadUsers();
+    loadReviews();
   }, []);
 
   const action = async (path, method = "POST", body) => {
@@ -80,6 +83,7 @@ export default function AdminPage() {
     await loadHealth();
     await loadPromotions();
     await loadUsers();
+    await loadReviews();
   };
 
   const saveProduct = async (event) => {
@@ -208,6 +212,10 @@ export default function AdminPage() {
             </div>
           ))}
         </div>
+      </section>
+      <section className="mb-8 rounded border p-5">
+        <h2 className="text-xl font-bold">Review moderation</h2>
+        {reviews.map((review) => <div key={review.id} className="mt-3 border p-3"><p>{review.rating}/5 · {review.title}</p><p>{review.body}</p><div className="mt-2 flex gap-2"><button className="rounded border px-3 py-1" onClick={() => action(`/reviews/${review.id}`, "PATCH", { status: "approved" })}>Approve</button><button className="rounded border px-3 py-1" onClick={() => action(`/reviews/${review.id}`, "PATCH", { status: "rejected" })}>Reject</button></div></div>)}
       </section>
       <section className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Promotions</h2>
