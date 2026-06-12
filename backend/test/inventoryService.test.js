@@ -57,3 +57,30 @@ test("rejects reservations that exceed available stock", async () => {
     models.Product.findByPk = originalProduct;
   }
 });
+
+test("reserves variant inventory instead of parent product inventory", async () => {
+  const originalProduct = models.Product.findByPk;
+  const originalVariant = models.ProductVariant.findByPk;
+  const originalReservationCreate = models.InventoryReservation.create;
+  const calls = [];
+  models.Product.findByPk = async () => {
+    throw new Error("parent product inventory should not be used");
+  };
+  models.ProductVariant.findByPk = async () => ({
+    name: "Blue",
+    active: true,
+    stockQuantity: 3,
+    reservedQuantity: 0,
+    increment: async (field, options) => calls.push([field, options.by]),
+  });
+  models.InventoryReservation.create = async (record) => calls.push(record);
+  try {
+    await reserveInventory(10, [{ productId: 1, variantId: 4, quantity: 2 }], {}, new Date());
+    assert.deepEqual(calls[0], ["reservedQuantity", 2]);
+    assert.equal(calls[1].variantId, 4);
+  } finally {
+    models.Product.findByPk = originalProduct;
+    models.ProductVariant.findByPk = originalVariant;
+    models.InventoryReservation.create = originalReservationCreate;
+  }
+});
