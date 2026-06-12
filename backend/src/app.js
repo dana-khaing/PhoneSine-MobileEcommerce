@@ -15,13 +15,16 @@ const { createRateLimiter } = require("./rateLimit");
 const { presentProduct } = require("./productPresenter");
 const { discoveryQuery } = require("./productDiscovery");
 const { Op } = require("sequelize");
+const { csrfProtection, securityHeaders } = require("./securityMiddleware");
 
 function createApp() {
   const app = express();
-  app.use(cors());
+  app.use(securityHeaders);
+  app.use(cors({ origin: process.env.FRONTEND_ORIGIN || "http://localhost:3000", credentials: true }));
   app.post("/payments/webhook", express.raw({ type: "application/json" }), stripeWebhook);
   app.use("/admin/products", productImagesRoute);
   app.use(express.json({ limit: "100kb" }));
+  app.use(csrfProtection);
   app.use(createRateLimiter({ windowMs: 60_000, max: 120 }));
   app.use(express.static(path.join(__dirname, "../public")));
   app.use("/auth", authRoute);
