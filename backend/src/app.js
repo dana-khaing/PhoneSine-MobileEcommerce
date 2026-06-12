@@ -29,7 +29,11 @@ function createApp() {
   app.get("/products", async (_req, res) => {
     const products = await Product.findAll({
       where: { active: true },
-      include: [{ association: "images", separate: true, order: [["position", "ASC"]] }],
+      include: [
+        { association: "category" },
+        { association: "images", separate: true, order: [["position", "ASC"]] },
+        { association: "variants", where: { active: true }, required: false },
+      ],
       attributes: [
         "id",
         "name",
@@ -38,6 +42,8 @@ function createApp() {
         ["priceAmount", "priceInPence"],
         "stockQuantity",
         "reservedQuantity",
+        "categoryId",
+        "specifications",
       ],
     });
     res.json(products.map(presentProduct));
@@ -46,7 +52,11 @@ function createApp() {
   app.get("/products/:id", async (req, res) => {
     const product = await Product.findOne({
       where: { id: req.params.id, active: true },
-      include: [{ association: "images", separate: true, order: [["position", "ASC"]] }],
+      include: [
+        { association: "category" },
+        { association: "images", separate: true, order: [["position", "ASC"]] },
+        { association: "variants", where: { active: true }, required: false },
+      ],
     });
     if (!product) return res.status(404).send("Product not found");
     return res.json(presentProduct(product));
