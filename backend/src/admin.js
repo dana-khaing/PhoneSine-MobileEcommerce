@@ -9,6 +9,7 @@ const {
 const { deliverPendingNotifications } = require("./notificationService");
 const { reconcilePayments } = require("./reconciliationService");
 const { audit } = require("./auditService");
+const { createProduct, updateProduct } = require("./productService");
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -53,21 +54,45 @@ router.post("/orders/:id/refund", async (req, res) => {
 });
 
 router.patch("/products/:id", async (req, res) => {
-  const product = await Product.findByPk(req.params.id);
-  if (!product) return res.status(404).send("Product not found");
-  const stockQuantity = req.body.stockQuantity ?? product.stockQuantity;
-  if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
-    return res.status(400).send("Stock quantity must be a non-negative integer");
+  try {
+    const product = await Product.findByPk(req.params.id);
+    if (!product) return res.status(404).send("Product not found");
+    await updateProduct(product, req.body);
+    await audit(req.user.email, "product_updated", "product", product.id, req.body);
+    return res.json(product);
+  } catch (error) {
+    return res.status(400).send(error.message);
   }
-  await product.update({
-    stockQuantity,
-    active: req.body.active ?? product.active,
-  });
-  res.json(product);
 });
 
 router.get("/products", async (_req, res) => {
   res.json(await Product.findAll({ order: [["name", "ASC"]] }));
+});
+
+router.post("/products", async (req, res) => {
+  try {
+    const product = await createProduct(req.body);
+    await audit(req.user.email, "product_created", "product", product.id, { name: product.name });
+    return res.status(201).json(product);
+  } catch (error) {
+    return res.status(400).send(error.message);
+  }
+});
+
+router.delete("/products/:id", async (req, res) => {
+  const product = await Product.findByPk(req.params.id);
+  if (!product) return res.status(404).send("Product not found");
+  await product.update({ active: false });
+  await audit(req.user.email, "product_archived", "product", product.id);
+  return res.status(204).end();
+});
+
+router.post("/products/:id/restore", async (req, res) => {
+  const product = await Product.findByPk(req.params.id);
+  if (!product) return res.status(404).send("Product not found");
+  await product.update({ active: true });
+  await audit(req.user.email, "product_restored", "product", product.id);
+  return res.json(product);
 });
 
 router.post("/cleanup", async (_req, res) => {

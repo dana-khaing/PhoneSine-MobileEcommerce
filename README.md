@@ -77,3 +77,6 @@ backend console during local development. Users must verify their email before
 signing in. Access tokens are short-lived and backed by rotating, revocable
 refresh sessions. Admin authorization uses the database `role` field; set
 `ADMIN_EMAILS` before the role migration to seed the first admin accounts.
+
+Admins can create, edit, archive, restore, price, and stock products from the
+commerce admin page.
