@@ -11,7 +11,7 @@ const savedItemsRoute = require("./savedItems");
 const reviewsRoute = require("./reviews");
 const shippingRoute = require("./shipping");
 const { stripeWebhook } = require("./stripeWebhook");
-const { Product } = require("../models");
+const { Product, ProductBundle } = require("../models");
 const { createRateLimiter } = require("./rateLimit");
 const { presentProduct } = require("./productPresenter");
 const { discoveryQuery } = require("./productDiscovery");
@@ -68,6 +68,8 @@ function createApp() {
         "reservedQuantity",
         "categoryId",
         "specifications",
+        "allowBackorder",
+        "preorderDate",
       ],
     });
     res.set("X-Total-Count", String(count));
@@ -94,6 +96,12 @@ function createApp() {
     if (!product) return res.status(404).send("Product not found");
     return res.json(presentProduct(product));
   });
+  app.get("/products/:id/recommendations", async (req, res) => {
+    const product = await Product.findByPk(req.params.id); if (!product) return res.status(404).send("Product not found");
+    const where = { active: true, id: { [Op.ne]: product.id } }; if (product.categoryId) where.categoryId = product.categoryId;
+    res.json((await Product.findAll({ where, limit: 4, include: ["images"] })).map(presentProduct));
+  });
+  app.get("/bundles", async (_req, res) => res.json(await ProductBundle.findAll({ where: { active: true } })));
 
   app.use((_req, res) => res.status(404).send("Not found"));
   return app;

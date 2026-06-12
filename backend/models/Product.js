@@ -8,6 +8,8 @@ module.exports = (sequelize, DataTypes) => {
     reservedQuantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     categoryId: { type: DataTypes.INTEGER },
     specifications: { type: DataTypes.JSON, allowNull: false, defaultValue: {} },
+    allowBackorder: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    preorderDate: { type: DataTypes.DATE },
     active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   });
 
