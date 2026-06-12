@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const models = require("../models");
-const { createOrderWithItems } = require("../src/orderRepository");
+const { createOrderWithItems, loadCheckoutItems } = require("../src/orderRepository");
 
 test("creates an order and its items in the same transaction", async () => {
   const transaction = { id: "transaction" };
@@ -62,5 +62,25 @@ test("creates an order and its items in the same transaction", async () => {
     models.Promotion.findOne = originalFindPromotion;
     models.InventoryReservation.create = originalReservationCreate;
     models.OrderEvent.create = originalEventCreate;
+  }
+});
+
+test("uses a selected variant name and price during checkout", async () => {
+  const originalProduct = models.Product.findByPk;
+  const originalVariant = models.ProductVariant.findOne;
+  models.Product.findByPk = async () => ({ id: 1, name: "Phone", priceAmount: 10000, active: true });
+  models.ProductVariant.findOne = async () => ({ id: 7, name: "Blue 256GB", priceAmount: 12000 });
+  try {
+    const items = await loadCheckoutItems([{ id: 1, variantId: 7, quantity: 1 }], {});
+    assert.deepEqual(items[0], {
+      productId: 1,
+      variantId: 7,
+      name: "Phone - Blue 256GB",
+      unitAmount: 12000,
+      quantity: 1,
+    });
+  } finally {
+    models.Product.findByPk = originalProduct;
+    models.ProductVariant.findOne = originalVariant;
   }
 });
