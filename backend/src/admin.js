@@ -1,5 +1,5 @@
 const express = require("express");
-const { AuditLog, Notification, Order, OrderEvent, OrderItem, Product, Promotion, Refund, Userdetail } = require("../models");
+const { AuditLog, Category, Notification, Order, OrderEvent, OrderItem, Product, ProductVariant, Promotion, Refund, Userdetail } = require("../models");
 const { requireAdmin } = require("./authMiddleware");
 const {
   cancelOrRefundOrder,
@@ -9,7 +9,7 @@ const {
 const { deliverPendingNotifications } = require("./notificationService");
 const { reconcilePayments } = require("./reconciliationService");
 const { audit } = require("./auditService");
-const { createProduct, updateProduct } = require("./productService");
+const { createCategory, createProduct, createVariant, updateProduct, updateVariant } = require("./productService");
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -67,9 +67,58 @@ router.patch("/products/:id", async (req, res) => {
 
 router.get("/products", async (_req, res) => {
   res.json(await Product.findAll({
-    include: [{ association: "images", separate: true, order: [["position", "ASC"]] }],
+    include: [
+      { association: "category" },
+      { association: "images", separate: true, order: [["position", "ASC"]] },
+      { association: "variants" },
+    ],
     order: [["name", "ASC"]],
   }));
+});
+
+router.get("/categories", async (_req, res) => {
+  res.json(await Category.findAll({ order: [["name", "ASC"]] }));
+});
+
+router.post("/categories", async (req, res) => {
+  try {
+    const category = await createCategory(req.body);
+    await audit(req.user.email, "category_created", "category", category.id, { name: category.name });
+    return res.status(201).json(category);
+  } catch (error) {
+    return res.status(400).send(error.message);
+  }
+});
+
+router.post("/products/:id/variants", async (req, res) => {
+  try {
+    if (!await Product.findByPk(req.params.id)) return res.status(404).send("Product not found");
+    const variant = await createVariant(req.params.id, req.body);
+    await audit(req.user.email, "variant_created", "product_variant", variant.id, { sku: variant.sku });
+    return res.status(201).json(variant);
+  } catch (error) {
+    return res.status(400).send(error.message);
+  }
+});
+
+router.patch("/products/:productId/variants/:id", async (req, res) => {
+  try {
+    const variant = await ProductVariant.findOne({ where: { id: req.params.id, productId: req.params.productId } });
+    if (!variant) return res.status(404).send("Product variant not found");
+    await updateVariant(variant, req.body);
+    await audit(req.user.email, "variant_updated", "product_variant", variant.id, req.body);
+    return res.json(variant);
+  } catch (error) {
+    return res.status(400).send(error.message);
+  }
+});
+
+router.delete("/products/:productId/variants/:id", async (req, res) => {
+  const variant = await ProductVariant.findOne({ where: { id: req.params.id, productId: req.params.productId } });
+  if (!variant) return res.status(404).send("Product variant not found");
+  await variant.update({ active: false });
+  await audit(req.user.email, "variant_archived", "product_variant", variant.id);
+  return res.status(204).end();
 });
 
 router.post("/products", async (req, res) => {
