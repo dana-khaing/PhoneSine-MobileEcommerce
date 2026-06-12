@@ -6,12 +6,16 @@ module.exports = (sequelize, DataTypes) => {
     priceAmount: { type: DataTypes.INTEGER, allowNull: false },
     stockQuantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     reservedQuantity: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    categoryId: { type: DataTypes.INTEGER },
+    specifications: { type: DataTypes.JSON, allowNull: false, defaultValue: {} },
     active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   });
 
-  Product.associate = ({ OrderItem, ProductImage }) => {
+  Product.associate = ({ Category, OrderItem, ProductImage, ProductVariant }) => {
+    Product.belongsTo(Category, { as: "category", foreignKey: "categoryId" });
     Product.hasMany(OrderItem, { foreignKey: "productId" });
     Product.hasMany(ProductImage, { as: "images", foreignKey: "productId" });
+    Product.hasMany(ProductVariant, { as: "variants", foreignKey: "productId" });
   };
 
   return Product;
