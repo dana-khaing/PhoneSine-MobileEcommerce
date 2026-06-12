@@ -9,6 +9,7 @@ const paymentMethodsRoute = require("./paymentMethods");
 const { stripeWebhook } = require("./stripeWebhook");
 const { Product } = require("../models");
 const { createRateLimiter } = require("./rateLimit");
+const { presentProduct } = require("./productPresenter");
 
 function createApp() {
   const app = express();
@@ -36,16 +37,13 @@ function createApp() {
         "reservedQuantity",
       ],
     });
-    res.json(
-      products.map((product) => {
-        const record = product.toJSON();
-        return {
-          ...record,
-          price: record.priceInPence / 100,
-          availableStock: record.stockQuantity - record.reservedQuantity,
-        };
-      })
-    );
+    res.json(products.map(presentProduct));
+  });
+
+  app.get("/products/:id", async (req, res) => {
+    const product = await Product.findOne({ where: { id: req.params.id, active: true } });
+    if (!product) return res.status(404).send("Product not found");
+    return res.json(presentProduct(product));
   });
 
   app.use((_req, res) => res.status(404).send("Not found"));
