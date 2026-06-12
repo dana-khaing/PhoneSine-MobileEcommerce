@@ -11,6 +11,7 @@ const { reconcilePayments } = require("./reconciliationService");
 const { audit } = require("./auditService");
 const { createCategory, createProduct, createVariant, updateProduct, updateVariant } = require("./productService");
 const { updateReturn } = require("./returnService");
+const { operationsSummary, queueLowStockAlerts } = require("./operationsService");
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -206,6 +207,11 @@ router.get("/health/payments", async (_req, res) => {
     Notification.count({ where: { status: "failed" } }),
   ]);
   res.json({ pending, reviews, disputes, failedNotifications });
+});
+router.get("/analytics", async (_req, res) => res.json(await operationsSummary()));
+router.post("/low-stock-alerts", async (req, res) => {
+  const recipient = req.body.recipient || req.user.email;
+  res.json({ queued: await queueLowStockAlerts(recipient) });
 });
 
 router.get("/users", async (_req, res) => {
