@@ -8,6 +8,8 @@ export default function ProductList({
   price,
   paymentlistener,
   productdetail,
+  sort,
+  page,
 }) {
   const [products, setProducts] = useState([]);
   const [items, setItems] = useState([]);
@@ -15,12 +17,13 @@ export default function ProductList({
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [filterSearch, sort, page]);
 
   // Just fetching the data from the backend
   const fetchData = async () => {
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_PRODUCT_LIST_URL);
+      const params = new URLSearchParams({ search: filterSearch, sort, page: String(page), limit: "12" });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}?${params}`);
       if (!response.ok) throw new Error("Unable to load products");
       const jsonData = await response.json();
       setProducts(jsonData);
