@@ -80,3 +80,6 @@ refresh sessions. Admin authorization uses the database `role` field; set
 
 Admins can create, edit, archive, restore, price, and stock products from the
 commerce admin page.
+
+Each active product has a public `/products/:id` API and storefront detail page
+with description, price, availability, and add-to-cart support.
