@@ -25,7 +25,7 @@ function productFields(input, existing = {}) {
   if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
     throw new Error("Stock quantity must be a non-negative integer");
   }
-  return { name, brand, description, priceAmount, stockQuantity, categoryId, specifications };
+  return { name, brand, description, priceAmount, stockQuantity, categoryId, specifications, allowBackorder: Boolean(input.allowBackorder ?? existing.allowBackorder), preorderDate: input.preorderDate ?? existing.preorderDate ?? null };
 }
 
 async function createProduct(input) {
