@@ -31,6 +31,14 @@ function createApp() {
   app.use("/saved", savedItemsRoute);
   app.use("/reviews", reviewsRoute);
   app.use("/admin", adminRoute);
+  app.get("/health", async (_req, res) => {
+    try {
+      await Product.sequelize.authenticate();
+      res.json({ status: "ok", database: "connected", timestamp: new Date().toISOString() });
+    } catch {
+      res.status(503).json({ status: "unavailable", database: "disconnected" });
+    }
+  });
 
   app.get("/products", async (_req, res) => {
     const query = discoveryQuery(_req.query);

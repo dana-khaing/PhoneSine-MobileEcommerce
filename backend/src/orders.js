@@ -4,6 +4,7 @@ const { requireAuth } = require("./authMiddleware");
 const { Op } = require("sequelize");
 const { cancelOrRefundOrder } = require("./orderOperations");
 const { createReturn } = require("./returnService");
+const { createInvoicePdf } = require("./invoiceService");
 
 const router = express.Router();
 
@@ -42,6 +43,13 @@ router.post("/:id/returns", requireAuth, async (req, res) => {
     if (!order) return res.status(404).send("Order not found");
     res.status(201).json(await createReturn(order, req.user.userId, req.body));
   } catch (error) { res.status(400).send(error.message); }
+});
+router.get("/:id/invoice", requireAuth, async (req, res) => {
+  const order = await Order.findOne({ where: { id: req.params.id, [Op.or]: [{ userId: req.user.userId }, { email: req.user.email }] }, include: [{ model: OrderItem, as: "items" }] });
+  if (!order) return res.status(404).send("Order not found");
+  res.set("Content-Type", "application/pdf");
+  res.set("Content-Disposition", `attachment; filename="order-${order.id}.pdf"`);
+  res.send(createInvoicePdf(order));
 });
 
 router.post("/:id/cancel", requireAuth, async (req, res) => {
