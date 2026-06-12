@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [message, setMessage] = useState("Loading orders...");
+  const [returnReasons, setReturnReasons] = useState({});
   const cancelOrder = async (orderId) => {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_ORDERS_URL}/${orderId}/cancel`,
@@ -15,6 +16,14 @@ export default function OrdersPage() {
       }
     );
     setMessage(response.ok ? "Cancellation/refund request submitted." : await response.text());
+  };
+  const requestReturn = async (orderId) => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_ORDERS_URL}/${orderId}/returns`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+      body: JSON.stringify({ reason: returnReasons[orderId], details: "" }),
+    });
+    setMessage(response.ok ? "Return request submitted." : await response.text());
   };
 
   useEffect(() => {
@@ -76,6 +85,8 @@ export default function OrdersPage() {
                 </p>
               ))}
             </div>
+            {order.returnRequest && <p className="mt-4 rounded bg-neutral-100 p-3">Return: {order.returnRequest.status}{order.returnRequest.returnTrackingNumber ? ` · ${order.returnRequest.returnTrackingNumber}` : ""}</p>}
+            {order.status === "delivered" && !order.returnRequest && <div className="mt-4 flex gap-2"><input className="rounded border p-2" placeholder="Return reason" value={returnReasons[order.id] || ""} onChange={(event) => setReturnReasons((current) => ({ ...current, [order.id]: event.target.value }))} /><button className="rounded border px-4 py-2" onClick={() => requestReturn(order.id)}>Request return</button></div>}
             {!["cancelled", "refunded", "partially_refunded"].includes(order.status) && (
               <button onClick={() => cancelOrder(order.id)} className="mt-4 rounded border px-4 py-2">
                 Cancel or request refund

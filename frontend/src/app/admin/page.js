@@ -15,6 +15,7 @@ export default function AdminPage() {
   const [promotion, setPromotion] = useState({ code: "", percentOff: 10, maxUses: 100, perCustomerLimit: 1 });
   const [users, setUsers] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [returns, setReturns] = useState([]);
   const emptyProduct = { name: "", brand: "", description: "", priceAmount: "", stockQuantity: "", categoryId: "", specifications: "{}" };
   const [productForm, setProductForm] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
@@ -59,6 +60,7 @@ export default function AdminPage() {
       .then((response) => response.json())
       .then(setUsers);
   const loadReviews = () => fetch(`${api}/reviews`, { headers: headers() }).then((response) => response.json()).then(setReviews);
+  const loadReturns = () => fetch(`${api}/returns`, { headers: headers() }).then((response) => response.json()).then(setReturns);
 
   useEffect(() => {
     loadOrders();
@@ -68,6 +70,7 @@ export default function AdminPage() {
     loadPromotions();
     loadUsers();
     loadReviews();
+    loadReturns();
   }, []);
 
   const action = async (path, method = "POST", body) => {
@@ -84,6 +87,7 @@ export default function AdminPage() {
     await loadPromotions();
     await loadUsers();
     await loadReviews();
+    await loadReturns();
   };
 
   const saveProduct = async (event) => {
@@ -212,6 +216,10 @@ export default function AdminPage() {
             </div>
           ))}
         </div>
+      </section>
+      <section className="mb-8 rounded border p-5">
+        <h2 className="text-xl font-bold">Returns</h2>
+        {returns.map((item) => <div key={item.id} className="mt-3 border p-3"><p>Order #{item.orderId} · {item.reason} · {item.status}</p><div className="mt-2 flex flex-wrap gap-2">{({ requested: ["approved", "rejected"], approved: ["in_transit"], in_transit: ["received"], received: ["refunded"] }[item.status] || []).map((status) => <button key={status} className="rounded border px-3 py-1" onClick={() => action(`/returns/${item.id}`, "PATCH", { status })}>{status}</button>)}</div></div>)}
       </section>
       <section className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Review moderation</h2>
