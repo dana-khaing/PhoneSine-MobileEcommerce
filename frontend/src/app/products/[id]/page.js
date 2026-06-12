@@ -12,6 +12,7 @@ export default function ProductDetailPage({ params }) {
   const [selectedVariantId, setSelectedVariantId] = useState("");
   const [reviews, setReviews] = useState({ averageRating: 0, reviewCount: 0, reviews: [] });
   const [review, setReview] = useState({ rating: 5, title: "", body: "" });
+  const [recommendations, setRecommendations] = useState([]);
   const { addItem } = useContext(CartContext);
 
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function ProductDetailPage({ params }) {
   }, [params.id]);
   const loadReviews = () => fetch(`${process.env.NEXT_PUBLIC_API_REVIEWS_URL}/products/${params.id}`).then((response) => response.json()).then(setReviews);
   useEffect(loadReviews, [params.id]);
+  useEffect(() => { fetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/${params.id}/recommendations`).then((response) => response.json()).then(setRecommendations); }, [params.id]);
 
   if (!product) return <main className="mx-auto max-w-5xl px-6 py-20">{message}</main>;
   const selectedVariant = product.variants?.find((variant) => String(variant.id) === selectedVariantId);
@@ -94,7 +96,8 @@ export default function ProductDetailPage({ params }) {
             {Object.entries(product.specifications).map(([key, value]) => <div key={key}><dt className="font-semibold">{key}</dt><dd>{String(value)}</dd></div>)}
           </dl>
         )}
-        <button disabled={availableStock === 0} onClick={addToCart} className="mt-8 rounded bg-neutral-900 px-6 py-3 text-white disabled:opacity-40">Add to cart</button>
+        {product.preorderDate && <p className="mt-3">Preorder release: {new Date(product.preorderDate).toLocaleDateString()}</p>}
+        <button disabled={availableStock === 0 && !product.allowBackorder} onClick={addToCart} className="mt-8 rounded bg-neutral-900 px-6 py-3 text-white disabled:opacity-40">{availableStock === 0 && product.allowBackorder ? "Backorder" : product.preorderDate ? "Preorder" : "Add to cart"}</button>
         <button onClick={saveToWishlist} className="ml-2 mt-8 rounded border px-6 py-3">Save to wishlist</button>
         {message && <p className="mt-3 text-sm">{message}</p>}
         <section className="mt-10 border-t pt-6">
@@ -107,6 +110,7 @@ export default function ProductDetailPage({ params }) {
             <button className="rounded border px-4 py-2">Submit review</button>
           </form>
         </section>
+        {recommendations.length > 0 && <section className="mt-10 border-t pt-6"><h2 className="text-xl font-bold">Related products</h2>{recommendations.map((item) => <Link key={item.id} className="mt-2 block underline" href={`/products/${item.id}`}>{item.name} · £{item.price.toFixed(2)}</Link>)}</section>}
       </section>
     </main>
   );
