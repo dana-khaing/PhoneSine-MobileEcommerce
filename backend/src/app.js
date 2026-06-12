@@ -7,6 +7,7 @@ const orderRoute = require("./orders");
 const adminRoute = require("./admin");
 const paymentMethodsRoute = require("./paymentMethods");
 const productImagesRoute = require("./productImages");
+const savedItemsRoute = require("./savedItems");
 const { stripeWebhook } = require("./stripeWebhook");
 const { Product } = require("../models");
 const { createRateLimiter } = require("./rateLimit");
@@ -24,6 +25,7 @@ function createApp() {
   app.use("/payments", paymentRoute);
   app.use("/orders", orderRoute);
   app.use("/payment-methods", paymentMethodsRoute);
+  app.use("/saved", savedItemsRoute);
   app.use("/admin", adminRoute);
 
   app.get("/products", async (_req, res) => {

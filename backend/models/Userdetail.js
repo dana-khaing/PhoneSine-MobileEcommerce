@@ -30,8 +30,10 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
 
-  Userdetail.associate = ({ Order }) => {
+  Userdetail.associate = ({ Order, SavedCart, WishlistItem }) => {
     Userdetail.hasMany(Order, { as: "orders", foreignKey: "userId" });
+    Userdetail.hasOne(SavedCart, { as: "savedCart", foreignKey: "userId" });
+    Userdetail.hasMany(WishlistItem, { as: "wishlist", foreignKey: "userId" });
   };
 
   return Userdetail;

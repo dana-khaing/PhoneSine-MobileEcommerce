@@ -40,6 +40,27 @@ export function CartProvider({ children }) {
   const removeItem = (key) =>
     setItems((current) => current.filter((item) => cartItemKey(item) !== String(key)));
   const clearCart = () => setItems([]);
+  const saveCart = async () => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/cart`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+      body: JSON.stringify({ items }),
+    });
+    if (!response.ok) throw new Error(await response.text());
+  };
+  const loadSavedCart = async () => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/cart`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const saved = await response.json();
+    const products = await Promise.all(saved.items.map(async (item) => {
+      const product = await fetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/${item.id}`).then((result) => result.json());
+      const variant = product.variants?.find((candidate) => candidate.id === item.variantId);
+      return { ...product, quantity: item.quantity, ...(variant ? { variantId: variant.id, variantName: variant.name, price: variant.price } : {}) };
+    }));
+    setItems(products);
+  };
 
   return (
     <CartContext.Provider
@@ -53,6 +74,8 @@ export function CartProvider({ children }) {
         updateQuantity,
         removeItem,
         clearCart,
+        saveCart,
+        loadSavedCart,
       }}
     >
       {children}
