@@ -14,6 +14,7 @@ export default function CartDrawer() {
     setIsCartOpen,
     updateQuantity,
     removeItem,
+    saveCart,
   } = useContext(CartContext);
 
   if (!isCartOpen) return null;
@@ -74,6 +75,7 @@ export default function CartDrawer() {
           >
             Checkout
           </Link>
+          <button onClick={() => saveCart().catch(() => {})} className="mt-2 w-full rounded border py-3">Save cart to account</button>
         </div>
       </aside>
     </div>
