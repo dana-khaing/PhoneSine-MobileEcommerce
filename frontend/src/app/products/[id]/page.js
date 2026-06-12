@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
 import { CartContext } from "../../contexts/cartContext";
+import { productImageUrl } from "../productImages.mjs";
 
 export default function ProductDetailPage({ params }) {
   const [product, setProduct] = useState(null);
   const [message, setMessage] = useState("Loading product...");
+  const [selectedImage, setSelectedImage] = useState(null);
   const { addItem } = useContext(CartContext);
 
   useEffect(() => {
@@ -17,6 +19,7 @@ export default function ProductDetailPage({ params }) {
       })
       .then((data) => {
         setProduct(data);
+        setSelectedImage(data.images?.[0] || null);
         setMessage("");
       })
       .catch((error) => setMessage(error.message));
@@ -27,7 +30,16 @@ export default function ProductDetailPage({ params }) {
   return (
     <main className="mx-auto grid max-w-5xl gap-10 px-6 py-12 md:grid-cols-2">
       <div className="flex min-h-96 items-center justify-center rounded bg-neutral-100">
-        <img src="/iph15-pro.jpeg" alt={product.name} className="max-h-80" />
+        <div>
+          <img src={productImageUrl(selectedImage, process.env.NEXT_PUBLIC_BACKEND_ORIGIN)} alt={selectedImage?.altText || product.name} className="mx-auto max-h-80 max-w-full object-contain" />
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            {product.images?.map((image) => (
+              <button key={image.id} onClick={() => setSelectedImage(image)} className="rounded border p-1">
+                <img src={productImageUrl(image, process.env.NEXT_PUBLIC_BACKEND_ORIGIN)} alt={image.altText} className="h-16 w-16 object-cover" />
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
       <section>
         <Link href="/products" className="text-sm underline">Back to products</Link>
