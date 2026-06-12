@@ -18,10 +18,12 @@ const { presentProduct } = require("./productPresenter");
 const { discoveryQuery } = require("./productDiscovery");
 const { Op } = require("sequelize");
 const { csrfProtection, securityHeaders } = require("./securityMiddleware");
+const { errorHandler, requestLogger } = require("./logger");
 
 function createApp() {
   const app = express();
   app.use(securityHeaders);
+  app.use(requestLogger);
   app.use(cors({ origin: process.env.FRONTEND_ORIGIN || "http://localhost:3000", credentials: true }));
   app.post("/payments/webhook", express.raw({ type: "application/json" }), stripeWebhook);
   app.use("/admin/products", productImagesRoute);
@@ -106,6 +108,7 @@ function createApp() {
   app.get("/bundles", async (_req, res) => res.json(await ProductBundle.findAll({ where: { active: true } })));
 
   app.use((_req, res) => res.status(404).send("Not found"));
+  app.use(errorHandler);
   return app;
 }
 
