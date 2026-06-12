@@ -1,5 +1,5 @@
 const express = require("express");
-const { AuditLog, Category, Notification, Order, OrderEvent, OrderItem, Product, ProductReview, ProductVariant, Promotion, Refund, ReturnRequest, Userdetail } = require("../models");
+const { AuditLog, Category, Notification, Order, OrderEvent, OrderItem, Product, ProductBundle, ProductReview, ProductVariant, Promotion, Refund, ReturnRequest, Userdetail } = require("../models");
 const { requireAdmin } = require("./authMiddleware");
 const {
   cancelOrRefundOrder,
@@ -12,6 +12,7 @@ const { audit } = require("./auditService");
 const { createCategory, createProduct, createVariant, updateProduct, updateVariant } = require("./productService");
 const { updateReturn } = require("./returnService");
 const { operationsSummary, queueLowStockAlerts } = require("./operationsService");
+const { parseProductCsv, productsToCsv } = require("./catalogueService");
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -139,6 +140,15 @@ router.post("/products", async (req, res) => {
   } catch (error) {
     return res.status(400).send(error.message);
   }
+});
+router.get("/products-export.csv", async (_req, res) => res.type("text/csv").send(productsToCsv(await Product.findAll())));
+router.post("/products-import.csv", express.text({ type: "text/csv", limit: "1mb" }), async (req, res) => {
+  try { const records = parseProductCsv(req.body); for (const record of records) await createProduct(record); res.json({ imported: records.length }); }
+  catch (error) { res.status(400).send(error.message); }
+});
+router.post("/bundles", async (req, res) => {
+  const priceAmount = Number(req.body.priceAmount); if (!req.body.name || !Number.isInteger(priceAmount) || !Array.isArray(req.body.items)) return res.status(400).send("Bundle name, price, and items are required");
+  res.status(201).json(await ProductBundle.create({ ...req.body, priceAmount, active: true }));
 });
 
 router.delete("/products/:id", async (req, res) => {

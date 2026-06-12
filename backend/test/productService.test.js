@@ -12,6 +12,8 @@ test("validates product management fields", () => {
     stockQuantity: 8,
     categoryId: null,
     specifications: {},
+    allowBackorder: false,
+    preorderDate: null,
   }), {
     name: "Phone",
     brand: "Phone Sine",
@@ -20,6 +22,8 @@ test("validates product management fields", () => {
     stockQuantity: 8,
     categoryId: null,
     specifications: {},
+    allowBackorder: false,
+    preorderDate: null,
   });
   assert.throws(() => productFields({ name: "", brand: "Brand", priceAmount: 1 }), /required/);
   assert.throws(() => productFields({ name: "Phone", brand: "Brand", priceAmount: 0 }), /positive/);
