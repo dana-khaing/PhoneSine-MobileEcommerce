@@ -1,5 +1,5 @@
 const express = require("express");
-const { AuditLog, Category, Notification, Order, OrderEvent, OrderItem, Product, ProductReview, ProductVariant, Promotion, Refund, Userdetail } = require("../models");
+const { AuditLog, Category, Notification, Order, OrderEvent, OrderItem, Product, ProductReview, ProductVariant, Promotion, Refund, ReturnRequest, Userdetail } = require("../models");
 const { requireAdmin } = require("./authMiddleware");
 const {
   cancelOrRefundOrder,
@@ -10,6 +10,7 @@ const { deliverPendingNotifications } = require("./notificationService");
 const { reconcilePayments } = require("./reconciliationService");
 const { audit } = require("./auditService");
 const { createCategory, createProduct, createVariant, updateProduct, updateVariant } = require("./productService");
+const { updateReturn } = require("./returnService");
 
 const router = express.Router();
 router.use(requireAdmin);
@@ -51,6 +52,14 @@ router.post("/orders/:id/refund", async (req, res) => {
   } catch (error) {
     return res.status(400).send(error.message);
   }
+});
+router.get("/returns", async (_req, res) => res.json(await ReturnRequest.findAll({ include: [{ model: Order }], order: [["createdAt", "DESC"]] })));
+router.patch("/returns/:id", async (req, res) => {
+  try {
+    const request = await ReturnRequest.findByPk(req.params.id);
+    if (!request) return res.status(404).send("Return not found");
+    res.json(await updateReturn(request, req.body));
+  } catch (error) { res.status(400).send(error.message); }
 });
 
 router.patch("/products/:id", async (req, res) => {
