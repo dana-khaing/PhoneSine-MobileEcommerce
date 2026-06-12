@@ -17,6 +17,7 @@ const Login = ({ closeallcard, handlesignup }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
   const { setUserName, setUserEmail, setUserIsLogin } = useContext(AuthContext);
   const { toast } = useToast();
   const handleEnterKey = (e) => {
@@ -32,7 +33,8 @@ const Login = ({ closeallcard, handlesignup }) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password, rememberMe }),
+      credentials: "include",
+      body: JSON.stringify({ email, password, rememberMe, twoFactorCode }),
     });
 
     if (data.status === 200) {
@@ -122,6 +124,7 @@ const Login = ({ closeallcard, handlesignup }) => {
             Forgot your password?
           </a>
         </div>
+        <input type="text" inputMode="numeric" maxLength="6" className="rounded-lg border border-black p-3" placeholder="Two-factor code, if enabled" value={twoFactorCode} onChange={(event) => setTwoFactorCode(event.target.value)} />
         <button
           type="submit"
           className="bg-neutral-900 text-white py-3 rounded-lg"

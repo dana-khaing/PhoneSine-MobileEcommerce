@@ -28,6 +28,10 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: "customer",
     },
+    failedLoginAttempts: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    lockedUntil: { type: DataTypes.DATE },
+    twoFactorSecret: { type: DataTypes.STRING },
+    twoFactorEnabled: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
   });
 
   Userdetail.associate = ({ Order, SavedCart, WishlistItem }) => {
