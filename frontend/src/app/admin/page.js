@@ -17,7 +17,7 @@ export default function AdminPage() {
   const [reviews, setReviews] = useState([]);
   const [returns, setReturns] = useState([]);
   const [analytics, setAnalytics] = useState(null);
-  const emptyProduct = { name: "", brand: "", description: "", priceAmount: "", stockQuantity: "", categoryId: "", specifications: "{}" };
+  const emptyProduct = { name: "", brand: "", description: "", priceAmount: "", stockQuantity: "", categoryId: "", specifications: "{}", allowBackorder: false, preorderDate: "" };
   const [productForm, setProductForm] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
   const [message, setMessage] = useState("Loading admin orders...");
@@ -105,6 +105,8 @@ export default function AdminPage() {
         stockQuantity: Number(productForm.stockQuantity),
         categoryId: productForm.categoryId || null,
         specifications: productForm.specifications,
+        allowBackorder: productForm.allowBackorder,
+        preorderDate: productForm.preorderDate || null,
       }
     );
     setProductForm(emptyProduct);
@@ -121,6 +123,8 @@ export default function AdminPage() {
       stockQuantity: product.stockQuantity,
       categoryId: product.categoryId || "",
       specifications: JSON.stringify(product.specifications || {}, null, 2),
+      allowBackorder: product.allowBackorder,
+      preorderDate: product.preorderDate?.slice(0, 10) || "",
     });
   };
 
@@ -172,12 +176,15 @@ export default function AdminPage() {
             {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
           </select>
           <textarea className="rounded border p-2" placeholder='Specifications JSON, e.g. {"screen":"6.1 inch"}' value={productForm.specifications} onChange={(event) => setProductForm((current) => ({ ...current, specifications: event.target.value }))} />
+          <label className="flex items-center gap-2"><input type="checkbox" checked={productForm.allowBackorder} onChange={(event) => setProductForm((current) => ({ ...current, allowBackorder: event.target.checked }))} /> Allow backorders</label>
+          <input type="date" className="rounded border p-2" value={productForm.preorderDate} onChange={(event) => setProductForm((current) => ({ ...current, preorderDate: event.target.value }))} />
           <div className="flex gap-2 md:col-span-2">
             <button className="rounded border px-3 py-2">{editingProductId ? "Save product" : "Create product"}</button>
             {editingProductId && <button type="button" className="rounded border px-3 py-2" onClick={() => { setEditingProductId(null); setProductForm(emptyProduct); }}>Cancel edit</button>}
           </div>
         </form>
         <div className="mt-5 flex gap-2">
+          <a className="rounded border px-3 py-2" href={`${api}/products-export.csv`}>Export products CSV</a>
           <input className="rounded border p-2" placeholder="New category name" value={categoryName} onChange={(event) => setCategoryName(event.target.value)} />
           <button className="rounded border px-3 py-2" onClick={async () => { await action("/categories", "POST", { name: categoryName }); setCategoryName(""); }}>Create category</button>
         </div>
