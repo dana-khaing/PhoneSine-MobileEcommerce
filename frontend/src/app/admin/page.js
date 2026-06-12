@@ -11,6 +11,9 @@ export default function AdminPage() {
   const [promotions, setPromotions] = useState([]);
   const [promotion, setPromotion] = useState({ code: "", percentOff: 10, maxUses: 100, perCustomerLimit: 1 });
   const [users, setUsers] = useState([]);
+  const emptyProduct = { name: "", brand: "", description: "", priceAmount: "", stockQuantity: "" };
+  const [productForm, setProductForm] = useState(emptyProduct);
+  const [editingProductId, setEditingProductId] = useState(null);
   const [message, setMessage] = useState("Loading admin orders...");
   const api = process.env.NEXT_PUBLIC_API_ADMIN_URL;
   const headers = () => ({
@@ -70,6 +73,32 @@ export default function AdminPage() {
     await loadUsers();
   };
 
+  const saveProduct = async (event) => {
+    event.preventDefault();
+    await action(
+      editingProductId ? `/products/${editingProductId}` : "/products",
+      editingProductId ? "PATCH" : "POST",
+      {
+        ...productForm,
+        priceAmount: Number(productForm.priceAmount),
+        stockQuantity: Number(productForm.stockQuantity),
+      }
+    );
+    setProductForm(emptyProduct);
+    setEditingProductId(null);
+  };
+
+  const editProduct = (product) => {
+    setEditingProductId(product.id);
+    setProductForm({
+      name: product.name,
+      brand: product.brand,
+      description: product.description || "",
+      priceAmount: product.priceAmount,
+      stockQuantity: product.stockQuantity,
+    });
+  };
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
       <h1 className="text-3xl font-bold">Commerce admin</h1>
@@ -81,12 +110,26 @@ export default function AdminPage() {
       {health && <p className="my-4">Payment health: {health.pending} pending · {health.reviews} reviews · {health.disputes} disputes · {health.failedNotifications} failed notifications</p>}
       {message && <p className="my-4">{message}</p>}
       <section className="mb-8 rounded border p-5">
-        <h2 className="text-xl font-bold">Inventory</h2>
+        <h2 className="text-xl font-bold">Product management</h2>
+        <form onSubmit={saveProduct} className="mt-3 grid gap-2 md:grid-cols-2">
+          {["name", "brand", "priceAmount", "stockQuantity"].map((field) => (
+            <input key={field} className="rounded border p-2" type={field.includes("Amount") || field.includes("Quantity") ? "number" : "text"} placeholder={field} value={productForm[field]} onChange={(event) => setProductForm((current) => ({ ...current, [field]: event.target.value }))} required />
+          ))}
+          <textarea className="rounded border p-2 md:col-span-2" placeholder="description" value={productForm.description} onChange={(event) => setProductForm((current) => ({ ...current, description: event.target.value }))} />
+          <div className="flex gap-2 md:col-span-2">
+            <button className="rounded border px-3 py-2">{editingProductId ? "Save product" : "Create product"}</button>
+            {editingProductId && <button type="button" className="rounded border px-3 py-2" onClick={() => { setEditingProductId(null); setProductForm(emptyProduct); }}>Cancel edit</button>}
+          </div>
+        </form>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
           {products.map((product) => (
-            <div key={product.id} className="flex items-center justify-between gap-3 border p-3">
-              <span>{product.name} · {product.stockQuantity} stock / {product.reservedQuantity} reserved</span>
-              <button className="rounded border px-3 py-1" onClick={() => action(`/products/${product.id}`, "PATCH", { stockQuantity: product.stockQuantity + 5 })}>+5 stock</button>
+            <div key={product.id} className="border p-3">
+              <p>{product.name} · {product.stockQuantity} stock / {product.reservedQuantity} reserved · {product.active ? "active" : "archived"}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button className="rounded border px-3 py-1" onClick={() => editProduct(product)}>Edit</button>
+                <button className="rounded border px-3 py-1" onClick={() => action(`/products/${product.id}`, "PATCH", { stockQuantity: product.stockQuantity + 5 })}>+5 stock</button>
+                <button className="rounded border px-3 py-1" onClick={() => action(product.active ? `/products/${product.id}` : `/products/${product.id}/restore`, product.active ? "DELETE" : "POST")}>{product.active ? "Archive" : "Restore"}</button>
+              </div>
             </div>
           ))}
         </div>
