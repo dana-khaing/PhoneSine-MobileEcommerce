@@ -26,6 +26,8 @@ export default function ProductDetailPage({ params }) {
         setSelectedImage(data.images?.[0] || null);
         setSelectedVariantId(data.variants?.[0]?.id ? String(data.variants[0].id) : "");
         setMessage("");
+        const recent = JSON.parse(localStorage.getItem("phone-sine-recent") || "[]").filter((item) => item.id !== data.id);
+        localStorage.setItem("phone-sine-recent", JSON.stringify([{ id: data.id, name: data.name, price: data.price }, ...recent].slice(0, 8)));
       })
       .catch((error) => setMessage(error.message));
   }, [params.id]);
