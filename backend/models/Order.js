@@ -23,12 +23,13 @@ module.exports = (sequelize, DataTypes) => {
     reconciledAt: { type: DataTypes.DATE },
   });
 
-  Order.associate = ({ OrderItem, Userdetail, OrderEvent, Refund, ReturnRequest }) => {
+  Order.associate = ({ OrderItem, Userdetail, OrderEvent, Refund, ReturnRequest, Shipment }) => {
     Order.hasMany(OrderItem, { as: "items", foreignKey: "orderId" });
     Order.hasMany(OrderEvent, { as: "events", foreignKey: "orderId" });
     Order.belongsTo(Userdetail, { as: "user", foreignKey: "userId" });
     Order.hasMany(Refund, { as: "refunds", foreignKey: "orderId" });
     Order.hasOne(ReturnRequest, { as: "returnRequest", foreignKey: "orderId" });
+    Order.hasOne(Shipment, { as: "shipment", foreignKey: "orderId" });
   };
 
   return Order;

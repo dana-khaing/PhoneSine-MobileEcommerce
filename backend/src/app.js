@@ -9,6 +9,7 @@ const paymentMethodsRoute = require("./paymentMethods");
 const productImagesRoute = require("./productImages");
 const savedItemsRoute = require("./savedItems");
 const reviewsRoute = require("./reviews");
+const shippingRoute = require("./shipping");
 const { stripeWebhook } = require("./stripeWebhook");
 const { Product } = require("../models");
 const { createRateLimiter } = require("./rateLimit");
@@ -33,6 +34,7 @@ function createApp() {
   app.use("/payment-methods", paymentMethodsRoute);
   app.use("/saved", savedItemsRoute);
   app.use("/reviews", reviewsRoute);
+  app.use("/shipping", shippingRoute);
   app.use("/admin", adminRoute);
   app.get("/health", async (_req, res) => {
     try {

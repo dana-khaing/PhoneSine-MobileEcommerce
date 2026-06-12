@@ -23,6 +23,7 @@ router.get("/", requireAuth, async (req, res) => {
         { model: OrderItem, as: "items" },
         { model: Refund, as: "refunds" },
         { association: "returnRequest" },
+        { association: "shipment" },
         {
           model: OrderEvent,
           as: "events",
