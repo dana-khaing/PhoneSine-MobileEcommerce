@@ -12,7 +12,7 @@ async function reserveInventory(orderId, items, transaction, expiresAt) {
   for (const item of items) {
     const stockItem = await findStockItem(item, transaction);
     if (!stockItem || !stockItem.active) throw new Error(`Product unavailable: ${item.productId}`);
-    if (stockItem.stockQuantity - stockItem.reservedQuantity < item.quantity) {
+    if (!stockItem.allowBackorder && stockItem.stockQuantity - stockItem.reservedQuantity < item.quantity) {
       throw new Error(`Insufficient stock for ${stockItem.name}`);
     }
     await stockItem.increment("reservedQuantity", { by: item.quantity, transaction });
