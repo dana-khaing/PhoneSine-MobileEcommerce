@@ -9,8 +9,9 @@ module.exports = (sequelize, DataTypes) => {
     active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   });
 
-  Product.associate = ({ OrderItem }) => {
+  Product.associate = ({ OrderItem, ProductImage }) => {
     Product.hasMany(OrderItem, { foreignKey: "productId" });
+    Product.hasMany(ProductImage, { as: "images", foreignKey: "productId" });
   };
 
   return Product;

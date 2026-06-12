@@ -23,3 +23,11 @@ test("presents product prices and available stock for storefront APIs", () => {
     }
   );
 });
+
+test("presents prices from aliased list-query fields", () => {
+  assert.equal(presentProduct({
+    priceInPence: 50000,
+    stockQuantity: 1,
+    reservedQuantity: 0,
+  }).price, 500);
+});

@@ -66,7 +66,10 @@ router.patch("/products/:id", async (req, res) => {
 });
 
 router.get("/products", async (_req, res) => {
-  res.json(await Product.findAll({ order: [["name", "ASC"]] }));
+  res.json(await Product.findAll({
+    include: [{ association: "images", separate: true, order: [["position", "ASC"]] }],
+    order: [["name", "ASC"]],
+  }));
 });
 
 router.post("/products", async (req, res) => {
