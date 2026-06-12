@@ -13,6 +13,8 @@ const { stripeWebhook } = require("./stripeWebhook");
 const { Product } = require("../models");
 const { createRateLimiter } = require("./rateLimit");
 const { presentProduct } = require("./productPresenter");
+const { discoveryQuery } = require("./productDiscovery");
+const { Op } = require("sequelize");
 
 function createApp() {
   const app = express();
@@ -31,8 +33,13 @@ function createApp() {
   app.use("/admin", adminRoute);
 
   app.get("/products", async (_req, res) => {
-    const products = await Product.findAll({
-      where: { active: true },
+    const query = discoveryQuery(_req.query);
+    const { rows: products, count } = await Product.findAndCountAll({
+      where: query.where,
+      limit: query.limit,
+      offset: query.offset,
+      order: query.order,
+      distinct: true,
       include: [
         { association: "category" },
         { association: "images", separate: true, order: [["position", "ASC"]] },
@@ -50,6 +57,15 @@ function createApp() {
         "specifications",
       ],
     });
+    res.set("X-Total-Count", String(count));
+    res.set("X-Page", String(query.page));
+    res.json(products.map(presentProduct));
+  });
+
+  app.get("/products/compare", async (req, res) => {
+    const ids = String(req.query.ids || "").split(",").map(Number).filter(Boolean).slice(0, 4);
+    if (ids.length < 2) return res.status(400).send("Select between 2 and 4 products");
+    const products = await Product.findAll({ where: { id: { [Op.in]: ids }, active: true }, include: ["category", "variants", "images"] });
     res.json(products.map(presentProduct));
   });
 
