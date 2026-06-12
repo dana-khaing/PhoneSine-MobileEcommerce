@@ -1,6 +1,7 @@
 "use client";
 
-import { ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { NavList } from "./navItem/navList";
 import Auth from "./auth";
@@ -19,6 +20,7 @@ export default function NavBar() {
         <NavList />
       </div>
       <div className="flex items-center justify-end">
+        <Link href="/saved" aria-label="Wishlist" className="p-2"><Heart className="h-5 w-5" /></Link>
         {/* <Button variant="ghost" className=" flex pl-[0.5rem] pr-1.5"></Button> */}
         <Button
           variant="ghost"
