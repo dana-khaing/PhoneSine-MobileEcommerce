@@ -1,5 +1,5 @@
 const express = require("express");
-const { AuditLog, Category, Notification, Order, OrderEvent, OrderItem, Product, ProductVariant, Promotion, Refund, Userdetail } = require("../models");
+const { AuditLog, Category, Notification, Order, OrderEvent, OrderItem, Product, ProductReview, ProductVariant, Promotion, Refund, Userdetail } = require("../models");
 const { requireAdmin } = require("./authMiddleware");
 const {
   cancelOrRefundOrder,
@@ -225,6 +225,14 @@ router.patch("/users/:id/role", async (req, res) => {
 
 router.get("/notifications", async (_req, res) => {
   res.json(await Notification.findAll({ order: [["createdAt", "DESC"]] }));
+});
+router.get("/reviews", async (_req, res) => res.json(await ProductReview.findAll({ where: { status: "pending" }, order: [["createdAt", "ASC"]] })));
+router.patch("/reviews/:id", async (req, res) => {
+  if (!["approved", "rejected"].includes(req.body.status)) return res.status(400).send("Review status must be approved or rejected");
+  const review = await ProductReview.findByPk(req.params.id);
+  if (!review) return res.status(404).send("Review not found");
+  await review.update({ status: req.body.status });
+  res.json(review);
 });
 
 router.post("/notifications/deliver", async (_req, res) => {
