@@ -16,6 +16,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [returns, setReturns] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const emptyProduct = { name: "", brand: "", description: "", priceAmount: "", stockQuantity: "", categoryId: "", specifications: "{}" };
   const [productForm, setProductForm] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
@@ -61,6 +62,7 @@ export default function AdminPage() {
       .then(setUsers);
   const loadReviews = () => fetch(`${api}/reviews`, { headers: headers() }).then((response) => response.json()).then(setReviews);
   const loadReturns = () => fetch(`${api}/returns`, { headers: headers() }).then((response) => response.json()).then(setReturns);
+  const loadAnalytics = () => fetch(`${api}/analytics`, { headers: headers() }).then((response) => response.json()).then(setAnalytics);
 
   useEffect(() => {
     loadOrders();
@@ -71,6 +73,7 @@ export default function AdminPage() {
     loadUsers();
     loadReviews();
     loadReturns();
+    loadAnalytics();
   }, []);
 
   const action = async (path, method = "POST", body) => {
@@ -88,6 +91,7 @@ export default function AdminPage() {
     await loadUsers();
     await loadReviews();
     await loadReturns();
+    await loadAnalytics();
   };
 
   const saveProduct = async (event) => {
@@ -154,6 +158,7 @@ export default function AdminPage() {
         <button className="rounded border px-4 py-2" onClick={() => action("/reconcile")}>Reconcile payments</button>
       </div>
       {health && <p className="my-4">Payment health: {health.pending} pending · {health.reviews} reviews · {health.disputes} disputes · {health.failedNotifications} failed notifications</p>}
+      {analytics && <div className="my-4 rounded border p-4"><strong>Operations:</strong> {analytics.orders} orders · £{(analytics.revenue / 100).toFixed(2)} paid revenue · {analytics.lowStock.length} low-stock items <button className="ml-3 rounded border px-3 py-1" onClick={() => action("/low-stock-alerts", "POST", {})}>Queue low-stock alerts</button></div>}
       {message && <p className="my-4">{message}</p>}
       <section className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Product management</h2>
