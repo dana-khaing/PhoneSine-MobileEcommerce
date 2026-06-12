@@ -3,6 +3,7 @@
 import { createContext, useEffect, useState } from "react";
 import {
   addCartItem,
+  cartItemKey,
   cartItemCount,
   cartSubtotal,
   updateCartItemQuantity,
@@ -36,8 +37,8 @@ export function CartProvider({ children }) {
   const addItem = (product) => setItems((current) => addCartItem(current, product));
   const updateQuantity = (productId, quantity) =>
     setItems((current) => updateCartItemQuantity(current, productId, quantity));
-  const removeItem = (productId) =>
-    setItems((current) => current.filter((item) => item.id !== productId));
+  const removeItem = (key) =>
+    setItems((current) => current.filter((item) => cartItemKey(item) !== String(key)));
   const clearCart = () => setItems([]);
 
   return (
