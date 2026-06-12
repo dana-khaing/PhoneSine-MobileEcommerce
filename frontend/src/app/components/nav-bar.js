@@ -22,6 +22,7 @@ export default function NavBar() {
       <div className="flex items-center justify-end">
         <Link href="/saved" aria-label="Wishlist" className="p-2"><Heart className="h-5 w-5" /></Link>
         <Link href="/security" className="p-2 text-sm">Security</Link>
+        <Link href="/support" className="p-2 text-sm">Support</Link>
         {/* <Button variant="ghost" className=" flex pl-[0.5rem] pr-1.5"></Button> */}
         <Button
           variant="ghost"
