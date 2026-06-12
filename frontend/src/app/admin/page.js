@@ -99,6 +99,21 @@ export default function AdminPage() {
     });
   };
 
+  const uploadImage = async (productId, file) => {
+    if (!file) return;
+    const response = await fetch(`${api}/products/${productId}/images`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": file.type,
+        "X-Alt-Text": file.name,
+      },
+      body: file,
+    });
+    setMessage(response.ok ? "Product image uploaded." : await response.text());
+    await loadProducts();
+  };
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
       <h1 className="text-3xl font-bold">Commerce admin</h1>
@@ -129,6 +144,17 @@ export default function AdminPage() {
                 <button className="rounded border px-3 py-1" onClick={() => editProduct(product)}>Edit</button>
                 <button className="rounded border px-3 py-1" onClick={() => action(`/products/${product.id}`, "PATCH", { stockQuantity: product.stockQuantity + 5 })}>+5 stock</button>
                 <button className="rounded border px-3 py-1" onClick={() => action(product.active ? `/products/${product.id}` : `/products/${product.id}/restore`, product.active ? "DELETE" : "POST")}>{product.active ? "Archive" : "Restore"}</button>
+                <label className="cursor-pointer rounded border px-3 py-1">
+                  Upload image
+                  <input className="hidden" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => uploadImage(product.id, event.target.files?.[0])} />
+                </label>
+              </div>
+              <div className="mt-2 flex gap-2">
+                {product.images?.map((image) => (
+                  <button key={image.id} onClick={() => action(`/products/${product.id}/images/${image.id}`, "DELETE")} title="Delete image">
+                    <img src={`${process.env.NEXT_PUBLIC_BACKEND_ORIGIN}${image.url}`} alt={image.altText} className="h-14 w-14 rounded border object-cover" />
+                  </button>
+                ))}
               </div>
             </div>
           ))}

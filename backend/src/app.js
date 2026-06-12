@@ -6,6 +6,7 @@ const paymentRoute = require("./payments");
 const orderRoute = require("./orders");
 const adminRoute = require("./admin");
 const paymentMethodsRoute = require("./paymentMethods");
+const productImagesRoute = require("./productImages");
 const { stripeWebhook } = require("./stripeWebhook");
 const { Product } = require("../models");
 const { createRateLimiter } = require("./rateLimit");
@@ -15,6 +16,7 @@ function createApp() {
   const app = express();
   app.use(cors());
   app.post("/payments/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+  app.use("/admin/products", productImagesRoute);
   app.use(express.json({ limit: "100kb" }));
   app.use(createRateLimiter({ windowMs: 60_000, max: 120 }));
   app.use(express.static(path.join(__dirname, "../public")));
@@ -27,6 +29,7 @@ function createApp() {
   app.get("/products", async (_req, res) => {
     const products = await Product.findAll({
       where: { active: true },
+      include: [{ association: "images", separate: true, order: [["position", "ASC"]] }],
       attributes: [
         "id",
         "name",
@@ -41,7 +44,10 @@ function createApp() {
   });
 
   app.get("/products/:id", async (req, res) => {
-    const product = await Product.findOne({ where: { id: req.params.id, active: true } });
+    const product = await Product.findOne({
+      where: { id: req.params.id, active: true },
+      include: [{ association: "images", separate: true, order: [["position", "ASC"]] }],
+    });
     if (!product) return res.status(404).send("Product not found");
     return res.json(presentProduct(product));
   });
