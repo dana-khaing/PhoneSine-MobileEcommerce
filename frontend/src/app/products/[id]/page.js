@@ -39,6 +39,14 @@ export default function ProductDetailPage({ params }) {
       price: selectedVariant.price,
     } : {}),
   });
+  const saveToWishlist = async () => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/wishlist`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+      body: JSON.stringify({ productId: product.id, variantId: selectedVariant?.id }),
+    });
+    setMessage(response.ok ? "Saved to wishlist." : await response.text());
+  };
 
   return (
     <main className="mx-auto grid max-w-5xl gap-10 px-6 py-12 md:grid-cols-2">
@@ -73,6 +81,8 @@ export default function ProductDetailPage({ params }) {
           </dl>
         )}
         <button disabled={availableStock === 0} onClick={addToCart} className="mt-8 rounded bg-neutral-900 px-6 py-3 text-white disabled:opacity-40">Add to cart</button>
+        <button onClick={saveToWishlist} className="ml-2 mt-8 rounded border px-6 py-3">Save to wishlist</button>
+        {message && <p className="mt-3 text-sm">{message}</p>}
       </section>
     </main>
   );
