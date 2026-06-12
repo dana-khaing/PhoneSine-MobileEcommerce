@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useContext } from "react";
+import { CartContext } from "../contexts/cartContext";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [message, setMessage] = useState("Loading orders...");
   const [returnReasons, setReturnReasons] = useState({});
+  const { addItem } = useContext(CartContext);
   const cancelOrder = async (orderId) => {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_ORDERS_URL}/${orderId}/cancel`,
@@ -91,6 +94,7 @@ export default function OrdersPage() {
               const url = URL.createObjectURL(await response.blob());
               const link = document.createElement("a"); link.href = url; link.download = `order-${order.id}.pdf`; link.click(); URL.revokeObjectURL(url);
             }}>Download invoice</a>
+            <button className="ml-2 mt-4 rounded border px-4 py-2" onClick={() => order.items.forEach((item) => addItem({ id: item.productId, variantId: item.variantId, name: item.name, price: item.unitAmount / 100 }))}>Reorder</button>
             {order.returnRequest && <p className="mt-4 rounded bg-neutral-100 p-3">Return: {order.returnRequest.status}{order.returnRequest.returnTrackingNumber ? ` · ${order.returnRequest.returnTrackingNumber}` : ""}</p>}
             {order.shipment && <p className="mt-4 rounded bg-neutral-100 p-3">Shipment: {order.shipment.carrier} · {order.shipment.status} · {order.shipment.trackingNumber}</p>}
             {order.status === "delivered" && !order.returnRequest && <div className="mt-4 flex gap-2"><input className="rounded border p-2" placeholder="Return reason" value={returnReasons[order.id] || ""} onChange={(event) => setReturnReasons((current) => ({ ...current, [order.id]: event.target.value }))} /><button className="rounded border px-4 py-2" onClick={() => requestReturn(order.id)}>Request return</button></div>}
