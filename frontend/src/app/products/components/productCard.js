@@ -8,6 +8,9 @@ export default function ProductCard({
   paymentlistener,
   productdetail,
 }) {
+  const image = product.images?.[0]?.url
+    ? `${process.env.NEXT_PUBLIC_BACKEND_ORIGIN}${product.images[0].url}`
+    : "/iph15-pro.jpeg";
   const goToPayemnt = () => {
     paymentlistener(true);
     productdetail(product);
@@ -16,9 +19,9 @@ export default function ProductCard({
     <div className="px-4 pb-9 sm:px-8">
       <div className="py-12 bg-gray-100 flex justify-center">
         <img
-          src="/iph15-pro.jpeg"
-          alt="iPhone 15 Pro"
-          className="w-36 h-auto"
+          src={image}
+          alt={product.images?.[0]?.altText || name}
+          className="h-44 w-44 object-contain"
         />
       </div>
       <div className="p-2">

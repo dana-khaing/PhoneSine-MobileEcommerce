@@ -83,3 +83,7 @@ commerce admin page.
 
 Each active product has a public `/products/:id` API and storefront detail page
 with description, price, availability, and add-to-cart support.
+
+Admins can upload JPEG, PNG, and WebP product images up to 2 MB. Images are
+stored under the backend public uploads directory and displayed as storefront
+galleries. Set `NEXT_PUBLIC_BACKEND_ORIGIN` to the backend's public origin.
