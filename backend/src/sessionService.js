@@ -50,5 +50,7 @@ async function revokeSession(refreshToken) {
     { where: { tokenHash: hashAccountToken(refreshToken), revokedAt: null } }
   );
 }
+async function listSessions(userId) { return RefreshSession.findAll({ where: { userId, revokedAt: null }, attributes: ["id", "userAgent", "expiresAt", "createdAt"], order: [["createdAt", "DESC"]] }); }
+async function revokeSessionById(userId, id) { return RefreshSession.update({ revokedAt: new Date() }, { where: { id, userId, revokedAt: null } }); }
 
-module.exports = { accessTokenFor, createSession, revokeSession, rotateSession };
+module.exports = { accessTokenFor, createSession, listSessions, revokeSession, revokeSessionById, rotateSession };
