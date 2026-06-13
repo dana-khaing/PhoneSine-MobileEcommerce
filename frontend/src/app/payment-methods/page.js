@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { authenticatedFetch } from "../components/auth/session.mjs";
 
 export default function PaymentMethodsPage() {
   const [methods, setMethods] = useState([]);
   const [message, setMessage] = useState("Loading saved payment methods...");
   const api = process.env.NEXT_PUBLIC_API_PAYMENT_METHODS_URL;
-  const headers = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
 
   const load = () =>
-    fetch(api, { headers: headers() })
+    authenticatedFetch(api)
       .then(async (response) => {
         if (!response.ok) throw new Error(await response.text());
         return response.json();
@@ -25,7 +25,7 @@ export default function PaymentMethodsPage() {
   }, []);
 
   const remove = async (id) => {
-    const response = await fetch(`${api}/${id}`, { method: "DELETE", headers: headers() });
+    const response = await authenticatedFetch(`${api}/${id}`, { method: "DELETE" });
     setMessage(response.ok ? "Payment method removed." : await response.text());
     await load();
   };

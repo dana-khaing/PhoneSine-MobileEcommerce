@@ -1,31 +1,37 @@
-export function storeSession({ token, refreshToken }) {
-  localStorage.setItem("token", token);
-  localStorage.setItem("refreshToken", refreshToken);
+function csrfToken() {
+  if (typeof document === "undefined") return "";
+  const cookie = document.cookie.split("; ").find((part) => part.startsWith("csrf_token="));
+  return cookie ? decodeURIComponent(cookie.split("=").slice(1).join("=")) : "";
+}
+
+export function authenticatedFetch(url, options = {}) {
+  const method = (options.method || "GET").toUpperCase();
+  const headers = new Headers(options.headers || {});
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) headers.set("X-CSRF-Token", csrfToken());
+  return fetch(url, { ...options, headers, credentials: "include" });
+}
+
+export function storeSession() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
 }
 
 export async function refreshSession() {
-  const refreshToken = localStorage.getItem("refreshToken");
-  if (!refreshToken) throw new Error("Session expired");
-  const response = await fetch(process.env.NEXT_PUBLIC_API_REFRESH_URL, {
+  const response = await authenticatedFetch(process.env.NEXT_PUBLIC_API_REFRESH_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken }),
+    body: "{}",
   });
   if (!response.ok) throw new Error(await response.text());
-  const session = await response.json();
-  storeSession(session);
-  return session.token;
+  return (await response.json()).token;
 }
 
 export async function clearSession() {
-  const refreshToken = localStorage.getItem("refreshToken");
   localStorage.removeItem("token");
   localStorage.removeItem("refreshToken");
-  if (refreshToken) {
-    await fetch(process.env.NEXT_PUBLIC_API_LOGOUT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    }).catch(() => {});
-  }
+  await authenticatedFetch(process.env.NEXT_PUBLIC_API_LOGOUT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+  }).catch(() => {});
 }

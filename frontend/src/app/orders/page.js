@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useContext } from "react";
 import { CartContext } from "../contexts/cartContext";
+import { authenticatedFetch } from "../components/auth/session.mjs";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -11,33 +12,25 @@ export default function OrdersPage() {
   const [returnReasons, setReturnReasons] = useState({});
   const { addItem } = useContext(CartContext);
   const cancelOrder = async (orderId) => {
-    const response = await fetch(
+    const response = await authenticatedFetch(
       `${process.env.NEXT_PUBLIC_API_ORDERS_URL}/${orderId}/cancel`,
       {
         method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       }
     );
     setMessage(response.ok ? "Cancellation/refund request submitted." : await response.text());
   };
   const requestReturn = async (orderId) => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_ORDERS_URL}/${orderId}/returns`, {
+    const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_ORDERS_URL}/${orderId}/returns`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reason: returnReasons[orderId], details: "" }),
     });
     setMessage(response.ok ? "Return request submitted." : await response.text());
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setMessage("Sign in to view your orders.");
-      return;
-    }
-
-    fetch(process.env.NEXT_PUBLIC_API_ORDERS_URL, {
-      headers: { Authorization: `Bearer ${token}` },
+    authenticatedFetch(process.env.NEXT_PUBLIC_API_ORDERS_URL, {
     })
       .then(async (response) => {
         if (!response.ok) throw new Error(await response.text());
@@ -90,7 +83,7 @@ export default function OrdersPage() {
             </div>
             <a className="mt-4 inline-block rounded border px-4 py-2" href={`${process.env.NEXT_PUBLIC_API_ORDERS_URL}/${order.id}/invoice`} onClick={async (event) => {
               event.preventDefault();
-              const response = await fetch(event.currentTarget.href, { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+              const response = await authenticatedFetch(event.currentTarget.href);
               const url = URL.createObjectURL(await response.blob());
               const link = document.createElement("a"); link.href = url; link.download = `order-${order.id}.pdf`; link.click(); URL.revokeObjectURL(url);
             }}>Download invoice</a>

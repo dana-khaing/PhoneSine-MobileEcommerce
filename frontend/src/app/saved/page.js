@@ -3,20 +3,20 @@
 import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
 import { CartContext } from "../contexts/cartContext";
+import { authenticatedFetch } from "../components/auth/session.mjs";
 
 export default function SavedPage() {
   const [wishlist, setWishlist] = useState([]);
   const [message, setMessage] = useState("");
   const { loadSavedCart } = useContext(CartContext);
-  const headers = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
-  const loadWishlist = () => fetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/wishlist`, { headers: headers() })
+  const loadWishlist = () => authenticatedFetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/wishlist`)
     .then(async (response) => {
       if (!response.ok) throw new Error(await response.text());
       return response.json();
     }).then(setWishlist).catch((error) => setMessage(error.message));
   useEffect(loadWishlist, []);
   const remove = async (id) => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/wishlist/${id}`, { method: "DELETE", headers: headers() });
+    await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/wishlist/${id}`, { method: "DELETE" });
     loadWishlist();
   };
   return (

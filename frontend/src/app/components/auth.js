@@ -35,39 +35,13 @@ const Auth = () => {
     setIsClickedlogin(true);
   };
 
-  const handleSessionTimeOut = () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
+  const handleSession = (token) => {
     try {
       const decoded = jwtDecode(token);
-      const exp = new Date(decoded.exp * 1000);
-      const currentTime = new Date();
-      const timeLeft = exp - currentTime;
-
-      if (timeLeft < 0) {
-        refreshSession().then(handleSessionTimeOut).catch(() => {
-          clearSession();
-          setUserIsLogin(false);
-          setUserName("");
-          setUserEmail("");
-          toast({
-            className: " bg-neutral-900 text-white",
-            title: "Login failed.",
-            description: "Session expired",
-          });
-        });
-      } else {
-        setUserName(decoded.username);
-        setUserEmail(decoded.email);
-        setUserIsLogin(true);
-      }
+      setUserName(decoded.username);
+      setUserEmail(decoded.email);
+      setUserIsLogin(true);
     } catch (error) {
-      toast({
-        className: " bg-neutral-900 text-white",
-        title: "Login failed.",
-        description: "Invalid token",
-      });
       clearSession();
       setUserIsLogin(false);
       setUserName("");
@@ -76,7 +50,7 @@ const Auth = () => {
   };
 
   useEffect(() => {
-    handleSessionTimeOut();
+    refreshSession().then(handleSession).catch(() => {});
   }, []);
 
   return (
