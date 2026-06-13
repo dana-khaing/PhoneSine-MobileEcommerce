@@ -1,0 +1,19 @@
+name: Staging Images
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".env.staging.example"
+      - ".github/workflows/staging.yml"
+      - "backend/**"
+      - "docker-compose.staging.yml"
+      - "frontend/**"
+jobs:
+  validate-staging:
+    runs-on: ubuntu-latest
+    env:
+      STAGING_ENV_FILE: .env.staging.example
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose --env-file .env.staging.example -f docker-compose.staging.yml config --quiet
+      - run: docker compose --env-file .env.staging.example -f docker-compose.staging.yml build
