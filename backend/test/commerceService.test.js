@@ -11,7 +11,7 @@ test("calculates discounts, VAT, delivery, and final totals", () => {
   assert.deepEqual(
     calculateAmounts([{ unitAmount: 10000, quantity: 1 }], {
       country: "GB",
-      deliveryAmount: 1250,
+    deliveryAmount: 1250,
       percentOff: 10,
     }),
     {
@@ -19,6 +19,7 @@ test("calculates discounts, VAT, delivery, and final totals", () => {
       discountAmount: 1000,
       taxAmount: 1800,
       deliveryAmount: 1250,
+      giftCardAmount: 0,
       totalAmount: 12050,
       taxRate: 20,
     }

@@ -1,4 +1,5 @@
 const { Notification } = require("../models");
+const { sendEmail } = require("./providerService");
 
 const subjects = {
   order_confirmation: "Your Phone Sine order is confirmed",
@@ -31,7 +32,9 @@ async function deliverPendingNotifications(limit = 25) {
   let delivered = 0;
   for (const notification of notifications) {
     try {
-      if (process.env.EMAIL_WEBHOOK_URL) {
+      if (process.env.RESEND_API_KEY) {
+        await sendEmail({ to: notification.recipient, subject: notification.subject, text: notification.body });
+      } else if (process.env.EMAIL_WEBHOOK_URL) {
         const response = await fetch(process.env.EMAIL_WEBHOOK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

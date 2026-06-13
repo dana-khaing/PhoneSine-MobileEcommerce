@@ -1,5 +1,5 @@
 const test = require("node:test"); const assert = require("node:assert/strict"); const { shippingRates } = require("../src/shippingService");
-test("calculates domestic and international shipping rates", () => {
-  assert.equal(shippingRates({ country: "GB", subtotalAmount: 100000 })[0].amount, 0);
-  assert.equal(shippingRates({ country: "US" })[0].amount, 2500);
+test("calculates domestic and international shipping rates", async () => {
+  assert.equal((await shippingRates({ country: "GB", subtotalAmount: 100000 }))[0].amount, 0);
+  assert.equal((await shippingRates({ country: "US" }))[0].amount, 2500);
 });
