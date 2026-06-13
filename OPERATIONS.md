@@ -21,3 +21,10 @@ gunzip -c phone-sine-YYYY-MM-DD.sql.gz | mysql "$RESTORE_DB_NAME"
 ```
 
 Store backups outside the application host with restricted access and lifecycle retention.
+
+## Staging
+
+Use the reproducible staging stack and promotion checklist in
+[`DEPLOYMENT.md`](DEPLOYMENT.md). The staging workflow validates the Compose
+configuration and builds both application images on deployment-related pull
+requests.
