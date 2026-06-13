@@ -19,6 +19,7 @@ const initialDetails = {
   postcode: "",
   country: "GB",
   promotionCode: "",
+  giftCardCode: "",
   currency: "gbp",
   savePaymentMethod: false,
 };
@@ -130,6 +131,7 @@ export default function CheckoutPage() {
           <input className="rounded border p-3" name="postcode" placeholder="Postcode" value={details.postcode} onChange={updateDetails} />
           <input className="rounded border p-3" name="country" maxLength="2" placeholder="Country code (GB)" value={details.country} onChange={updateDetails} />
           <input className="rounded border p-3" name="promotionCode" placeholder="Promotion code" value={details.promotionCode} onChange={updateDetails} />
+          <input className="rounded border p-3" name="giftCardCode" placeholder="Gift card code" value={details.giftCardCode} onChange={updateDetails} />
           <select className="rounded border p-3" name="currency" value={details.currency} onChange={updateDetails}>
             <option value="gbp">GBP</option>
             <option value="usd">USD</option>
