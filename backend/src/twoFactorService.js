@@ -10,4 +10,6 @@ function codeFor(secret, timestamp = Date.now()) {
 function verifyCode(secret, code, timestamp = Date.now()) {
   return [-30000, 0, 30000].some((offset) => codeFor(secret, timestamp + offset) === String(code));
 }
-module.exports = { codeFor, generateSecret, verifyCode };
+function provisioningUri(email, secret) { return `otpauth://totp/Phone%20Sine:${encodeURIComponent(email)}?secret=${secret}&issuer=Phone%20Sine`; }
+function recoveryCodes() { return Array.from({ length: 8 }, () => crypto.randomBytes(5).toString("hex").toUpperCase()); }
+module.exports = { codeFor, generateSecret, provisioningUri, recoveryCodes, verifyCode };
