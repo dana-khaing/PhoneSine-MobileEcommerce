@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { authenticatedFetch } from "../components/auth/session.mjs";
 
 export default function AdminPage() {
   const [orders, setOrders] = useState([]);
@@ -24,11 +25,10 @@ export default function AdminPage() {
   const api = process.env.NEXT_PUBLIC_API_ADMIN_URL;
   const headers = () => ({
     "Content-Type": "application/json",
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
   });
 
   const loadOrders = () =>
-    fetch(`${api}/orders`, { headers: headers() })
+    authenticatedFetch(`${api}/orders`, { headers: headers() })
       .then(async (response) => {
         if (!response.ok) throw new Error(await response.text());
         return response.json();
@@ -40,29 +40,29 @@ export default function AdminPage() {
       .catch((error) => setMessage(error.message));
 
   const loadProducts = () =>
-    fetch(`${api}/products`, { headers: headers() })
+    authenticatedFetch(`${api}/products`, { headers: headers() })
       .then((response) => response.json())
       .then(setProducts);
   const loadCategories = () =>
-    fetch(`${api}/categories`, { headers: headers() })
+    authenticatedFetch(`${api}/categories`, { headers: headers() })
       .then((response) => response.json())
       .then(setCategories);
 
   const loadHealth = () =>
-    fetch(`${api}/health/payments`, { headers: headers() })
+    authenticatedFetch(`${api}/health/payments`, { headers: headers() })
       .then((response) => response.json())
       .then(setHealth);
   const loadPromotions = () =>
-    fetch(`${api}/promotions`, { headers: headers() })
+    authenticatedFetch(`${api}/promotions`, { headers: headers() })
       .then((response) => response.json())
       .then(setPromotions);
   const loadUsers = () =>
-    fetch(`${api}/users`, { headers: headers() })
+    authenticatedFetch(`${api}/users`, { headers: headers() })
       .then((response) => response.json())
       .then(setUsers);
-  const loadReviews = () => fetch(`${api}/reviews`, { headers: headers() }).then((response) => response.json()).then(setReviews);
-  const loadReturns = () => fetch(`${api}/returns`, { headers: headers() }).then((response) => response.json()).then(setReturns);
-  const loadAnalytics = () => fetch(`${api}/analytics`, { headers: headers() }).then((response) => response.json()).then(setAnalytics);
+  const loadReviews = () => authenticatedFetch(`${api}/reviews`, { headers: headers() }).then((response) => response.json()).then(setReviews);
+  const loadReturns = () => authenticatedFetch(`${api}/returns`, { headers: headers() }).then((response) => response.json()).then(setReturns);
+  const loadAnalytics = () => authenticatedFetch(`${api}/analytics`, { headers: headers() }).then((response) => response.json()).then(setAnalytics);
 
   useEffect(() => {
     loadOrders();
@@ -77,7 +77,7 @@ export default function AdminPage() {
   }, []);
 
   const action = async (path, method = "POST", body) => {
-    const response = await fetch(`${api}${path}`, {
+    const response = await authenticatedFetch(`${api}${path}`, {
       method,
       headers: headers(),
       ...(body ? { body: JSON.stringify(body) } : {}),
@@ -140,10 +140,9 @@ export default function AdminPage() {
 
   const uploadImage = async (productId, file) => {
     if (!file) return;
-    const response = await fetch(`${api}/products/${productId}/images`, {
+    const response = await authenticatedFetch(`${api}/products/${productId}/images`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
         "Content-Type": file.type,
         "X-Alt-Text": file.name,
       },

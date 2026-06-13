@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken");
 const { Userdetail } = require("../models");
+const { parseCookies } = require("./securityMiddleware");
 
 function readUser(req) {
-  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "");
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || parseCookies(req).access_token;
   if (!token) return null;
 
   return jwt.verify(token, process.env.JWT_SECRET);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { authenticatedFetch } from "../components/auth/session.mjs";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -9,7 +10,7 @@ export default function ResetPasswordPage() {
   const submit = async (event) => {
     event.preventDefault();
     const token = new URLSearchParams(window.location.search).get("token");
-    const response = await fetch(process.env.NEXT_PUBLIC_API_RESET_PASSWORD_URL, {
+    const response = await authenticatedFetch(process.env.NEXT_PUBLIC_API_RESET_PASSWORD_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, password }),

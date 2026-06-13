@@ -8,6 +8,7 @@ import {
   cartSubtotal,
   updateCartItemQuantity,
 } from "../cart/cart.mjs";
+import { authenticatedFetch } from "../components/auth/session.mjs";
 
 export const CartContext = createContext();
 
@@ -41,21 +42,20 @@ export function CartProvider({ children }) {
     setItems((current) => current.filter((item) => cartItemKey(item) !== String(key)));
   const clearCart = () => setItems([]);
   const saveCart = async () => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/cart`, {
+    const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/cart`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items }),
     });
     if (!response.ok) throw new Error(await response.text());
   };
   const loadSavedCart = async () => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/cart`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/cart`, {
     });
     if (!response.ok) throw new Error(await response.text());
     const saved = await response.json();
     const products = await Promise.all(saved.items.map(async (item) => {
-      const product = await fetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/${item.id}`).then((result) => result.json());
+      const product = await authenticatedFetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/${item.id}`).then((result) => result.json());
       const variant = product.variants?.find((candidate) => candidate.id === item.variantId);
       return { ...product, quantity: item.quantity, ...(variant ? { variantId: variant.id, variantName: variant.name, price: variant.price } : {}) };
     }));

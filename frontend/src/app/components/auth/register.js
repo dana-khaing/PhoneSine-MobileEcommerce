@@ -5,6 +5,7 @@ import ActionBtn from "./actionBtn";
 import { useState, useContext } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { AuthContext } from "@/app/contexts/authContext";
+import { authenticatedFetch } from "./session.mjs";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -32,7 +33,7 @@ const Register = ({ closeallcard, handlelogin }) => {
       });
       return;
     }
-    const data = await fetch(process.env.NEXT_PUBLIC_API_REGISTER_URL, {
+    const data = await authenticatedFetch(process.env.NEXT_PUBLIC_API_REGISTER_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

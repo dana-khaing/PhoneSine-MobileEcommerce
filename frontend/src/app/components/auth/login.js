@@ -9,7 +9,7 @@ import { useContext } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { jwtDecode } from "jwt-decode";
-import { storeSession } from "./session.mjs";
+import { authenticatedFetch, storeSession } from "./session.mjs";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,12 +28,11 @@ const Login = ({ closeallcard, handlesignup }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    const data = await fetch(process.env.NEXT_PUBLIC_API_LOGIN_URL, {
+    const data = await authenticatedFetch(process.env.NEXT_PUBLIC_API_LOGIN_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
       body: JSON.stringify({ email, password, rememberMe, twoFactorCode }),
     });
 
