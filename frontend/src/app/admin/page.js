@@ -18,6 +18,12 @@ export default function AdminPage() {
   const [reviews, setReviews] = useState([]);
   const [returns, setReturns] = useState([]);
   const [analytics, setAnalytics] = useState(null);
+  const [tickets, setTickets] = useState([]);
+  const [ticketReplies, setTicketReplies] = useState({});
+  const [giftCards, setGiftCards] = useState([]);
+  const [giftCard, setGiftCard] = useState({ balanceAmount: "", currency: "gbp", expiresAt: "" });
+  const [bundles, setBundles] = useState([]);
+  const [bundle, setBundle] = useState({ name: "", description: "", priceAmount: "", items: "[]" });
   const emptyProduct = { name: "", brand: "", description: "", priceAmount: "", stockQuantity: "", categoryId: "", specifications: "{}", allowBackorder: false, preorderDate: "" };
   const [productForm, setProductForm] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
@@ -63,6 +69,9 @@ export default function AdminPage() {
   const loadReviews = () => authenticatedFetch(`${api}/reviews`, { headers: headers() }).then((response) => response.json()).then(setReviews);
   const loadReturns = () => authenticatedFetch(`${api}/returns`, { headers: headers() }).then((response) => response.json()).then(setReturns);
   const loadAnalytics = () => authenticatedFetch(`${api}/analytics`, { headers: headers() }).then((response) => response.json()).then(setAnalytics);
+  const loadTickets = () => authenticatedFetch(`${api}/tickets`, { headers: headers() }).then((response) => response.json()).then(setTickets);
+  const loadGiftCards = () => authenticatedFetch(`${api}/gift-cards`, { headers: headers() }).then((response) => response.json()).then(setGiftCards);
+  const loadBundles = () => authenticatedFetch(`${api}/bundles`, { headers: headers() }).then((response) => response.json()).then(setBundles);
 
   useEffect(() => {
     loadOrders();
@@ -74,6 +83,9 @@ export default function AdminPage() {
     loadReviews();
     loadReturns();
     loadAnalytics();
+    loadTickets();
+    loadGiftCards();
+    loadBundles();
   }, []);
 
   const action = async (path, method = "POST", body) => {
@@ -92,6 +104,40 @@ export default function AdminPage() {
     await loadReviews();
     await loadReturns();
     await loadAnalytics();
+    await loadTickets();
+    await loadGiftCards();
+    await loadBundles();
+  };
+
+  const importProducts = async (file) => {
+    if (!file) return;
+    const response = await authenticatedFetch(`${api}/products-import.csv`, {
+      method: "POST",
+      headers: { "Content-Type": "text/csv" },
+      body: await file.text(),
+    });
+    setMessage(response.ok ? `${(await response.json()).imported} products imported.` : await response.text());
+    await loadProducts();
+  };
+
+  const download = async (path, filename) => {
+    const response = await authenticatedFetch(`${api}${path}`);
+    if (!response.ok) return setMessage(await response.text());
+    const url = URL.createObjectURL(await response.blob());
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const createBundle = async () => {
+    try {
+      await action("/bundles", "POST", { ...bundle, priceAmount: Number(bundle.priceAmount), items: JSON.parse(bundle.items) });
+      setBundle({ name: "", description: "", priceAmount: "", items: "[]" });
+    } catch {
+      setMessage("Bundle items must be valid JSON.");
+    }
   };
 
   const saveProduct = async (event) => {
@@ -161,7 +207,7 @@ export default function AdminPage() {
         <button className="rounded border px-4 py-2" onClick={() => action("/reconcile")}>Reconcile payments</button>
       </div>
       {health && <p className="my-4">Payment health: {health.pending} pending · {health.reviews} reviews · {health.disputes} disputes · {health.failedNotifications} failed notifications</p>}
-      {analytics && <div className="my-4 rounded border p-4"><strong>Operations:</strong> {analytics.orders} orders · £{(analytics.revenue / 100).toFixed(2)} paid revenue · {analytics.lowStock.length} low-stock items <button className="ml-3 rounded border px-3 py-1" onClick={() => action("/low-stock-alerts", "POST", {})}>Queue low-stock alerts</button></div>}
+      {analytics && <div className="my-4 rounded border p-4"><strong>Operations:</strong> {analytics.orders} orders · £{(analytics.revenue / 100).toFixed(2)} paid revenue · {analytics.lowStock.length} low-stock items <div className="mt-3 grid gap-2 sm:grid-cols-3">{[["Orders", analytics.orders], ["Revenue", Math.round(analytics.revenue / 100)], ["Low stock", analytics.lowStock.length]].map(([label, value]) => <div key={label}><p className="text-xs">{label}: {value}</p><div className="mt-1 h-3 rounded bg-neutral-100"><div className="h-3 rounded bg-neutral-900" style={{ width: `${Math.min(100, Math.max(4, Number(value)))}%` }} /></div></div>)}</div><button className="mt-3 rounded border px-3 py-1" onClick={() => action("/low-stock-alerts", "POST", {})}>Queue low-stock alerts</button><button className="ml-3 mt-3 rounded border px-3 py-1" onClick={() => download("/reports/operations.csv", "operations-report.csv")}>Download report</button></div>}
       {message && <p className="my-4">{message}</p>}
       <section className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Product management</h2>
@@ -183,7 +229,8 @@ export default function AdminPage() {
           </div>
         </form>
         <div className="mt-5 flex gap-2">
-          <a className="rounded border px-3 py-2" href={`${api}/products-export.csv`}>Export products CSV</a>
+          <button className="rounded border px-3 py-2" onClick={() => download("/products-export.csv", "products.csv")}>Export products CSV</button>
+          <label className="cursor-pointer rounded border px-3 py-2">Import products CSV<input className="hidden" type="file" accept=".csv,text/csv" onChange={(event) => importProducts(event.target.files?.[0])} /></label>
           <input className="rounded border p-2" placeholder="New category name" value={categoryName} onChange={(event) => setCategoryName(event.target.value)} />
           <button className="rounded border px-3 py-2" onClick={async () => { await action("/categories", "POST", { name: categoryName }); setCategoryName(""); }}>Create category</button>
         </div>
@@ -227,6 +274,14 @@ export default function AdminPage() {
             </div>
           ))}
         </div>
+      </section>
+      <section className="mb-8 rounded border p-5">
+        <h2 className="text-xl font-bold">Support tickets</h2>
+        {tickets.map((ticket) => <div key={ticket.id} className="mt-3 rounded border p-3"><strong>{ticket.subject} · {ticket.status}</strong><p>{ticket.message}</p><div className="mt-2 flex gap-2"><input className="flex-1 rounded border p-2" placeholder="Reply to customer" value={ticketReplies[ticket.id] || ""} onChange={(event) => setTicketReplies((current) => ({ ...current, [ticket.id]: event.target.value }))} /><button className="rounded border px-3" onClick={() => action(`/tickets/${ticket.id}`, "PATCH", { adminReply: ticketReplies[ticket.id], status: "closed" })}>Reply and close</button></div></div>)}
+      </section>
+      <section className="mb-8 grid gap-6 rounded border p-5 md:grid-cols-2">
+        <div><h2 className="text-xl font-bold">Gift cards</h2><div className="mt-3 flex flex-wrap gap-2"><input className="rounded border p-2" type="number" placeholder="Balance in pence" value={giftCard.balanceAmount} onChange={(event) => setGiftCard((current) => ({ ...current, balanceAmount: event.target.value }))} /><select className="rounded border p-2" value={giftCard.currency} onChange={(event) => setGiftCard((current) => ({ ...current, currency: event.target.value }))}><option>gbp</option><option>usd</option><option>eur</option></select><input className="rounded border p-2" type="date" value={giftCard.expiresAt} onChange={(event) => setGiftCard((current) => ({ ...current, expiresAt: event.target.value }))} /><button className="rounded border px-3" onClick={() => action("/gift-cards", "POST", { ...giftCard, balanceAmount: Number(giftCard.balanceAmount), expiresAt: giftCard.expiresAt || null })}>Issue gift card</button></div>{giftCards.map((card) => <p key={card.id} className="mt-2 text-sm">{card.code} · {card.currency.toUpperCase()} {(card.balanceAmount / 100).toFixed(2)}</p>)}</div>
+        <div><h2 className="text-xl font-bold">Product bundles</h2><div className="mt-3 grid gap-2"><input className="rounded border p-2" placeholder="Bundle name" value={bundle.name} onChange={(event) => setBundle((current) => ({ ...current, name: event.target.value }))} /><input className="rounded border p-2" type="number" placeholder="Price in pence" value={bundle.priceAmount} onChange={(event) => setBundle((current) => ({ ...current, priceAmount: event.target.value }))} /><textarea className="rounded border p-2" placeholder='Items JSON, e.g. [{"productId":1,"quantity":2}]' value={bundle.items} onChange={(event) => setBundle((current) => ({ ...current, items: event.target.value }))} /><button className="rounded border p-2" onClick={createBundle}>Create bundle</button></div>{bundles.map((item) => <div key={item.id} className="mt-2 flex justify-between text-sm"><span>{item.name} · £{(item.priceAmount / 100).toFixed(2)} · {item.active ? "active" : "inactive"}</span>{item.active && <button className="underline" onClick={() => action(`/bundles/${item.id}`, "PATCH", { active: false })}>Deactivate</button>}</div>)}</div>
       </section>
       <section className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Returns</h2>
