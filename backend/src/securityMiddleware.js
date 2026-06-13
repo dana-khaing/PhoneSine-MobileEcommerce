@@ -28,6 +28,13 @@ function setSessionCookies(res, session) {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
   const csrf = crypto.randomBytes(24).toString("hex");
   res.append("Set-Cookie", `refresh_token=${encodeURIComponent(session.refreshToken)}; HttpOnly; SameSite=Strict; Path=/auth${secure}`);
+  res.append("Set-Cookie", `access_token=${encodeURIComponent(session.token)}; HttpOnly; SameSite=Strict; Path=/${secure}`);
   res.append("Set-Cookie", `csrf_token=${csrf}; SameSite=Strict; Path=/${secure}`);
 }
-module.exports = { csrfProtection, parseCookies, securityHeaders, setSessionCookies };
+function clearSessionCookies(res) {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  res.append("Set-Cookie", `refresh_token=; HttpOnly; SameSite=Strict; Path=/auth; Max-Age=0${secure}`);
+  res.append("Set-Cookie", `access_token=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`);
+  res.append("Set-Cookie", `csrf_token=; SameSite=Strict; Path=/; Max-Age=0${secure}`);
+}
+module.exports = { clearSessionCookies, csrfProtection, parseCookies, securityHeaders, setSessionCookies };
