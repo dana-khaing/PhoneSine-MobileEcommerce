@@ -9,6 +9,7 @@ import {
   validateCheckoutDetails,
 } from "./checkout.mjs";
 import { cartItemKey } from "../cart/cart.mjs";
+import { authenticatedFetch } from "../components/auth/session.mjs";
 
 const initialDetails = {
   email: "",
@@ -62,14 +63,11 @@ export default function CheckoutPage() {
         idempotencyKey = crypto.randomUUID();
         sessionStorage.setItem("phone-sine-payment-key", idempotencyKey);
       }
-      const response = await fetch(process.env.NEXT_PUBLIC_API_PAYMENT_URL, {
+      const response = await authenticatedFetch(process.env.NEXT_PUBLIC_API_PAYMENT_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Idempotency-Key": idempotencyKey,
-          ...(localStorage.getItem("token")
-            ? { Authorization: `Bearer ${localStorage.getItem("token")}` }
-            : {}),
         },
         body: JSON.stringify({ items, checkout }),
       });
@@ -87,7 +85,7 @@ export default function CheckoutPage() {
   const updateQuote = async () => {
     setMessage("");
     try {
-      const response = await fetch(process.env.NEXT_PUBLIC_API_PAYMENT_QUOTE_URL, {
+      const response = await authenticatedFetch(process.env.NEXT_PUBLIC_API_PAYMENT_QUOTE_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

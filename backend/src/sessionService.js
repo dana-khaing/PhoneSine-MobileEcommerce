@@ -45,6 +45,7 @@ async function rotateSession(refreshToken, userAgent) {
 }
 
 async function revokeSession(refreshToken) {
+  if (!refreshToken) return;
   await RefreshSession.update(
     { revokedAt: new Date() },
     { where: { tokenHash: hashAccountToken(refreshToken), revokedAt: null } }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
 import { CartContext } from "../../contexts/cartContext";
 import { productImageUrl } from "../productImages.mjs";
+import { authenticatedFetch } from "../../components/auth/session.mjs";
 
 export default function ProductDetailPage({ params }) {
   const [product, setProduct] = useState(null);
@@ -16,7 +17,7 @@ export default function ProductDetailPage({ params }) {
   const { addItem } = useContext(CartContext);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/${params.id}`)
+    authenticatedFetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/${params.id}`)
       .then(async (response) => {
         if (!response.ok) throw new Error(await response.text());
         return response.json();
@@ -31,9 +32,9 @@ export default function ProductDetailPage({ params }) {
       })
       .catch((error) => setMessage(error.message));
   }, [params.id]);
-  const loadReviews = () => fetch(`${process.env.NEXT_PUBLIC_API_REVIEWS_URL}/products/${params.id}`).then((response) => response.json()).then(setReviews);
+  const loadReviews = () => authenticatedFetch(`${process.env.NEXT_PUBLIC_API_REVIEWS_URL}/products/${params.id}`).then((response) => response.json()).then(setReviews);
   useEffect(loadReviews, [params.id]);
-  useEffect(() => { fetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/${params.id}/recommendations`).then((response) => response.json()).then(setRecommendations); }, [params.id]);
+  useEffect(() => { authenticatedFetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/${params.id}/recommendations`).then((response) => response.json()).then(setRecommendations); }, [params.id]);
 
   if (!product) return <main className="mx-auto max-w-5xl px-6 py-20">{message}</main>;
   const selectedVariant = product.variants?.find((variant) => String(variant.id) === selectedVariantId);
@@ -48,18 +49,18 @@ export default function ProductDetailPage({ params }) {
     } : {}),
   });
   const saveToWishlist = async () => {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/wishlist`, {
+    const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/wishlist`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ productId: product.id, variantId: selectedVariant?.id }),
     });
     setMessage(response.ok ? "Saved to wishlist." : await response.text());
   };
   const submitReview = async (event) => {
     event.preventDefault();
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_REVIEWS_URL}/products/${product.id}`, {
+    const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_REVIEWS_URL}/products/${product.id}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(review),
     });
     setMessage(response.ok ? "Review submitted for moderation." : await response.text());
