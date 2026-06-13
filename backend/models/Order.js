@@ -20,6 +20,8 @@ module.exports = (sequelize, DataTypes) => {
     idempotencyKey: { type: DataTypes.STRING, unique: true },
     disputeId: { type: DataTypes.STRING },
     disputeStatus: { type: DataTypes.STRING },
+    giftCardCode: { type: DataTypes.STRING },
+    giftCardAmount: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     reconciledAt: { type: DataTypes.DATE },
   });
 

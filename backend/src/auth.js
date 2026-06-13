@@ -13,7 +13,7 @@ const { issuePasswordReset, resetPassword } = require("./passwordResetService");
 const { createSession, revokeSession, rotateSession } = require("./sessionService");
 const { requireAuth } = require("./authMiddleware");
 const { parseCookies, setSessionCookies } = require("./securityMiddleware");
-const { generateSecret, verifyCode } = require("./twoFactorService");
+const { generateSecret, provisioningUri, recoveryCodes, verifyCode } = require("./twoFactorService");
 
 router.post("/register", async (req, res) => {
   const { firstname, lastname, email, password } = req.body;
@@ -138,8 +138,9 @@ router.post("/logout", async (req, res) => {
 router.post("/two-factor/setup", requireAuth, async (req, res) => {
   const user = await Userdetail.findByPk(req.user.userId);
   const secret = generateSecret();
-  await user.update({ twoFactorSecret: secret, twoFactorEnabled: false });
-  res.json({ secret });
+  const codes = recoveryCodes();
+  await user.update({ twoFactorSecret: secret, twoFactorEnabled: false, twoFactorRecoveryCodes: codes });
+  res.json({ secret, provisioningUri: provisioningUri(user.email, secret), recoveryCodes: codes });
 });
 router.post("/two-factor/enable", requireAuth, async (req, res) => {
   const user = await Userdetail.findByPk(req.user.userId);
