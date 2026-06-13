@@ -1,0 +1,40 @@
+services:
+  database:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+    volumes:
+      - staging_database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: ${STAGING_ENV_FILE:-.env.staging}
+    environment:
+      DB_HOST: database
+      NODE_ENV: production
+      PORT: 8080
+    depends_on:
+      database:
+        condition: service_healthy
+    ports: ["8080:8080"]
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        API_ORIGIN: ${PUBLIC_API_ORIGIN}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports: ["3000:3000"]
+volumes:
+  staging_database:
