@@ -1,5 +1,6 @@
+const crypto = require("crypto");
 const express = require("express");
-const { AuditLog, Category, Notification, Order, OrderEvent, OrderItem, Product, ProductBundle, ProductReview, ProductVariant, Promotion, Refund, ReturnRequest, Userdetail } = require("../models");
+const { AuditLog, Category, GiftCard, Notification, Order, OrderEvent, OrderItem, Product, ProductBundle, ProductReview, ProductVariant, Promotion, Refund, ReturnRequest, SupportTicket, Userdetail } = require("../models");
 const { requireAdmin } = require("./authMiddleware");
 const {
   cancelOrRefundOrder,
@@ -11,7 +12,7 @@ const { reconcilePayments } = require("./reconciliationService");
 const { audit } = require("./auditService");
 const { createCategory, createProduct, createVariant, updateProduct, updateVariant } = require("./productService");
 const { updateReturn } = require("./returnService");
-const { operationsSummary, queueLowStockAlerts } = require("./operationsService");
+const { operationsSummary, operationsSummaryToCsv, queueLowStockAlerts } = require("./operationsService");
 const { parseProductCsv, productsToCsv } = require("./catalogueService");
 
 const router = express.Router();
@@ -148,7 +149,17 @@ router.post("/products-import.csv", express.text({ type: "text/csv", limit: "1mb
 });
 router.post("/bundles", async (req, res) => {
   const priceAmount = Number(req.body.priceAmount); if (!req.body.name || !Number.isInteger(priceAmount) || !Array.isArray(req.body.items)) return res.status(400).send("Bundle name, price, and items are required");
-  res.status(201).json(await ProductBundle.create({ ...req.body, priceAmount, active: true }));
+  const bundle = await ProductBundle.create({ ...req.body, priceAmount, active: true });
+  await audit(req.user.email, "bundle_created", "product_bundle", bundle.id, { name: bundle.name });
+  res.status(201).json(bundle);
+});
+router.get("/bundles", async (_req, res) => res.json(await ProductBundle.findAll({ order: [["createdAt", "DESC"]] })));
+router.patch("/bundles/:id", async (req, res) => {
+  const bundle = await ProductBundle.findByPk(req.params.id);
+  if (!bundle) return res.status(404).send("Bundle not found");
+  await bundle.update({ active: req.body.active !== false });
+  await audit(req.user.email, "bundle_updated", "product_bundle", bundle.id, { active: bundle.active });
+  return res.json(bundle);
 });
 
 router.delete("/products/:id", async (req, res) => {
@@ -219,6 +230,9 @@ router.get("/health/payments", async (_req, res) => {
   res.json({ pending, reviews, disputes, failedNotifications });
 });
 router.get("/analytics", async (_req, res) => res.json(await operationsSummary()));
+router.get("/reports/operations.csv", async (_req, res) => {
+  res.type("text/csv").send(operationsSummaryToCsv(await operationsSummary()));
+});
 router.post("/low-stock-alerts", async (req, res) => {
   const recipient = req.body.recipient || req.user.email;
   res.json({ queued: await queueLowStockAlerts(recipient) });
@@ -262,6 +276,32 @@ router.patch("/reviews/:id", async (req, res) => {
 
 router.post("/notifications/deliver", async (_req, res) => {
   res.json({ delivered: await deliverPendingNotifications() });
+});
+
+router.get("/tickets", async (_req, res) => {
+  res.json(await SupportTicket.findAll({ order: [["createdAt", "DESC"]] }));
+});
+router.patch("/tickets/:id", async (req, res) => {
+  const ticket = await SupportTicket.findByPk(req.params.id);
+  if (!ticket) return res.status(404).send("Ticket not found");
+  await ticket.update({ status: req.body.status || ticket.status, adminReply: req.body.adminReply ?? ticket.adminReply });
+  await audit(req.user.email, "support_ticket_updated", "support_ticket", ticket.id, { status: ticket.status });
+  return res.json(ticket);
+});
+router.get("/gift-cards", async (_req, res) => {
+  res.json(await GiftCard.findAll({ order: [["createdAt", "DESC"]] }));
+});
+router.post("/gift-cards", async (req, res) => {
+  const balanceAmount = Number(req.body.balanceAmount);
+  if (!Number.isInteger(balanceAmount) || balanceAmount < 1) return res.status(400).send("Positive gift card balance required");
+  const giftCard = await GiftCard.create({
+    code: crypto.randomBytes(8).toString("hex").toUpperCase(),
+    balanceAmount,
+    currency: String(req.body.currency || "gbp").toLowerCase(),
+    expiresAt: req.body.expiresAt || null,
+  });
+  await audit(req.user.email, "gift_card_created", "gift_card", giftCard.id, { balanceAmount, currency: giftCard.currency });
+  return res.status(201).json(giftCard);
 });
 
 module.exports = router;
