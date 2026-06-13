@@ -49,6 +49,18 @@ test("serves inventory and produces an end-to-end checkout quote", async () => {
   }
 });
 
+test("serves concurrent catalogue traffic without errors", async () => {
+  const server = createApp().listen(0);
+  await new Promise((resolve) => server.once("listening", resolve));
+  const url = `http://127.0.0.1:${server.address().port}/products?limit=4`;
+  try {
+    const responses = await Promise.all(Array.from({ length: 25 }, () => fetch(url)));
+    assert.equal(responses.filter((response) => response.status === 200).length, responses.length);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test("creates checkout orders and reserves stock through the payment route", async () => {
   const originalFetch = global.fetch;
   const originalStripeKey = process.env.STRIPE_SECRET_KEY;
