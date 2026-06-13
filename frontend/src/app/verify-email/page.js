@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { authenticatedFetch } from "../components/auth/session.mjs";
 
 export default function VerifyEmailPage() {
   const [message, setMessage] = useState("Verifying your email...");
@@ -12,7 +13,7 @@ export default function VerifyEmailPage() {
       setMessage("Verification token is missing.");
       return;
     }
-    fetch(process.env.NEXT_PUBLIC_API_VERIFY_EMAIL_URL, {
+    authenticatedFetch(process.env.NEXT_PUBLIC_API_VERIFY_EMAIL_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token }),

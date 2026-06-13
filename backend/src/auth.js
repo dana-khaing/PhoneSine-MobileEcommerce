@@ -10,10 +10,11 @@ const {
 } = require("./authValidation");
 const { issueEmailVerification, verifyEmailToken } = require("./emailVerificationService");
 const { issuePasswordReset, resetPassword } = require("./passwordResetService");
-const { createSession, revokeSession, rotateSession } = require("./sessionService");
+const { createSession, listSessions, revokeSession, revokeSessionById, rotateSession } = require("./sessionService");
 const { requireAuth } = require("./authMiddleware");
-const { parseCookies, setSessionCookies } = require("./securityMiddleware");
+const { clearSessionCookies, parseCookies, setSessionCookies } = require("./securityMiddleware");
 const { generateSecret, provisioningUri, recoveryCodes, verifyCode } = require("./twoFactorService");
+const { decrypt, encrypt } = require("./secretEncryption");
 
 router.post("/register", async (req, res) => {
   const { firstname, lastname, email, password } = req.body;
@@ -70,7 +71,7 @@ router.post("/login", async (req, res) => {
     await currentUser.update({ failedLoginAttempts, lockedUntil: failedLoginAttempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null });
     return res.status(400).send("Invalid password");
   }
-  if (currentUser.twoFactorEnabled && !verifyCode(currentUser.twoFactorSecret, req.body.twoFactorCode)) return res.status(401).send("Two-factor code required");
+  if (currentUser.twoFactorEnabled && !verifyCode(decrypt(currentUser.twoFactorSecret), req.body.twoFactorCode)) return res.status(401).send("Two-factor code required");
   if (!currentUser.emailVerifiedAt) {
     return res.status(403).send("Verify your email before signing in");
   }
@@ -133,20 +134,23 @@ router.post("/refresh", async (req, res) => {
 
 router.post("/logout", async (req, res) => {
   await revokeSession(req.body.refreshToken || parseCookies(req).refresh_token);
+  clearSessionCookies(res);
   return res.status(204).end();
 });
 router.post("/two-factor/setup", requireAuth, async (req, res) => {
   const user = await Userdetail.findByPk(req.user.userId);
   const secret = generateSecret();
   const codes = recoveryCodes();
-  await user.update({ twoFactorSecret: secret, twoFactorEnabled: false, twoFactorRecoveryCodes: codes });
+  await user.update({ twoFactorSecret: encrypt(secret), twoFactorEnabled: false, twoFactorRecoveryCodes: codes });
   res.json({ secret, provisioningUri: provisioningUri(user.email, secret), recoveryCodes: codes });
 });
 router.post("/two-factor/enable", requireAuth, async (req, res) => {
   const user = await Userdetail.findByPk(req.user.userId);
-  if (!user.twoFactorSecret || !verifyCode(user.twoFactorSecret, req.body.code)) return res.status(400).send("Invalid two-factor code");
+  if (!user.twoFactorSecret || !verifyCode(decrypt(user.twoFactorSecret), req.body.code)) return res.status(400).send("Invalid two-factor code");
   await user.update({ twoFactorEnabled: true });
   res.json({ enabled: true });
 });
+router.get("/sessions", requireAuth, async (req, res) => res.json(await listSessions(req.user.userId)));
+router.delete("/sessions/:id", requireAuth, async (req, res) => { await revokeSessionById(req.user.userId, req.params.id); res.status(204).end(); });
 
 module.exports = router;
