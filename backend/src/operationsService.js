@@ -14,4 +14,12 @@ async function queueLowStockAlerts(recipient) {
   for (const item of summary.lowStock) await Notification.create({ recipient, type: "low_stock", subject: `Low stock: ${item.name}`, body: `${item.name} has ${item.stockQuantity - item.reservedQuantity} available`, status: "pending" });
   return summary.lowStock.length;
 }
-module.exports = { operationsSummary, queueLowStockAlerts };
+function operationsSummaryToCsv(summary) {
+  return [
+    ["metric", "value"],
+    ["orders", summary.orders],
+    ["paid_revenue", summary.revenue],
+    ["low_stock_items", summary.lowStock.length],
+  ].map((row) => row.join(",")).join("\n");
+}
+module.exports = { operationsSummary, operationsSummaryToCsv, queueLowStockAlerts };
