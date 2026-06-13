@@ -1,4 +1,4 @@
-const { Order, OrderEvent, OrderItem, Product, ProductVariant, Promotion, PromotionUsage, sequelize } = require("../models");
+const { GiftCard, Order, OrderEvent, OrderItem, Product, ProductVariant, Promotion, PromotionUsage, sequelize } = require("../models");
 const { calculateAmounts, validateAddress, validatePromotion } = require("./commerceService");
 const { reserveInventory } = require("./inventoryService");
 const { deliveryAmountFor } = require("./paymentService");
@@ -47,6 +47,8 @@ async function createOrderWithItems({ checkout, cartItems, userId = null, idempo
         })
       : null;
     const percentOff = promotion ? validatePromotion(promotion) : 0;
+    const giftCard = checkout.giftCardCode ? await GiftCard.findOne({ where: { code: checkout.giftCardCode.toUpperCase(), active: true }, transaction, lock: transaction.LOCK?.UPDATE }) : null;
+    if (checkout.giftCardCode && !giftCard) throw new Error("Gift card is invalid");
     if (promotion?.perCustomerLimit) {
       const uses = await PromotionUsage.count({
         where: { promotionId: promotion.id, email: checkout.email.toLowerCase() },
@@ -58,6 +60,7 @@ async function createOrderWithItems({ checkout, cartItems, userId = null, idempo
       country: address.country,
       deliveryAmount: deliveryAmountFor(checkout.deliveryMethod),
       percentOff,
+      giftCardAmount: giftCard?.balanceAmount || 0,
     }), normalizeCurrency(checkout.currency));
 
     const order = await Order.create(
@@ -67,6 +70,7 @@ async function createOrderWithItems({ checkout, cartItems, userId = null, idempo
         status: "pending",
         ...amounts,
         promotionCode: promotion?.code,
+        giftCardCode: giftCard?.code,
         deliveryMethod: checkout.deliveryMethod,
         shippingAddress: address,
         currency: amounts.currency,
@@ -81,6 +85,7 @@ async function createOrderWithItems({ checkout, cartItems, userId = null, idempo
       );
       await promotion.increment("useCount", { by: 1, transaction });
     }
+    if (giftCard) await giftCard.update({ balanceAmount: Math.max(0, giftCard.balanceAmount - amounts.giftCardAmount), active: giftCard.balanceAmount > amounts.giftCardAmount }, { transaction });
     await OrderItem.bulkCreate(
       checkoutItems.map((item) => ({
         orderId: order.id,

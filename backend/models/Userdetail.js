@@ -32,6 +32,7 @@ module.exports = (sequelize, DataTypes) => {
     lockedUntil: { type: DataTypes.DATE },
     twoFactorSecret: { type: DataTypes.STRING },
     twoFactorEnabled: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    twoFactorRecoveryCodes: { type: DataTypes.JSON, allowNull: false, defaultValue: [] },
   });
 
   Userdetail.associate = ({ Order, SavedCart, WishlistItem }) => {

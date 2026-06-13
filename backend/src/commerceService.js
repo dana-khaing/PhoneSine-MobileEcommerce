@@ -23,7 +23,7 @@ function validateAddress(address) {
   return { ...address, country };
 }
 
-function calculateAmounts(items, { country, deliveryAmount = 0, percentOff = 0 }) {
+function calculateAmounts(items, { country, deliveryAmount = 0, percentOff = 0, giftCardAmount = 0 }) {
   const subtotalAmount = items.reduce(
     (total, item) => total + item.unitAmount * item.quantity,
     0
@@ -38,7 +38,8 @@ function calculateAmounts(items, { country, deliveryAmount = 0, percentOff = 0 }
     discountAmount,
     taxAmount,
     deliveryAmount,
-    totalAmount: taxableAmount + taxAmount + deliveryAmount,
+    giftCardAmount: Math.min(giftCardAmount, taxableAmount + taxAmount + deliveryAmount),
+    totalAmount: Math.max(0, taxableAmount + taxAmount + deliveryAmount - giftCardAmount),
     taxRate,
   };
 }

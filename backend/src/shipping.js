@@ -3,7 +3,7 @@ const { Order, Shipment } = require("../models");
 const { requireAdmin } = require("./authMiddleware");
 const { createShipment, shippingRates, updateShipment } = require("./shippingService");
 const router = express.Router();
-router.post("/rates", (req, res) => res.json(shippingRates(req.body)));
+router.post("/rates", async (req, res) => { try { res.json(await shippingRates(req.body)); } catch (error) { res.status(502).send(error.message); } });
 router.post("/orders/:id", requireAdmin, async (req, res) => {
   const order = await Order.findByPk(req.params.id); if (!order) return res.status(404).send("Order not found");
   res.status(201).json(await createShipment(order, req.body));
