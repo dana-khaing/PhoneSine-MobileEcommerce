@@ -10,6 +10,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState({ firstname: "", lastname: "", email: "", addresses: [] });
   const [address, setAddress] = useState(emptyAddress);
   const [editingId, setEditingId] = useState(null);
+  const [deletionConfirmation, setDeletionConfirmation] = useState("");
   const [message, setMessage] = useState("Loading profile...");
 
   const load = () => authenticatedFetch(api()).then(async (response) => {
@@ -32,6 +33,28 @@ export default function ProfilePage() {
   };
   const editAddress = (item) => { setEditingId(item.id); setAddress({ ...emptyAddress, ...item }); };
   const removeAddress = async (id) => { await authenticatedFetch(`${api()}/addresses/${id}`, { method: "DELETE" }); load(); };
+  const exportData = async () => {
+    const response = await authenticatedFetch(`${api()}/export`);
+    if (!response.ok) return setMessage(await response.text());
+    const url = URL.createObjectURL(await response.blob());
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "phone-sine-account-data.json";
+    link.click();
+    URL.revokeObjectURL(url);
+    setMessage("Account data exported.");
+  };
+  const deleteAccount = async () => {
+    const response = await authenticatedFetch(api(), {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirmation: deletionConfirmation }),
+    });
+    if (!response.ok) return setMessage(await response.text());
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    window.location.assign("/");
+  };
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
@@ -53,6 +76,19 @@ export default function ProfilePage() {
         <label className="flex items-center gap-2"><input type="checkbox" checked={address.isDefault} onChange={(event) => setAddress((current) => ({ ...current, isDefault: event.target.checked }))} /> Use as default address</label>
         <div className="flex gap-2 sm:col-span-2"><button className="rounded bg-neutral-900 px-4 py-2 text-white">Save address</button>{editingId && <button type="button" className="rounded border px-4 py-2" onClick={() => { setEditingId(null); setAddress(emptyAddress); }}>Cancel</button>}</div>
       </form>
+
+      <section className="mt-8 rounded border p-5">
+        <h2 className="text-xl font-bold">Privacy controls</h2>
+        <p className="mt-2 text-sm">Download a portable copy of your profile, orders, support activity, and account history.</p>
+        <button className="mt-4 rounded border px-4 py-2" type="button" onClick={exportData}>Download my data</button>
+        <div className="mt-6 border-t pt-5">
+          <h3 className="font-bold text-red-700">Delete account</h3>
+          <p className="mt-2 text-sm">This permanently removes your account data. Completed commerce records are retained only in anonymized form.</p>
+          <label className="mt-3 block text-sm" htmlFor="delete-confirmation">Enter DELETE to confirm</label>
+          <input id="delete-confirmation" className="mt-2 rounded border p-2" value={deletionConfirmation} onChange={(event) => setDeletionConfirmation(event.target.value)} />
+          <button className="ml-2 rounded bg-red-700 px-4 py-2 text-white disabled:opacity-50" type="button" disabled={deletionConfirmation !== "DELETE"} onClick={deleteAccount}>Delete my account</button>
+        </div>
+      </section>
     </main>
   );
 }
