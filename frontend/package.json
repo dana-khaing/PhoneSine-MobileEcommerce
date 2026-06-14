@@ -8,6 +8,7 @@
     "start": "next start",
     "test": "node --test",
     "test:e2e": "playwright test",
+    "audit": "pnpm audit --audit-level critical",
     "lint": "next lint"
   },
   "dependencies": {
