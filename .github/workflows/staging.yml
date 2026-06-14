@@ -5,7 +5,10 @@ on:
     paths:
       - ".env.staging.example"
       - ".github/workflows/staging.yml"
+      - ".github/workflows/release.yml"
+      - ".env.production.example"
       - "backend/**"
+      - "docker-compose.production.yml"
       - "docker-compose.staging.yml"
       - "frontend/**"
 jobs:
@@ -16,4 +19,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose --env-file .env.staging.example -f docker-compose.staging.yml config --quiet
+      - run: PRODUCTION_ENV_FILE=.env.production.example docker compose --env-file .env.production.example -f docker-compose.production.yml config --quiet
       - run: docker compose --env-file .env.staging.example -f docker-compose.staging.yml build

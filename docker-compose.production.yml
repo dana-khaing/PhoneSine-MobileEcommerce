@@ -1,0 +1,17 @@
+services:
+  backend:
+    image: ${BACKEND_IMAGE}
+    restart: unless-stopped
+    env_file: ${PRODUCTION_ENV_FILE:-.env.production}
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      RUN_IN_PROCESS_JOBS: "false"
+    ports: ["127.0.0.1:8080:8080"]
+  frontend:
+    image: ${FRONTEND_IMAGE}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports: ["127.0.0.1:3000:3000"]
