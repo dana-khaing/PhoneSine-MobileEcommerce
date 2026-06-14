@@ -1,0 +1,48 @@
+name: Production Release
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+  packages: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: ghcr.io/dana-khaing/phone-sine-mobileecommerce-backend:${{ github.ref_name }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          build-args: |
+            API_ORIGIN=${{ vars.PRODUCTION_API_ORIGIN }}
+            TURNSTILE_SITE_KEY=${{ vars.PRODUCTION_TURNSTILE_SITE_KEY }}
+          tags: ghcr.io/dana-khaing/phone-sine-mobileecommerce-frontend:${{ github.ref_name }}
+  deploy:
+    if: vars.ENABLE_PRODUCTION_DEPLOY == 'true'
+    needs: publish
+    runs-on: [self-hosted, production]
+    environment: production
+    env:
+      BACKEND_IMAGE: ghcr.io/dana-khaing/phone-sine-mobileecommerce-backend:${{ github.ref_name }}
+      FRONTEND_IMAGE: ghcr.io/dana-khaing/phone-sine-mobileecommerce-frontend:${{ github.ref_name }}
+      PRODUCTION_ENV_FILE: .env.production
+    steps:
+      - uses: actions/checkout@v4
+      - run: printf '%s' "$PRODUCTION_ENV_CONTENT" > .env.production
+        env:
+          PRODUCTION_ENV_CONTENT: ${{ secrets.PRODUCTION_ENV_CONTENT }}
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - run: sh scripts/deploy-production.sh

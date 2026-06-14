@@ -70,3 +70,15 @@ starts the services, and blocks until API readiness and the storefront respond.
 Back up the database before changing release tags. Roll back by restoring the
 previous image tags in `.env.production` and rerunning the script; restore the
 database backup only when a migration changed incompatible data.
+
+## Release Automation
+
+Pushing a `v*` Git tag or manually running `Production Release` publishes both
+images to GHCR under that tag. Configure `PRODUCTION_API_ORIGIN` and
+`PRODUCTION_TURNSTILE_SITE_KEY` as repository variables before publishing.
+
+Automatic promotion is optional. Attach a self-hosted runner labeled
+`production`, store the complete production environment file as the
+`PRODUCTION_ENV_CONTENT` environment secret, and set repository variable
+`ENABLE_PRODUCTION_DEPLOY=true`. Without those settings, releases publish
+images but do not attempt to change any production host.
