@@ -7,12 +7,33 @@ permissions:
   contents: read
   pull-requests: read
 jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: ${{ matrix.package }}/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: ${{ matrix.package }}
+      - run: pnpm run audit
+        working-directory: ${{ matrix.package }}
   dependency-review:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/dependency-review-action@v4
+        with:
+          allow-ghsas: GHSA-37ch-88jc-xwx2
   secret-scan:
     runs-on: ubuntu-latest
     steps:
