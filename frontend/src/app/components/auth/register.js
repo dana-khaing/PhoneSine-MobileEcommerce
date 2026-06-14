@@ -6,6 +6,7 @@ import { useState, useContext } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { AuthContext } from "@/app/contexts/authContext";
 import { authenticatedFetch } from "./session.mjs";
+import BotChallenge from "./botChallenge";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,6 +16,7 @@ const Register = ({ closeallcard, handlelogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmpassword, setConfirmpassword] = useState("");
+  const [botToken, setBotToken] = useState("");
   const { setUserName, setUserEmail, setUserIsLogin } = useContext(AuthContext);
   const { toast } = useToast();
   const handlekey = (e) => {
@@ -43,6 +45,7 @@ const Register = ({ closeallcard, handlelogin }) => {
         lastname,
         email,
         password,
+        botToken,
       }),
     });
 
@@ -161,6 +164,7 @@ const Register = ({ closeallcard, handlelogin }) => {
           <p>- at least a lowercase letter *</p>
           <p>- at least a special character *</p>
         </div>
+        <BotChallenge onToken={setBotToken} />
         <button
           className="bg-neutral-900 text-white py-3 rounded-lg mt-1"
           type="submit"
@@ -168,8 +172,8 @@ const Register = ({ closeallcard, handlelogin }) => {
           Sign Up
         </button>
         <p className="mx-auto my-1 text-xs">OR</p>
-        <ActionBtn icon="google.svg" text="Google" />
-        <ActionBtn icon="apple.svg" text="Apple" />
+        <ActionBtn icon="google.svg" text="Google" provider="google" />
+        <ActionBtn icon="apple.svg" text="Apple" provider="apple" />
         <div className="mx-auto my-2 text-sm text-black">
           <span>Already have an account? </span>
           <button className="underline font-medium" onClick={handlelogin}>
