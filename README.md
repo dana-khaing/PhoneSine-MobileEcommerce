@@ -115,6 +115,10 @@ Customers can download a portable JSON copy of their account data or permanently
 delete their account from `/profile`. Deletion removes account-owned data and
 anonymizes retained commerce and security-audit records.
 
+Out-of-stock product and variant pages accept one-time email alert subscriptions.
+The maintenance job delivers alerts after inventory becomes available; run it
+directly with `pnpm run job:stock-alerts`.
+
 Each active product has a public `/products/:id` API and storefront detail page
 with description, price, availability, and add-to-cart support.
 

@@ -14,6 +14,7 @@ export default function ProductDetailPage({ params }) {
   const [reviews, setReviews] = useState({ averageRating: 0, reviewCount: 0, reviews: [] });
   const [review, setReview] = useState({ rating: 5, title: "", body: "" });
   const [recommendations, setRecommendations] = useState([]);
+  const [stockAlertEmail, setStockAlertEmail] = useState("");
   const { addItem } = useContext(CartContext);
 
   useEffect(() => {
@@ -65,6 +66,15 @@ export default function ProductDetailPage({ params }) {
     });
     setMessage(response.ok ? "Review submitted for moderation." : await response.text());
   };
+  const subscribeToStock = async (event) => {
+    event.preventDefault();
+    const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_BACKEND_ORIGIN}/stock-alerts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: stockAlertEmail, productId: product.id, variantId: selectedVariant?.id }),
+    });
+    setMessage(response.ok ? "We will email you when this item is back in stock." : await response.text());
+  };
 
   return (
     <main className="mx-auto grid max-w-5xl gap-10 px-6 py-12 md:grid-cols-2">
@@ -102,6 +112,16 @@ export default function ProductDetailPage({ params }) {
         {product.preorderDate && <p className="mt-3">Preorder release: {new Date(product.preorderDate).toLocaleDateString()}</p>}
         <button disabled={availableStock === 0 && !product.allowBackorder} onClick={addToCart} className="mt-8 rounded bg-neutral-900 px-6 py-3 text-white disabled:opacity-40">{availableStock === 0 && product.allowBackorder ? "Backorder" : product.preorderDate ? "Preorder" : "Add to cart"}</button>
         <button onClick={saveToWishlist} className="ml-2 mt-8 rounded border px-6 py-3">Save to wishlist</button>
+        {availableStock === 0 && (
+          <form onSubmit={subscribeToStock} className="mt-6 rounded border p-4">
+            <h2 className="font-bold">Get a back-in-stock alert</h2>
+            <p className="mt-1 text-sm">We will send one email when this {selectedVariant ? "variant" : "product"} is available.</p>
+            <div className="mt-3 flex gap-2">
+              <input className="min-w-0 flex-1 rounded border p-2" type="email" placeholder="you@example.com" value={stockAlertEmail} onChange={(event) => setStockAlertEmail(event.target.value)} required />
+              <button className="rounded bg-neutral-900 px-4 py-2 text-white">Notify me</button>
+            </div>
+          </form>
+        )}
         {message && <p className="mt-3 text-sm">{message}</p>}
         <section className="mt-10 border-t pt-6">
           <h2 className="text-xl font-bold">Customer reviews</h2>
