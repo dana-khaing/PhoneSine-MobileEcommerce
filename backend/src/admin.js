@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const express = require("express");
 const { AuditLog, Category, GiftCard, Notification, Order, OrderEvent, OrderItem, Product, ProductBundle, ProductReview, ProductVariant, Promotion, Refund, ReturnRequest, SupportTicket, Userdetail } = require("../models");
-const { requireAdmin } = require("./authMiddleware");
+const { requireAdminRequestPermission, requireStaff } = require("./authMiddleware");
 const {
   cancelOrRefundOrder,
   cleanupAbandonedOrders,
@@ -16,7 +16,8 @@ const { operationsSummary, operationsSummaryToCsv, queueLowStockAlerts } = requi
 const { parseProductCsv, productsToCsv } = require("./catalogueService");
 
 const router = express.Router();
-router.use(requireAdmin);
+router.use(requireStaff);
+router.use(requireAdminRequestPermission);
 
 router.get("/orders", async (_req, res) => {
   const orders = await Order.findAll({

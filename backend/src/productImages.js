@@ -3,14 +3,14 @@ const fs = require("fs/promises");
 const path = require("path");
 const crypto = require("crypto");
 const { Product, ProductImage } = require("../models");
-const { requireAdmin } = require("./authMiddleware");
+const { requirePermission } = require("./authMiddleware");
 const { audit } = require("./auditService");
 
 const router = express.Router();
 const uploadDir = path.join(__dirname, "../public/uploads/products");
 const types = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 
-router.post("/:id/images", requireAdmin, express.raw({ type: Object.keys(types), limit: "2mb" }), async (req, res) => {
+router.post("/:id/images", requirePermission("catalog.manage"), express.raw({ type: Object.keys(types), limit: "2mb" }), async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
     if (!product) return res.status(404).send("Product not found");
@@ -35,7 +35,7 @@ router.post("/:id/images", requireAdmin, express.raw({ type: Object.keys(types),
   }
 });
 
-router.delete("/:id/images/:imageId", requireAdmin, async (req, res) => {
+router.delete("/:id/images/:imageId", requirePermission("catalog.manage"), async (req, res) => {
   const image = await ProductImage.findOne({ where: { id: req.params.imageId, productId: req.params.id } });
   if (!image) return res.status(404).send("Product image not found");
   const filename = path.basename(image.url);
