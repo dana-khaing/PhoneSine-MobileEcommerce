@@ -51,3 +51,22 @@ image versions, and run the health and checkout verification steps again.
 
 Do not automatically reverse migrations whose down operation can delete
 commerce records.
+
+# Production Deployment
+
+Production uses prebuilt immutable images from GitHub Container Registry and an
+external managed MySQL database. Copy `.env.production.example` to
+`.env.production` on a TLS-terminating production host and replace every
+placeholder.
+
+Deploy a published release:
+
+```sh
+PRODUCTION_ENV_FILE=.env.production sh scripts/deploy-production.sh
+```
+
+The script validates Compose configuration, pulls the selected release images,
+starts the services, and blocks until API readiness and the storefront respond.
+Back up the database before changing release tags. Roll back by restoring the
+previous image tags in `.env.production` and rerunning the script; restore the
+database backup only when a migration changed incompatible data.
