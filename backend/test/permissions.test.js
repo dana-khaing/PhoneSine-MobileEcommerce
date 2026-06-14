@@ -11,6 +11,13 @@ test("grants staff only their assigned permissions", () => {
   assert.equal(hasPermission("customer", "admin.access"), false);
 });
 
+test("keeps role administration exclusive to administrators", () => {
+  for (const role of ["catalog", "fulfillment", "support", "operations", "customer"]) {
+    assert.equal(hasPermission(role, "roles.manage"), false);
+  }
+  assert.equal(hasPermission("admin", "roles.manage"), true);
+});
+
 test("maps admin routes to granular permissions", () => {
   assert.equal(adminRequestPermission("PATCH", "/users/3/role"), "roles.manage");
   assert.equal(adminRequestPermission("POST", "/orders/2/refund"), "payments.manage");

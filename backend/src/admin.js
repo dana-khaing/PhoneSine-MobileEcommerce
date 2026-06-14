@@ -248,7 +248,8 @@ router.get("/users", async (_req, res) => {
 
 router.patch("/users/:id/role", async (req, res) => {
   try {
-    if (!["admin", "customer"].includes(req.body.role)) throw new Error("Role must be admin or customer");
+    const roles = ["admin", "catalog", "customer", "fulfillment", "operations", "support"];
+    if (!roles.includes(req.body.role)) throw new Error(`Role must be one of: ${roles.join(", ")}`);
     const user = await Userdetail.findByPk(req.params.id);
     if (!user) return res.status(404).send("User not found");
     if (user.role === "admin" && req.body.role !== "admin") {
