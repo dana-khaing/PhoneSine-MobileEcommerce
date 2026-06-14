@@ -11,6 +11,8 @@ export default function ProfilePage() {
   const [address, setAddress] = useState(emptyAddress);
   const [editingId, setEditingId] = useState(null);
   const [deletionConfirmation, setDeletionConfirmation] = useState("");
+  const [loyalty, setLoyalty] = useState({ pointsBalance: 0, referralCode: "", referred: false, transactions: [] });
+  const [referralCode, setReferralCode] = useState("");
   const [message, setMessage] = useState("Loading profile...");
 
   const load = () => authenticatedFetch(api()).then(async (response) => {
@@ -19,6 +21,8 @@ export default function ProfilePage() {
   }).then((result) => { setProfile(result); setMessage(""); }).catch((error) => setMessage(error.message));
 
   useEffect(() => { load(); }, []);
+  const loadLoyalty = () => authenticatedFetch(`${process.env.NEXT_PUBLIC_BACKEND_ORIGIN}/loyalty`).then((response) => response.ok ? response.json() : null).then((result) => result && setLoyalty(result));
+  useEffect(() => { loadLoyalty(); }, []);
 
   const saveProfile = async (event) => {
     event.preventDefault();
@@ -55,6 +59,16 @@ export default function ProfilePage() {
     localStorage.removeItem("refreshToken");
     window.location.assign("/");
   };
+  const applyReferral = async (event) => {
+    event.preventDefault();
+    const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_BACKEND_ORIGIN}/loyalty/referral`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: referralCode }),
+    });
+    setMessage(response.ok ? "Referral code applied. Rewards unlock after your first paid order." : await response.text());
+    if (response.ok) { setLoyalty(await response.json()); setReferralCode(""); }
+  };
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
@@ -67,6 +81,19 @@ export default function ProfilePage() {
         <input className="rounded border bg-neutral-100 p-2 sm:col-span-2" value={profile.email || ""} disabled />
         <button className="rounded bg-neutral-900 px-4 py-2 text-white sm:col-span-2">Save profile</button>
       </form>
+
+      <section className="mt-8 rounded border p-5">
+        <h2 className="text-xl font-bold">Phone Sine rewards</h2>
+        <p className="mt-3 text-3xl font-bold">{loyalty.pointsBalance} points</p>
+        <p className="mt-2 text-sm">Earn one point for every whole pound spent. Your referral code: <strong>{loyalty.referralCode}</strong></p>
+        {!loyalty.referred && (
+          <form className="mt-4 flex gap-2" onSubmit={applyReferral}>
+            <input className="min-w-0 flex-1 rounded border p-2" placeholder="Referral code" value={referralCode} onChange={(event) => setReferralCode(event.target.value)} required />
+            <button className="rounded border px-4 py-2">Apply code</button>
+          </form>
+        )}
+        {loyalty.transactions?.length > 0 && <ul className="mt-5 space-y-2 text-sm">{loyalty.transactions.slice(0, 5).map((entry) => <li key={entry.id} className="flex justify-between border-t pt-2"><span>{entry.description}</span><strong>+{entry.points}</strong></li>)}</ul>}
+      </section>
 
       <section className="mt-8 rounded border p-5"><h2 className="text-xl font-bold">Address book</h2><div className="mt-4 grid gap-3 sm:grid-cols-2">{profile.addresses?.map((item) => <article key={item.id} className="rounded border p-4"><strong>{item.label}{item.isDefault ? " · Default" : ""}</strong><p className="mt-2 text-sm">{item.recipientName}<br />{item.line1}{item.line2 ? <><br />{item.line2}</> : null}<br />{item.city}{item.region ? `, ${item.region}` : ""} {item.postalCode}<br />{item.country}</p><div className="mt-3 flex gap-2"><button className="rounded border px-3 py-1" onClick={() => editAddress(item)}>Edit</button><button className="rounded border px-3 py-1" onClick={() => removeAddress(item.id)}>Delete</button></div></article>)}</div></section>
 
