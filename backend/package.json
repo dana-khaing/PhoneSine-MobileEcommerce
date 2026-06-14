@@ -13,6 +13,8 @@
     "job:notifications": "node src/jobs.js notifications",
     "job:reconcile": "node src/jobs.js reconcile",
     "job:low-stock": "node src/jobs.js low-stock",
+    "db:backup": "sh scripts/backup.sh",
+    "db:restore-test": "sh scripts/restore-test.sh",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:status": "sequelize-cli db:migrate:status"
   },
