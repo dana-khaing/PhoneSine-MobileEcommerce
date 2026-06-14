@@ -1,6 +1,20 @@
 const { Product, ProductVariant, StockAlert } = require("../models");
 const { sendEmail } = require("./providerService");
 
+async function sendStockAlert(message) {
+  if (process.env.RESEND_API_KEY) return sendEmail(message);
+  if (process.env.EMAIL_WEBHOOK_URL) {
+    const response = await fetch(process.env.EMAIL_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(message),
+    });
+    if (!response.ok) throw new Error("Email provider rejected stock alert");
+    return;
+  }
+  console.log(`[email:${message.to}] ${message.subject}`);
+}
+
 function normalizeSubscription(input) {
   const email = String(input.email || "").trim().toLowerCase();
   const productId = Number(input.productId);
@@ -34,7 +48,7 @@ async function deliverStockAlerts(limit = 50) {
   for (const alert of alerts) {
     const item = alert.variant || alert.product;
     if (!alert.product?.active || !item?.active || item.stockQuantity - item.reservedQuantity < 1) continue;
-    await sendEmail({
+    await sendStockAlert({
       to: alert.email,
       subject: `${alert.product.name} is back in stock`,
       text: `${alert.variant?.name || alert.product.name} is available again. Visit the Phone Sine store to order.`,

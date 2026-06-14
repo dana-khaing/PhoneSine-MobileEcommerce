@@ -7,7 +7,7 @@ on:
         required: true
         default: maintenance
         type: choice
-        options: [maintenance, cleanup, notifications, reconcile, low-stock]
+        options: [maintenance, cleanup, notifications, reconcile, low-stock, stock-alerts]
   schedule:
     - cron: "*/10 * * * *"
     - cron: "15 7 * * *"
