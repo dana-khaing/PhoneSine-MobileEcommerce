@@ -7,10 +7,6 @@ const brandList = [
   { id: 4, brand: "OnePlus" },
   { id: 5, brand: "Google Pixel" },
 ];
-const categoryList = [
-  { id: 1, list: "Earphone" },
-  { id: 2, list: "Phone Case" },
-];
 const SideBar = ({
   selectedbranch,
   onBrandClick,
@@ -19,6 +15,9 @@ const SideBar = ({
   priceListener,
   MIN,
   MAX,
+  categories,
+  selectedCategory,
+  onCategoryClick,
 }) => {
   return (
     <div className="px-0 py-0">
@@ -53,10 +52,11 @@ const SideBar = ({
       <div className="font-bold m-2">Category</div>
       <div className="w-full text-start items-start justify-start">
         <ul>
-          {categoryList.map((item) => (
+          <li><button onClick={() => onCategoryClick("")} className={`m-1 w-full rounded-lg px-5 py-2 text-start ${selectedCategory === "" ? "bg-slate-900 text-white" : "text-black"}`}>All categories</button></li>
+          {categories.map((item) => (
             <li key={item.id}>
-              <button className="py-2 px-5 m-1 overflow-hidden text-ellipsis whitespace-nowrap">
-                {item.list}
+              <button onClick={() => onCategoryClick(String(item.id))} className={`m-1 w-full rounded-lg px-5 py-2 text-start ${String(item.id) === selectedCategory ? "bg-slate-900 text-white" : "text-black"}`}>
+                {item.name}
               </button>
             </li>
           ))}

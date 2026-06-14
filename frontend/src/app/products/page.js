@@ -2,7 +2,7 @@
 
 import ProductList from "./components/productList.js";
 import SideBar from "./components/sideBar.js";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Payment from "./components/paymentPage.js";
 import Link from "next/link";
 
@@ -16,6 +16,15 @@ export default function ProductsPage() {
   const [detailsProduct, setDetailsProduct] = useState([]);
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
+  const [categories, setCategories] = useState([]);
+  const [categoryId, setCategoryId] = useState("");
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_ORIGIN}/categories`)
+      .then((response) => response.json())
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, []);
 
   const handleFilterChange = (catbrand) => {
     setFilterBrand(catbrand);
@@ -49,6 +58,9 @@ export default function ProductsPage() {
           priceValue={values}
           MIN={MIN}
           MAX={MAX}
+          categories={categories}
+          selectedCategory={categoryId}
+          onCategoryClick={(id) => { setCategoryId(id); setPage(1); }}
         />
       </div>
       {payment ? (
@@ -76,6 +88,7 @@ export default function ProductsPage() {
               productdetail={productDetailskey}
               sort={sort}
               page={page}
+              categoryId={categoryId}
             />
             <div className="my-6 flex justify-center gap-2"><button className="rounded border px-4 py-2" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Previous</button><button className="rounded border px-4 py-2" onClick={() => setPage((value) => value + 1)}>Next</button></div>
           </div>
