@@ -81,6 +81,21 @@ refresh sessions. Admin authorization uses the database `role` field; set
 Admins can create, edit, archive, restore, price, and stock products from the
 commerce admin page.
 
+Google and Apple sign-in use the authorization-code flow. Configure provider
+credentials in `backend/.env`, set `BACKEND_ORIGIN` to the public API origin,
+and register these provider callback URLs:
+
+- `${BACKEND_ORIGIN}/auth/oauth/google/callback`
+- `${BACKEND_ORIGIN}/auth/oauth/apple/callback`
+
+Apple requires a currently valid signed client-secret JWT. OAuth identities can
+be linked from `/security`, where customers can also review active sessions and
+recent successful or failed login activity.
+
+To require Cloudflare Turnstile on password login and registration, set
+`TURNSTILE_SECRET_KEY` in the backend and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` in
+the frontend. Leave both unset for local development without bot verification.
+
 Each active product has a public `/products/:id` API and storefront detail page
 with description, price, availability, and add-to-cart support.
 
