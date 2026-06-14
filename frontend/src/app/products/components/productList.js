@@ -10,6 +10,7 @@ export default function ProductList({
   productdetail,
   sort,
   page,
+  categoryId,
 }) {
   const [products, setProducts] = useState([]);
   const [items, setItems] = useState([]);
@@ -17,12 +18,16 @@ export default function ProductList({
 
   useEffect(() => {
     fetchData();
-  }, [filterSearch, sort, page]);
+  }, [filterSearch, filterBrand, price, sort, page, categoryId]);
 
   // Just fetching the data from the backend
   const fetchData = async () => {
     try {
       const params = new URLSearchParams({ search: filterSearch, sort, page: String(page), limit: "12" });
+      if (filterBrand !== "All Products") params.set("brand", filterBrand);
+      if (categoryId) params.set("categoryId", categoryId);
+      params.set("minPrice", String(price[0]));
+      params.set("maxPrice", String(price[1]));
       const response = await fetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}?${params}`);
       if (!response.ok) throw new Error("Unable to load products");
       const jsonData = await response.json();
