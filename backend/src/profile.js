@@ -2,6 +2,7 @@ const express = require("express");
 const { CustomerAddress, Userdetail } = require("../models");
 const { requireAuth } = require("./authMiddleware");
 const { saveAddress } = require("./profileService");
+const { deleteAccount, exportAccountData } = require("./privacyService");
 
 const router = express.Router();
 router.use(requireAuth);
@@ -44,6 +45,20 @@ router.patch("/addresses/:id", async (req, res) => {
 router.delete("/addresses/:id", async (req, res) => {
   const deleted = await CustomerAddress.destroy({ where: { id: req.params.id, userId: req.user.userId } });
   return deleted ? res.status(204).end() : res.status(404).send("Address not found");
+});
+
+router.get("/export", async (req, res) => {
+  const data = await exportAccountData(req.user.userId);
+  res.set("Content-Disposition", `attachment; filename="phone-sine-account-${req.user.userId}.json"`);
+  return res.json(data);
+});
+
+router.delete("/", async (req, res) => {
+  if (req.body.confirmation !== "DELETE") return res.status(400).send('Enter "DELETE" to confirm account deletion');
+  await deleteAccount(req.user.userId);
+  res.clearCookie("refreshToken");
+  res.clearCookie("csrfToken");
+  return res.status(204).end();
 });
 
 module.exports = router;
