@@ -35,7 +35,8 @@ module.exports = (sequelize, DataTypes) => {
     twoFactorRecoveryCodes: { type: DataTypes.JSON, allowNull: false, defaultValue: [] },
   });
 
-  Userdetail.associate = ({ LoginEvent, OAuthIdentity, Order, SavedCart, WishlistItem }) => {
+  Userdetail.associate = ({ CustomerAddress, LoginEvent, OAuthIdentity, Order, SavedCart, WishlistItem }) => {
+    Userdetail.hasMany(CustomerAddress, { as: "addresses", foreignKey: "userId" });
     Userdetail.hasMany(Order, { as: "orders", foreignKey: "userId" });
     Userdetail.hasMany(OAuthIdentity, { as: "oauthIdentities", foreignKey: "userId" });
     Userdetail.hasMany(LoginEvent, { as: "loginEvents", foreignKey: "userId" });

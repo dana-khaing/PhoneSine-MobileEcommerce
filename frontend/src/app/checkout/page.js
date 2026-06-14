@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { CartContext } from "../contexts/cartContext";
 import {
   checkoutTotal,
@@ -32,7 +32,34 @@ export default function CheckoutPage() {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [quote, setQuote] = useState(null);
+  const [savedAddresses, setSavedAddresses] = useState([]);
   const total = checkoutTotal(subtotal, deliveryMethod);
+
+  useEffect(() => {
+    authenticatedFetch(`${process.env.NEXT_PUBLIC_BACKEND_ORIGIN}/profile`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((profile) => {
+        if (!profile) return;
+        setSavedAddresses(profile.addresses || []);
+        const preferred = profile.addresses?.find((item) => item.isDefault);
+        setDetails((current) => ({ ...current, email: profile.email || current.email, firstName: profile.firstname || current.firstName, lastName: profile.lastname || current.lastName }));
+        if (preferred) useSavedAddress(preferred);
+      })
+      .catch(() => {});
+  }, []);
+
+  const useSavedAddress = (item) => {
+    const names = String(item.recipientName || "").trim().split(/\s+/);
+    setDetails((current) => ({
+      ...current,
+      firstName: names[0] || current.firstName,
+      lastName: names.slice(1).join(" ") || current.lastName,
+      address: [item.line1, item.line2].filter(Boolean).join(", "),
+      city: item.city,
+      postcode: item.postalCode,
+      country: item.country,
+    }));
+  };
 
   const updateDetails = (event) => {
     setDetails((current) => ({
@@ -121,6 +148,7 @@ export default function CheckoutPage() {
 
         <section className="grid gap-4 rounded-lg border p-6 sm:grid-cols-2">
           <h2 className="text-xl font-bold sm:col-span-2">Shipping details</h2>
+          {savedAddresses.length > 0 && <select className="rounded border p-3 sm:col-span-2" defaultValue="" onChange={(event) => { const selected = savedAddresses.find((item) => String(item.id) === event.target.value); if (selected) useSavedAddress(selected); }}><option value="">Choose a saved address</option>{savedAddresses.map((item) => <option key={item.id} value={item.id}>{item.label}{item.isDefault ? " (default)" : ""} · {item.line1}, {item.city}</option>)}</select>}
           <input className="rounded border p-3 sm:col-span-2" name="email" type="email" placeholder="Email" value={details.email} onChange={updateDetails} />
           <input className="rounded border p-3" name="firstName" placeholder="First name" value={details.firstName} onChange={updateDetails} />
           <input className="rounded border p-3" name="lastName" placeholder="Last name" value={details.lastName} onChange={updateDetails} />
