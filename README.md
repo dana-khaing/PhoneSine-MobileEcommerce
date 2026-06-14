@@ -111,6 +111,10 @@ Two-factor recovery codes are single-use. Customers can regenerate them or
 disable two-factor authentication from `/security` after entering a current
 authenticator or recovery code.
 
+Customers can download a portable JSON copy of their account data or permanently
+delete their account from `/profile`. Deletion removes account-owned data and
+anonymizes retained commerce and security-audit records.
+
 Each active product has a public `/products/:id` API and storefront detail page
 with description, price, availability, and add-to-cart support.
 
