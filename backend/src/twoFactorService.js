@@ -12,4 +12,11 @@ function verifyCode(secret, code, timestamp = Date.now()) {
 }
 function provisioningUri(email, secret) { return `otpauth://totp/Phone%20Sine:${encodeURIComponent(email)}?secret=${secret}&issuer=Phone%20Sine`; }
 function recoveryCodes() { return Array.from({ length: 8 }, () => crypto.randomBytes(5).toString("hex").toUpperCase()); }
-module.exports = { codeFor, generateSecret, provisioningUri, recoveryCodes, verifyCode };
+function consumeRecoveryCode(codes, submittedCode) {
+  const normalized = String(submittedCode || "").trim().toUpperCase();
+  const index = (codes || []).findIndex((code) => code === normalized);
+  return index < 0
+    ? { used: false, remaining: codes || [] }
+    : { used: true, remaining: codes.filter((_, candidate) => candidate !== index) };
+}
+module.exports = { codeFor, consumeRecoveryCode, generateSecret, provisioningUri, recoveryCodes, verifyCode };

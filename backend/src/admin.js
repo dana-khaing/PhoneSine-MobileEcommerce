@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const express = require("express");
 const { AuditLog, Category, GiftCard, Notification, Order, OrderEvent, OrderItem, Product, ProductBundle, ProductReview, ProductVariant, Promotion, Refund, ReturnRequest, SupportTicket, Userdetail } = require("../models");
-const { requireAdmin } = require("./authMiddleware");
+const { requireAdminRequestPermission, requireStaff } = require("./authMiddleware");
 const {
   cancelOrRefundOrder,
   cleanupAbandonedOrders,
@@ -16,7 +16,8 @@ const { operationsSummary, operationsSummaryToCsv, queueLowStockAlerts } = requi
 const { parseProductCsv, productsToCsv } = require("./catalogueService");
 
 const router = express.Router();
-router.use(requireAdmin);
+router.use(requireStaff);
+router.use(requireAdminRequestPermission);
 
 router.get("/orders", async (_req, res) => {
   const orders = await Order.findAll({
@@ -247,7 +248,8 @@ router.get("/users", async (_req, res) => {
 
 router.patch("/users/:id/role", async (req, res) => {
   try {
-    if (!["admin", "customer"].includes(req.body.role)) throw new Error("Role must be admin or customer");
+    const roles = ["admin", "catalog", "customer", "fulfillment", "operations", "support"];
+    if (!roles.includes(req.body.role)) throw new Error(`Role must be one of: ${roles.join(", ")}`);
     const user = await Userdetail.findByPk(req.params.id);
     if (!user) return res.status(404).send("User not found");
     if (user.role === "admin" && req.body.role !== "admin") {
