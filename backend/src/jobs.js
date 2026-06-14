@@ -5,6 +5,7 @@ const { deliverPendingNotifications } = require("./notificationService");
 const { runMaintenance } = require("./maintenanceService");
 const { queueLowStockAlerts } = require("./operationsService");
 const { reconcilePayments } = require("./reconciliationService");
+const { deliverStockAlerts } = require("./stockAlertService");
 
 const jobs = {
   cleanup: async () => ({ cleaned: await cleanupAbandonedOrders() }),
@@ -12,6 +13,7 @@ const jobs = {
   notifications: async () => ({ delivered: await deliverPendingNotifications() }),
   reconcile: async () => ({ results: await reconcilePayments() }),
   "low-stock": async () => ({ queued: await queueLowStockAlerts(process.env.OPERATIONS_ALERT_EMAIL) }),
+  "stock-alerts": async () => ({ delivered: await deliverStockAlerts() }),
 };
 
 async function main(name = process.argv[2]) {
