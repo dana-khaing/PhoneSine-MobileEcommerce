@@ -11,6 +11,7 @@ const savedItemsRoute = require("./savedItems");
 const reviewsRoute = require("./reviews");
 const shippingRoute = require("./shipping");
 const customerExperienceRoute = require("./customerExperience");
+const profileRoute = require("./profile");
 const { stripeWebhook } = require("./stripeWebhook");
 const { Category, Product, ProductBundle } = require("../models");
 const { createRateLimiter } = require("./rateLimit");
@@ -39,6 +40,7 @@ function createApp() {
   app.use("/reviews", reviewsRoute);
   app.use("/shipping", shippingRoute);
   app.use("/customer", customerExperienceRoute);
+  app.use("/profile", profileRoute);
   app.use("/admin", adminRoute);
   app.get("/health", async (_req, res) => {
     try {
