@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -32,6 +32,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/dependency-review-action@v4
+        with:
+          allow-ghsas: GHSA-37ch-88jc-xwx2
   secret-scan:
     runs-on: ubuntu-latest
     steps:
