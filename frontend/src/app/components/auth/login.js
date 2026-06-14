@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { jwtDecode } from "jwt-decode";
 import { authenticatedFetch, storeSession } from "./session.mjs";
+import BotChallenge from "./botChallenge";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,6 +19,7 @@ const Login = ({ closeallcard, handlesignup }) => {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [botToken, setBotToken] = useState("");
   const { setUserName, setUserEmail, setUserIsLogin } = useContext(AuthContext);
   const { toast } = useToast();
   const handleEnterKey = (e) => {
@@ -33,7 +35,7 @@ const Login = ({ closeallcard, handlesignup }) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, password, rememberMe, twoFactorCode }),
+      body: JSON.stringify({ email, password, rememberMe, twoFactorCode, botToken }),
     });
 
     if (data.status === 200) {
@@ -124,6 +126,7 @@ const Login = ({ closeallcard, handlesignup }) => {
           </a>
         </div>
         <input type="text" inputMode="numeric" maxLength="6" className="rounded-lg border border-black p-3" placeholder="Two-factor code, if enabled" value={twoFactorCode} onChange={(event) => setTwoFactorCode(event.target.value)} />
+        <BotChallenge onToken={setBotToken} />
         <button
           type="submit"
           className="bg-neutral-900 text-white py-3 rounded-lg"
@@ -131,8 +134,8 @@ const Login = ({ closeallcard, handlesignup }) => {
           Sign In
         </button>
         <p className="mx-auto my-1 text-xs">OR</p>
-        <ActionBtn icon="google.svg" text="Google" />
-        <ActionBtn icon="apple.svg" text="Apple" />
+        <ActionBtn icon="google.svg" text="Google" provider="google" />
+        <ActionBtn icon="apple.svg" text="Apple" provider="apple" />
         <div className="mx-auto my-2 text-sm text-black">
           <span>Don't have account yet? </span>
           <button className="underline font-medium" onClick={handlesignup}>
