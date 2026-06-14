@@ -125,7 +125,7 @@ const Login = ({ closeallcard, handlesignup }) => {
             Forgot your password?
           </a>
         </div>
-        <input type="text" inputMode="numeric" maxLength="6" className="rounded-lg border border-black p-3" placeholder="Two-factor code, if enabled" value={twoFactorCode} onChange={(event) => setTwoFactorCode(event.target.value)} />
+        <input type="text" maxLength="20" className="rounded-lg border border-black p-3" placeholder="Authenticator or recovery code, if enabled" value={twoFactorCode} onChange={(event) => setTwoFactorCode(event.target.value)} />
         <BotChallenge onToken={setBotToken} />
         <button
           type="submit"

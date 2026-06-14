@@ -14,7 +14,7 @@ const { issuePasswordReset, resetPassword } = require("./passwordResetService");
 const { createSession, listSessions, revokeSession, revokeSessionById, rotateSession } = require("./sessionService");
 const { optionalAuth, requireAuth } = require("./authMiddleware");
 const { clearSessionCookies, parseCookies, setSessionCookies } = require("./securityMiddleware");
-const { generateSecret, provisioningUri, recoveryCodes, verifyCode } = require("./twoFactorService");
+const { consumeRecoveryCode, generateSecret, provisioningUri, recoveryCodes, verifyCode } = require("./twoFactorService");
 const { decrypt, encrypt } = require("./secretEncryption");
 const { listLoginEvents, recordLoginEvent } = require("./loginSecurityService");
 const { authorizationUrl, exchangeOAuthCode, resolveOAuthUser } = require("./oauthService");
@@ -26,6 +26,14 @@ function loginEvent(req, values) {
     userAgent: req.headers["user-agent"],
     ...values,
   }).catch(() => {});
+}
+
+async function verifyUserSecondFactor(user, submittedCode) {
+  if (user.twoFactorSecret && verifyCode(decrypt(user.twoFactorSecret), submittedCode)) return true;
+  const recovery = consumeRecoveryCode(user.twoFactorRecoveryCodes, submittedCode);
+  if (!recovery.used) return false;
+  await user.update({ twoFactorRecoveryCodes: recovery.remaining });
+  return true;
 }
 
 router.post("/register", async (req, res) => {
@@ -94,7 +102,7 @@ router.post("/login", async (req, res) => {
       await loginEvent(req, { userId: currentUser.id, method: "password", successful: false, reason: "Invalid password" });
       return res.status(400).send("Invalid password");
     }
-    if (currentUser.twoFactorEnabled && !verifyCode(decrypt(currentUser.twoFactorSecret), req.body.twoFactorCode)) {
+    if (currentUser.twoFactorEnabled && !await verifyUserSecondFactor(currentUser, req.body.twoFactorCode)) {
       await loginEvent(req, { userId: currentUser.id, method: "password", successful: false, reason: "Two-factor code required" });
       return res.status(401).send("Two-factor code required");
     }
@@ -194,6 +202,7 @@ router.post("/logout", async (req, res) => {
 });
 router.post("/two-factor/setup", requireAuth, async (req, res) => {
   const user = await Userdetail.findByPk(req.user.userId);
+  if (user.twoFactorEnabled) return res.status(409).send("Disable two-factor authentication before creating a new setup");
   const secret = generateSecret();
   const codes = recoveryCodes();
   await user.update({ twoFactorSecret: encrypt(secret), twoFactorEnabled: false, twoFactorRecoveryCodes: codes });
@@ -204,6 +213,19 @@ router.post("/two-factor/enable", requireAuth, async (req, res) => {
   if (!user.twoFactorSecret || !verifyCode(decrypt(user.twoFactorSecret), req.body.code)) return res.status(400).send("Invalid two-factor code");
   await user.update({ twoFactorEnabled: true });
   res.json({ enabled: true });
+});
+router.post("/two-factor/recovery-codes", requireAuth, async (req, res) => {
+  const user = await Userdetail.findByPk(req.user.userId);
+  if (!user.twoFactorEnabled || !await verifyUserSecondFactor(user, req.body.code)) return res.status(400).send("Valid two-factor code required");
+  const codes = recoveryCodes();
+  await user.update({ twoFactorRecoveryCodes: codes });
+  return res.json({ recoveryCodes: codes });
+});
+router.post("/two-factor/disable", requireAuth, async (req, res) => {
+  const user = await Userdetail.findByPk(req.user.userId);
+  if (!user.twoFactorEnabled || !await verifyUserSecondFactor(user, req.body.code)) return res.status(400).send("Valid two-factor code required");
+  await user.update({ twoFactorEnabled: false, twoFactorSecret: null, twoFactorRecoveryCodes: [] });
+  return res.json({ enabled: false });
 });
 router.get("/sessions", requireAuth, async (req, res) => res.json(await listSessions(req.user.userId)));
 router.get("/login-events", requireAuth, async (req, res) => res.json(await listLoginEvents(req.user.userId)));

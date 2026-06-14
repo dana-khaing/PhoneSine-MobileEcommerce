@@ -53,6 +53,19 @@ export default function SecurityPage() {
         }}>Generate authenticator setup</button>
         {secret && <div className="mt-4 break-all rounded bg-neutral-100 p-3"><p>Secret: {secret}</p><a className="underline" href={provisioningUri}>Open authenticator app</a><p className="mt-2">Recovery codes: {recoveryCodes.join(", ")}</p></div>}
         <div className="mt-4 flex gap-2"><input className="rounded border p-2" placeholder="6-digit code" value={code} onChange={(event) => setCode(event.target.value)} /><button className="rounded border px-4" onClick={() => request("enable", { code })}>Enable 2FA</button></div>
+        <div className="mt-3 flex gap-2">
+          <button className="rounded border px-4 py-2" onClick={async () => {
+            const result = await request("recovery-codes", { code });
+            setRecoveryCodes(result?.recoveryCodes || []);
+          }}>Regenerate recovery codes</button>
+          <button className="rounded border px-4 py-2" onClick={async () => {
+            const result = await request("disable", { code });
+            if (result) {
+              setSecret("");
+              setRecoveryCodes([]);
+            }
+          }}>Disable 2FA</button>
+        </div>
         {message && <p className="mt-4">{message}</p>}
       </section>
 

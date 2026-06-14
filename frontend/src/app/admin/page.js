@@ -306,9 +306,9 @@ export default function AdminPage() {
         {users.map((user) => (
           <div key={user.id} className="mt-3 flex items-center justify-between border p-3">
             <span>{user.email} · {user.role} · {user.emailVerifiedAt ? "verified" : "unverified"}</span>
-            <button className="rounded border px-3 py-2" onClick={() => action(`/users/${user.id}/role`, "PATCH", { role: user.role === "admin" ? "customer" : "admin" })}>
-              Make {user.role === "admin" ? "customer" : "admin"}
-            </button>
+            <select className="rounded border px-3 py-2" value={user.role} onChange={(event) => action(`/users/${user.id}/role`, "PATCH", { role: event.target.value })}>
+              {["customer", "support", "catalog", "fulfillment", "operations", "admin"].map((role) => <option key={role} value={role}>{role}</option>)}
+            </select>
           </div>
         ))}
       </section>

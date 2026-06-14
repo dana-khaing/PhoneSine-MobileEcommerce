@@ -96,6 +96,21 @@ To require Cloudflare Turnstile on password login and registration, set
 `TURNSTILE_SECRET_KEY` in the backend and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` in
 the frontend. Leave both unset for local development without bot verification.
 
+### Staff roles
+
+Only `admin` users can assign roles. The available database-backed roles are:
+
+- `admin`: unrestricted administration and role management
+- `catalog`: products, categories, bundles, images, and review moderation
+- `fulfillment`: order visibility, fulfillment, returns, and shipping labels
+- `support`: order visibility, support tickets, and review moderation
+- `operations`: payment operations, reports, promotions, and gift cards
+- `customer`: no staff permissions
+
+Two-factor recovery codes are single-use. Customers can regenerate them or
+disable two-factor authentication from `/security` after entering a current
+authenticator or recovery code.
+
 Each active product has a public `/products/:id` API and storefront detail page
 with description, price, availability, and add-to-cart support.
 
