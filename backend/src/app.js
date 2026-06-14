@@ -20,6 +20,7 @@ const { discoveryQuery } = require("./productDiscovery");
 const { Op } = require("sequelize");
 const { csrfProtection, securityHeaders } = require("./securityMiddleware");
 const { errorHandler, requestLogger } = require("./logger");
+const { renderMetrics } = require("./metricsService");
 
 function createApp() {
   const app = express();
@@ -49,6 +50,19 @@ function createApp() {
     } catch {
       res.status(503).json({ status: "unavailable", database: "disconnected" });
     }
+  });
+  app.get("/health/ready", async (_req, res) => {
+    try {
+      await Product.sequelize.authenticate();
+      res.json({ ready: true });
+    } catch {
+      res.status(503).json({ ready: false });
+    }
+  });
+  app.get("/metrics", (req, res) => {
+    const token = process.env.METRICS_TOKEN;
+    if (token && req.headers.authorization !== `Bearer ${token}`) return res.status(401).send("Metrics token required");
+    return res.type("text/plain").send(renderMetrics());
   });
 
   app.get("/products", async (_req, res) => {

@@ -3,6 +3,9 @@
 ## Monitoring
 
 - Probe `GET /health` every minute and alert on non-200 responses.
+- Probe `GET /health/ready` before routing traffic.
+- Scrape `GET /metrics` with `Authorization: Bearer $METRICS_TOKEN`.
+- Set `OPERATIONS_ALERT_WEBHOOK_URL` to receive unhandled-error alerts.
 - Monitor `GET /admin/health/payments` and `GET /admin/analytics` with an admin token.
 - Trigger `POST /admin/low-stock-alerts` daily before notification delivery.
 
@@ -21,6 +24,22 @@ gunzip -c phone-sine-YYYY-MM-DD.sql.gz | mysql "$RESTORE_DB_NAME"
 ```
 
 Store backups outside the application host with restricted access and lifecycle retention.
+Run `pnpm run db:backup -- backup.sql.gz` and verify it with
+`RESTORE_DB_NAME=phone_sine_restore_test pnpm run db:restore-test -- backup.sql.gz`.
+The monthly `Backup Restore Verification` workflow performs this restore test.
+
+## Scheduled Jobs
+
+Run `pnpm run job:maintenance` every ten minutes from the platform scheduler.
+Run `pnpm run job:low-stock` daily. Individual cleanup, notification, and
+reconciliation jobs are also available. Set `RUN_IN_PROCESS_JOBS=true` only for
+single-instance deployments without an external scheduler.
+
+The `Scheduled Commerce Maintenance` workflow provides these schedules when the
+repository variable `ENABLE_SCHEDULED_MAINTENANCE` is `true`. Configure
+`PRODUCTION_DATABASE_URL`, `PRODUCTION_STRIPE_SECRET_KEY`,
+`PRODUCTION_EMAIL_WEBHOOK_URL`, and `PRODUCTION_JWT_SECRET` as repository
+secrets before enabling it.
 
 ## Staging
 
