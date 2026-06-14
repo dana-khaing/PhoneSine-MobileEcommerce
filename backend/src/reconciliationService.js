@@ -5,6 +5,7 @@ const { verifyPaidCheckoutSession } = require("./orderService");
 const { audit } = require("./auditService");
 const { settleReservations } = require("./inventoryService");
 const { queueNotification } = require("./notificationService");
+const { awardOrderPoints } = require("./loyaltyService");
 
 async function reconcilePayments(limit = 50) {
   const orders = await Order.findAll({
@@ -43,6 +44,7 @@ async function reconcilePayments(limit = 50) {
           { transaction }
         );
         if (canConfirm) {
+          await awardOrderPoints(order, transaction);
           await queueNotification(order, "payment_receipt", `Payment received for order #${order.id}.`, transaction);
           await queueNotification(order, "order_confirmation", `Order #${order.id} is confirmed.`, transaction);
         }

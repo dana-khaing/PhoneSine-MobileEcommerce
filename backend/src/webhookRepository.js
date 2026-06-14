@@ -4,6 +4,7 @@ const { settleReservations } = require("./inventoryService");
 const { queueNotification } = require("./notificationService");
 const { audit } = require("./auditService");
 const { releasePromotionUsage } = require("./promotionService");
+const { awardOrderPoints } = require("./loyaltyService");
 
 async function processStripeEvent(event) {
   return sequelize.transaction(async (transaction) => {
@@ -82,6 +83,7 @@ async function processStripeEvent(event) {
               { where: { id: order.userId }, transaction }
             );
           }
+          await awardOrderPoints(order, transaction);
           await queueNotification(
             order,
             "payment_receipt",
