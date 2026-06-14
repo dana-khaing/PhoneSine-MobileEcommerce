@@ -119,6 +119,10 @@ Out-of-stock product and variant pages accept one-time email alert subscriptions
 The maintenance job delivers alerts after inventory becomes available; run it
 directly with `pnpm run job:stock-alerts`.
 
+Paid orders earn one loyalty point per whole pound. Customers can view their
+reward ledger and share or apply referral codes from `/profile`; both customers
+receive 500 points after the referred customer's first confirmed payment.
+
 Each active product has a public `/products/:id` API and storefront detail page
 with description, price, availability, and add-to-cart support.
 
