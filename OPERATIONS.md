@@ -35,6 +35,12 @@ Run `pnpm run job:low-stock` daily. Individual cleanup, notification, and
 reconciliation jobs are also available. Set `RUN_IN_PROCESS_JOBS=true` only for
 single-instance deployments without an external scheduler.
 
+The `Scheduled Commerce Maintenance` workflow provides these schedules when the
+repository variable `ENABLE_SCHEDULED_MAINTENANCE` is `true`. Configure
+`PRODUCTION_DATABASE_URL`, `PRODUCTION_STRIPE_SECRET_KEY`,
+`PRODUCTION_EMAIL_WEBHOOK_URL`, and `PRODUCTION_JWT_SECRET` as repository
+secrets before enabling it.
+
 ## Staging
 
 Use the reproducible staging stack and promotion checklist in
