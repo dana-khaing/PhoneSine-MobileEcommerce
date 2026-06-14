@@ -12,7 +12,7 @@ const reviewsRoute = require("./reviews");
 const shippingRoute = require("./shipping");
 const customerExperienceRoute = require("./customerExperience");
 const { stripeWebhook } = require("./stripeWebhook");
-const { Product, ProductBundle } = require("../models");
+const { Category, Product, ProductBundle } = require("../models");
 const { createRateLimiter } = require("./rateLimit");
 const { presentProduct } = require("./productPresenter");
 const { discoveryQuery } = require("./productDiscovery");
@@ -79,6 +79,15 @@ function createApp() {
     res.set("X-Total-Count", String(count));
     res.set("X-Page", String(query.page));
     res.json(products.map(presentProduct));
+  });
+
+  app.get("/categories", async (_req, res) => {
+    res.json(await Category.findAll({
+      attributes: ["id", "name", "slug"],
+      include: [{ association: "products", attributes: [], where: { active: true }, required: false }],
+      group: ["Category.id"],
+      order: [["name", "ASC"]],
+    }));
   });
 
   app.get("/products/compare", async (req, res) => {
