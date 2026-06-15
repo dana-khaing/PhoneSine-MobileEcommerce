@@ -20,6 +20,15 @@ function fingerprint(error, context = {}) {
     .slice(0, 16);
 }
 
+function normalizeClientError(input = {}) {
+  return {
+    message: String(input.message || "Browser error").slice(0, 500),
+    digest: String(input.digest || "").slice(0, 100),
+    path: String(input.path || "").split("?")[0].slice(0, 300),
+    userAgent: String(input.userAgent || "").slice(0, 300),
+  };
+}
+
 async function reportError(error, context = {}) {
   if (!process.env.ERROR_TRACKING_WEBHOOK_URL) return false;
   const payload = {
@@ -43,4 +52,4 @@ async function reportError(error, context = {}) {
   return response.ok;
 }
 
-module.exports = { fingerprint, reportError, sanitize };
+module.exports = { fingerprint, normalizeClientError, reportError, sanitize };
