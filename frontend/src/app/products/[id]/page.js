@@ -29,7 +29,8 @@ export default function ProductDetailPage({ params }) {
         setSelectedVariantId(data.variants?.[0]?.id ? String(data.variants[0].id) : "");
         setMessage("");
         const recent = JSON.parse(localStorage.getItem("phone-sine-recent") || "[]").filter((item) => item.id !== data.id);
-        localStorage.setItem("phone-sine-recent", JSON.stringify([{ id: data.id, name: data.name, price: data.price }, ...recent].slice(0, 8)));
+        localStorage.setItem("phone-sine-recent", JSON.stringify([{ id: data.id, name: data.name, brand: data.brand, price: data.price, images: data.images }, ...recent].slice(0, 8)));
+        authenticatedFetch(`${process.env.NEXT_PUBLIC_BACKEND_ORIGIN}/recommendations/views/${data.id}`, { method: "POST", body: "{}" }).catch(() => {});
       })
       .catch((error) => setMessage(error.message));
   }, [params.id]);

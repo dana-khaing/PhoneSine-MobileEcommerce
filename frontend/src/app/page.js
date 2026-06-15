@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import StorefrontCard from "./components/storefrontCard";
+import { authenticatedFetch } from "./components/auth/session.mjs";
 
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [recent, setRecent] = useState([]);
+  const [recommended, setRecommended] = useState([]);
 
   useEffect(() => {
     Promise.all([
@@ -16,6 +19,11 @@ export default function Home() {
       setProducts(nextProducts);
       setCategories(nextCategories);
     }).catch(() => {});
+    setRecent(JSON.parse(localStorage.getItem("phone-sine-recent") || "[]").slice(0, 4));
+    authenticatedFetch(`${process.env.NEXT_PUBLIC_BACKEND_ORIGIN}/recommendations/personalized`)
+      .then((response) => response.ok ? response.json() : [])
+      .then((items) => setRecommended(items.slice(0, 4)))
+      .catch(() => {});
   }, []);
 
   return (
@@ -26,6 +34,8 @@ export default function Home() {
       </section>
       <section className="bg-neutral-100 py-14"><div className="mx-auto max-w-6xl px-6"><h2 className="text-2xl font-bold">Shop by category</h2><div className="mt-6 flex flex-wrap gap-3">{categories.map((category) => <Link key={category.id} href={`/categories/${category.slug}`} className="rounded-full border bg-white px-5 py-3">{category.name}</Link>)}</div></div></section>
       <section className="mx-auto max-w-6xl px-6 py-14"><div className="flex items-end justify-between"><div><p className="text-sm uppercase tracking-wide text-neutral-500">Just added</p><h2 className="text-2xl font-bold">Latest products</h2></div><Link href="/products" className="underline">View all</Link></div><div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <StorefrontCard key={product.id} product={product} />)}</div></section>
+      {recommended.length > 0 && <section className="mx-auto max-w-6xl px-6 py-14"><h2 className="text-2xl font-bold">Recommended for you</h2><div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{recommended.map((product) => <StorefrontCard key={product.id} product={product} />)}</div></section>}
+      {recent.length > 0 && <section className="mx-auto max-w-6xl px-6 py-14"><h2 className="text-2xl font-bold">Recently viewed</h2><div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{recent.map((product) => <StorefrontCard key={product.id} product={product} />)}</div></section>}
     </main>
   );
 }
