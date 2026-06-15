@@ -6,6 +6,11 @@
 - Probe `GET /health/ready` before routing traffic.
 - Scrape `GET /metrics` with `Authorization: Bearer $METRICS_TOKEN`.
 - Set `OPERATIONS_ALERT_WEBHOOK_URL` to receive unhandled-error alerts.
+- Set `ERROR_TRACKING_WEBHOOK_URL` to send sanitized application error reports to
+  an error-tracking collector. Set `APP_RELEASE` to the deployed commit or release
+  identifier so reports can be correlated with deployments.
+- Browser crashes are submitted to the rate-limited `/client-errors` endpoint.
+  Reports omit URL query parameters and the backend redacts sensitive context.
 - Monitor `GET /admin/health/payments` and `GET /admin/analytics` with an admin token.
 - Trigger `POST /admin/low-stock-alerts` daily before notification delivery.
 
