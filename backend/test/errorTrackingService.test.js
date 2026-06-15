@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { fingerprint, reportError, sanitize } = require("../src/errorTrackingService");
+const { fingerprint, normalizeClientError, reportError, sanitize } = require("../src/errorTrackingService");
 
 test("sanitizes sensitive error context", () => {
   assert.deepEqual(sanitize({
@@ -17,6 +17,16 @@ test("sanitizes sensitive error context", () => {
 test("creates stable error fingerprints", () => {
   const error = new Error("database unavailable");
   assert.equal(fingerprint(error, { method: "GET", path: "/products" }), fingerprint(error, { method: "GET", path: "/products" }));
+});
+
+test("bounds browser error reports and removes query parameters", () => {
+  const report = normalizeClientError({
+    message: "x".repeat(600),
+    digest: "browser-digest",
+    path: "/checkout?payment_secret=hidden",
+  });
+  assert.equal(report.message.length, 500);
+  assert.equal(report.path, "/checkout");
 });
 
 test("posts sanitized error reports when configured", async () => {

@@ -25,6 +25,7 @@ const { csrfProtection, securityHeaders } = require("./securityMiddleware");
 const { errorHandler, requestLogger } = require("./logger");
 const { renderMetrics } = require("./metricsService");
 const { fuzzyProductIds, searchSuggestions } = require("./searchService");
+const { normalizeClientError, reportError } = require("./errorTrackingService");
 
 function createApp() {
   const app = express();
@@ -34,6 +35,11 @@ function createApp() {
   app.post("/payments/webhook", express.raw({ type: "application/json" }), stripeWebhook);
   app.use("/admin/products", productImagesRoute);
   app.use(express.json({ limit: "100kb" }));
+  app.post("/client-errors", createRateLimiter({ windowMs: 60_000, max: 10 }), (req, res) => {
+    const report = normalizeClientError({ ...req.body, userAgent: req.headers["user-agent"] });
+    reportError(new Error(report.message), { source: "browser", ...report }).catch(() => {});
+    res.status(202).send("Accepted");
+  });
   app.use(csrfProtection);
   app.use(createRateLimiter({ windowMs: 60_000, max: 120 }));
   app.use(express.static(path.join(__dirname, "../public")));
