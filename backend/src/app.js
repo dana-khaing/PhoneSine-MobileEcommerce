@@ -24,6 +24,7 @@ const { Op } = require("sequelize");
 const { csrfProtection, securityHeaders } = require("./securityMiddleware");
 const { errorHandler, requestLogger } = require("./logger");
 const { renderMetrics } = require("./metricsService");
+const { fuzzyProductIds, searchSuggestions } = require("./searchService");
 
 function createApp() {
   const app = express();
@@ -73,7 +74,7 @@ function createApp() {
 
   app.get("/products", async (_req, res) => {
     const query = discoveryQuery(_req.query);
-    const { rows: products, count } = await Product.findAndCountAll({
+    let { rows: products, count } = await Product.findAndCountAll({
       where: query.where,
       limit: query.limit,
       offset: query.offset,
@@ -98,6 +99,25 @@ function createApp() {
         "preorderDate",
       ],
     });
+    if (count === 0 && _req.query.search) {
+      const ids = await fuzzyProductIds(_req.query.search);
+      if (ids.length) {
+        delete query.where[Op.or];
+        query.where.id = { [Op.in]: ids };
+        ({ rows: products, count } = await Product.findAndCountAll({
+          where: query.where,
+          limit: query.limit,
+          offset: query.offset,
+          order: query.order,
+          distinct: true,
+          include: [
+            { association: "category" },
+            { association: "images", separate: true, order: [["position", "ASC"]] },
+            { association: "variants", where: { active: true }, required: false },
+          ],
+        }));
+      }
+    }
     res.set("X-Total-Count", String(count));
     res.set("X-Page", String(query.page));
     res.json(products.map(presentProduct));
@@ -117,6 +137,10 @@ function createApp() {
     if (ids.length < 2) return res.status(400).send("Select between 2 and 4 products");
     const products = await Product.findAll({ where: { id: { [Op.in]: ids }, active: true }, include: ["category", "variants", "images"] });
     res.json(products.map(presentProduct));
+  });
+
+  app.get("/products/suggestions", async (req, res) => {
+    res.json(await searchSuggestions(req.query.search));
   });
 
   app.get("/products/:id", async (req, res) => {
