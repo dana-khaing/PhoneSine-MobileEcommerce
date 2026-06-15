@@ -1,4 +1,5 @@
 const { sendOperationalAlert } = require("./alertService");
+const { reportError } = require("./errorTrackingService");
 const { recordError, recordRequest } = require("./metricsService");
 
 function log(level, message, fields = {}) {
@@ -16,8 +17,10 @@ function requestLogger(req, res, next) {
 }
 function errorHandler(error, req, res, _next) {
   recordError();
-  log("error", "unhandled_request_error", { method: req.method, path: req.path, error: error.message });
-  sendOperationalAlert("unhandled_request_error", { method: req.method, path: req.path, error: error.message }).catch(() => {});
+  const context = { method: req.method, path: req.path };
+  log("error", "unhandled_request_error", { ...context, error: error.message });
+  sendOperationalAlert("unhandled_request_error", { ...context, error: error.message }).catch(() => {});
+  reportError(error, context).catch(() => {});
   res.status(500).send("Internal server error");
 }
 module.exports = { errorHandler, log, requestLogger };
