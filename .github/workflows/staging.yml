@@ -17,7 +17,7 @@ jobs:
     env:
       STAGING_ENV_FILE: .env.staging.example
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: docker compose --env-file .env.staging.example -f docker-compose.staging.yml config --quiet
       - run: PRODUCTION_ENV_FILE=.env.production.example docker compose --env-file .env.production.example -f docker-compose.production.yml config --quiet
       - run: docker compose --env-file .env.staging.example -f docker-compose.staging.yml build
