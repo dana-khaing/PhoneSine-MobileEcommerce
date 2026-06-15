@@ -18,6 +18,7 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [categories, setCategories] = useState([]);
   const [categoryId, setCategoryId] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_ORIGIN}/categories`)
@@ -25,6 +26,16 @@ export default function ProductsPage() {
       .then(setCategories)
       .catch(() => setCategories([]));
   }, []);
+  useEffect(() => {
+    if (search.trim().length < 2) return setSuggestions([]);
+    const timer = setTimeout(() => {
+      fetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/suggestions?search=${encodeURIComponent(search)}`)
+        .then((response) => response.json())
+        .then(setSuggestions)
+        .catch(() => setSuggestions([]));
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const handleFilterChange = (catbrand) => {
     setFilterBrand(catbrand);
@@ -54,6 +65,8 @@ export default function ProductsPage() {
           onBrandClick={handleFilterChange}
           selectedbranch={filterBrand}
           Searchlistener={handleSearchChange}
+          searchValue={search}
+          suggestions={suggestions}
           priceListener={handlePriceChange}
           priceValue={values}
           MIN={MIN}
