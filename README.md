@@ -123,6 +123,10 @@ Paid orders earn one loyalty point per whole pound. Customers can view their
 reward ledger and share or apply referral codes from `/profile`; both customers
 receive 500 points after the referred customer's first confirmed payment.
 
+The storefront keeps device-local recently viewed products and records
+authenticated viewing history for category-based personalized recommendations.
+Viewing history is included in account exports and removed with the account.
+
 Each active product has a public `/products/:id` API and storefront detail page
 with description, price, availability, and add-to-cart support.
 
