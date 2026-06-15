@@ -42,7 +42,7 @@ export default function ProductList({
   useEffect(() => {
     setItems(
       filterProducts(products, {
-        search: filterSearch,
+        search: "",
         brand: filterBrand,
         price,
       })
@@ -58,6 +58,7 @@ export default function ProductList({
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {items.length === 0 && <p className="col-span-full p-10 text-center text-neutral-500">No matching products found.</p>}
       {/* Product should have photo scr so that we can fetch this photo from the backend */}
       {items?.map((product) => (
         <ProductCard
