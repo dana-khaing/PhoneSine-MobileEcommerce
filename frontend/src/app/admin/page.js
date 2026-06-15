@@ -24,6 +24,12 @@ export default function AdminPage() {
   const [giftCard, setGiftCard] = useState({ balanceAmount: "", currency: "gbp", expiresAt: "" });
   const [bundles, setBundles] = useState([]);
   const [bundle, setBundle] = useState({ name: "", description: "", priceAmount: "", items: "[]" });
+  const [suppliers, setSuppliers] = useState([]);
+  const [supplier, setSupplier] = useState({ name: "", email: "", phone: "" });
+  const [warehouses, setWarehouses] = useState([]);
+  const [warehouse, setWarehouse] = useState({ name: "", code: "", address: "{}" });
+  const [purchaseOrders, setPurchaseOrders] = useState([]);
+  const [purchaseOrder, setPurchaseOrder] = useState({ supplierId: "", warehouseId: "", expectedAt: "", items: "[]" });
   const emptyProduct = { name: "", brand: "", description: "", priceAmount: "", stockQuantity: "", categoryId: "", specifications: "{}", allowBackorder: false, preorderDate: "" };
   const [productForm, setProductForm] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
@@ -72,6 +78,9 @@ export default function AdminPage() {
   const loadTickets = () => authenticatedFetch(`${api}/tickets`, { headers: headers() }).then((response) => response.json()).then(setTickets);
   const loadGiftCards = () => authenticatedFetch(`${api}/gift-cards`, { headers: headers() }).then((response) => response.json()).then(setGiftCards);
   const loadBundles = () => authenticatedFetch(`${api}/bundles`, { headers: headers() }).then((response) => response.json()).then(setBundles);
+  const loadSuppliers = () => authenticatedFetch(`${api}/suppliers`, { headers: headers() }).then((response) => response.json()).then(setSuppliers);
+  const loadWarehouses = () => authenticatedFetch(`${api}/warehouses`, { headers: headers() }).then((response) => response.json()).then(setWarehouses);
+  const loadPurchaseOrders = () => authenticatedFetch(`${api}/purchase-orders`, { headers: headers() }).then((response) => response.json()).then(setPurchaseOrders);
 
   useEffect(() => {
     loadOrders();
@@ -86,6 +95,9 @@ export default function AdminPage() {
     loadTickets();
     loadGiftCards();
     loadBundles();
+    loadSuppliers();
+    loadWarehouses();
+    loadPurchaseOrders();
   }, []);
 
   const action = async (path, method = "POST", body) => {
@@ -107,6 +119,9 @@ export default function AdminPage() {
     await loadTickets();
     await loadGiftCards();
     await loadBundles();
+    await loadSuppliers();
+    await loadWarehouses();
+    await loadPurchaseOrders();
   };
 
   const importProducts = async (file) => {
@@ -137,6 +152,28 @@ export default function AdminPage() {
       setBundle({ name: "", description: "", priceAmount: "", items: "[]" });
     } catch {
       setMessage("Bundle items must be valid JSON.");
+    }
+  };
+  const createWarehouse = async () => {
+    try {
+      await action("/warehouses", "POST", { ...warehouse, address: JSON.parse(warehouse.address) });
+      setWarehouse({ name: "", code: "", address: "{}" });
+    } catch {
+      setMessage("Warehouse address must be valid JSON.");
+    }
+  };
+  const createPurchaseOrder = async () => {
+    try {
+      await action("/purchase-orders", "POST", {
+        ...purchaseOrder,
+        supplierId: Number(purchaseOrder.supplierId),
+        warehouseId: Number(purchaseOrder.warehouseId),
+        expectedAt: purchaseOrder.expectedAt || null,
+        items: JSON.parse(purchaseOrder.items),
+      });
+      setPurchaseOrder({ supplierId: "", warehouseId: "", expectedAt: "", items: "[]" });
+    } catch {
+      setMessage("Purchase-order items must be valid JSON.");
     }
   };
 
@@ -274,6 +311,26 @@ export default function AdminPage() {
             </div>
           ))}
         </div>
+      </section>
+      <section className="mb-8 rounded border p-5">
+        <h2 className="text-xl font-bold">Inventory procurement</h2>
+        <div className="mt-4 grid gap-6 lg:grid-cols-3">
+          <div>
+            <h3 className="font-bold">Suppliers</h3>
+            <div className="mt-2 grid gap-2">{["name", "email", "phone"].map((field) => <input key={field} className="rounded border p-2" placeholder={field} value={supplier[field]} onChange={(event) => setSupplier((current) => ({ ...current, [field]: event.target.value }))} />)}<button className="rounded border p-2" onClick={async () => { await action("/suppliers", "POST", supplier); setSupplier({ name: "", email: "", phone: "" }); }}>Create supplier</button></div>
+            {suppliers.map((item) => <p key={item.id} className="mt-2 text-sm">{item.name} · {item.email || "No email"}</p>)}
+          </div>
+          <div>
+            <h3 className="font-bold">Warehouses</h3>
+            <div className="mt-2 grid gap-2"><input className="rounded border p-2" placeholder="Name" value={warehouse.name} onChange={(event) => setWarehouse((current) => ({ ...current, name: event.target.value }))} /><input className="rounded border p-2" placeholder="Code" value={warehouse.code} onChange={(event) => setWarehouse((current) => ({ ...current, code: event.target.value }))} /><textarea className="rounded border p-2" placeholder='Address JSON, e.g. {"city":"London"}' value={warehouse.address} onChange={(event) => setWarehouse((current) => ({ ...current, address: event.target.value }))} /><button className="rounded border p-2" onClick={createWarehouse}>Create warehouse</button></div>
+            {warehouses.map((item) => <div key={item.id} className="mt-2 text-sm"><strong>{item.code} · {item.name}</strong>{item.stocks?.map((stock) => <p key={stock.id}>{stock.product?.name}: {stock.quantity}</p>)}</div>)}
+          </div>
+          <div>
+            <h3 className="font-bold">New purchase order</h3>
+            <div className="mt-2 grid gap-2"><select className="rounded border p-2" value={purchaseOrder.supplierId} onChange={(event) => setPurchaseOrder((current) => ({ ...current, supplierId: event.target.value }))}><option value="">Supplier</option>{suppliers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><select className="rounded border p-2" value={purchaseOrder.warehouseId} onChange={(event) => setPurchaseOrder((current) => ({ ...current, warehouseId: event.target.value }))}><option value="">Warehouse</option>{warehouses.map((item) => <option key={item.id} value={item.id}>{item.code}</option>)}</select><input className="rounded border p-2" type="date" value={purchaseOrder.expectedAt} onChange={(event) => setPurchaseOrder((current) => ({ ...current, expectedAt: event.target.value }))} /><textarea className="rounded border p-2" placeholder='Items JSON, e.g. [{"productId":1,"quantity":10,"unitCostAmount":50000}]' value={purchaseOrder.items} onChange={(event) => setPurchaseOrder((current) => ({ ...current, items: event.target.value }))} /><button className="rounded border p-2" onClick={createPurchaseOrder}>Create purchase order</button></div>
+          </div>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-2">{purchaseOrders.map((order) => <article key={order.id} className="rounded border p-3"><strong>PO #{order.id} · {order.supplier?.name} · {order.status}</strong><p className="text-sm">{order.warehouse?.code} · £{(order.totalAmount / 100).toFixed(2)}</p>{order.items?.map((item) => <p key={item.id} className="text-sm">{item.product?.name}: {item.quantity} ordered / {item.receivedQuantity} received</p>)}{order.status !== "received" && <button className="mt-2 rounded border px-3 py-1" onClick={() => action(`/purchase-orders/${order.id}/receive`)}>Receive order</button>}</article>)}</div>
       </section>
       <section className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Support tickets</h2>
