@@ -12,10 +12,22 @@ async function sendEmail({ to, subject, text }) {
     body: JSON.stringify({ from: process.env.EMAIL_FROM || "Phone Sine <orders@example.com>", to: [to], subject, text }),
   }, "Email");
 }
+async function sendSms({ to, text }) {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_FROM_NUMBER;
+  if (!accountSid || !authToken || !from) throw new Error("Twilio is not configured");
+  const body = new URLSearchParams({ To: to, From: from, Body: text });
+  return providerRequest(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`, {
+    method: "POST",
+    headers: { Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`, "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  }, "SMS");
+}
 async function carrierRequest(path, body) {
   if (!process.env.CARRIER_API_URL || !process.env.CARRIER_API_KEY) throw new Error("Carrier provider is not configured");
   return providerRequest(`${process.env.CARRIER_API_URL}${path}`, {
     method: "POST", headers: { Authorization: `Bearer ${process.env.CARRIER_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
   }, "Carrier");
 }
-module.exports = { carrierRequest, sendEmail };
+module.exports = { carrierRequest, sendEmail, sendSms };
