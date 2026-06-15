@@ -135,6 +135,10 @@ Catalog and operations staff can manage suppliers, warehouses, warehouse stock,
 and purchase orders from `/admin`. Receiving a purchase order transactionally
 updates the destination warehouse and storefront product stock.
 
+The primary storefront and navigation support persistent English and Burmese
+locales. Customers can switch language from the navigation bar; the preference
+is stored on their device and updates the document language.
+
 Each active product has a public `/products/:id` API and storefront detail page
 with description, price, availability, and add-to-cart support.
 

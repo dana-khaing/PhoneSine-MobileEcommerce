@@ -7,9 +7,11 @@ import { NavList } from "./navItem/navList";
 import Auth from "./auth";
 import { useContext } from "react";
 import { CartContext } from "../contexts/cartContext";
+import { LocaleContext } from "../contexts/localeContext";
 
 export default function NavBar() {
   const { itemCount, setIsCartOpen } = useContext(CartContext);
+  const { locale, setLocale, t } = useContext(LocaleContext);
 
   return (
     <nav className="flex flex-wrap items-center gap-4 px-5 pt-5">
@@ -21,9 +23,13 @@ export default function NavBar() {
       </div>
       <div className="flex items-center justify-end">
         <Link href="/saved" aria-label="Wishlist" className="p-2"><Heart className="h-5 w-5" /></Link>
-        <Link href="/profile" className="p-2 text-sm">Profile</Link>
-        <Link href="/security" className="p-2 text-sm">Security</Link>
-        <Link href="/support" className="p-2 text-sm">Support</Link>
+        <Link href="/profile" className="p-2 text-sm">{t("profile")}</Link>
+        <Link href="/security" className="p-2 text-sm">{t("security")}</Link>
+        <Link href="/support" className="p-2 text-sm">{t("support")}</Link>
+        <select aria-label={t("language")} className="rounded border p-1 text-sm" value={locale} onChange={(event) => setLocale(event.target.value)}>
+          <option value="en">English</option>
+          <option value="my">မြန်မာ</option>
+        </select>
         {/* <Button variant="ghost" className=" flex pl-[0.5rem] pr-1.5"></Button> */}
         <Button
           variant="ghost"
