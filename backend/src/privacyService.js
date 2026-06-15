@@ -9,6 +9,7 @@ const {
   Order,
   PasswordResetToken,
   ProductReview,
+  ProductView,
   RefreshSession,
   ReturnRequest,
   SavedCart,
@@ -24,7 +25,7 @@ async function exportAccountData(userId) {
   });
   if (!user) throw new Error("Account not found");
 
-  const [addresses, orders, wishlist, savedCart, oauthIdentities, loginEvents, reviews, returns, supportTickets, loyaltyAccount, loyaltyTransactions] = await Promise.all([
+  const [addresses, orders, wishlist, savedCart, oauthIdentities, loginEvents, reviews, returns, supportTickets, loyaltyAccount, loyaltyTransactions, productViews] = await Promise.all([
     CustomerAddress.findAll({ where: { userId }, order: [["createdAt", "ASC"]] }),
     Order.findAll({
       where: { userId },
@@ -44,6 +45,7 @@ async function exportAccountData(userId) {
     SupportTicket.findAll({ where: { userId }, order: [["createdAt", "ASC"]] }),
     LoyaltyAccount.findOne({ where: { userId } }),
     LoyaltyTransaction.findAll({ where: { userId }, order: [["createdAt", "ASC"]] }),
+    ProductView.findAll({ where: { userId }, order: [["lastViewedAt", "ASC"]] }),
   ]);
 
   return {
@@ -59,6 +61,7 @@ async function exportAccountData(userId) {
     returns,
     supportTickets,
     rewards: { account: loyaltyAccount, transactions: loyaltyTransactions },
+    productViews,
   };
 }
 
