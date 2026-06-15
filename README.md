@@ -131,6 +131,10 @@ Product search provides debounced autocomplete suggestions and falls back to a
 bounded typo-tolerant matcher when exact name, brand, and description search
 returns no products.
 
+Catalog and operations staff can manage suppliers, warehouses, warehouse stock,
+and purchase orders from `/admin`. Receiving a purchase order transactionally
+updates the destination warehouse and storefront product stock.
+
 Each active product has a public `/products/:id` API and storefront detail page
 with description, price, availability, and add-to-cart support.
 
