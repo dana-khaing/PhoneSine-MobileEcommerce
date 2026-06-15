@@ -127,6 +127,10 @@ The storefront keeps device-local recently viewed products and records
 authenticated viewing history for category-based personalized recommendations.
 Viewing history is included in account exports and removed with the account.
 
+Product search provides debounced autocomplete suggestions and falls back to a
+bounded typo-tolerant matcher when exact name, brand, and description search
+returns no products.
+
 Each active product has a public `/products/:id` API and storefront detail page
 with description, price, availability, and add-to-cart support.
 
