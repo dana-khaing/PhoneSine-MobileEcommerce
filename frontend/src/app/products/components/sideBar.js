@@ -18,6 +18,8 @@ const SideBar = ({
   categories,
   selectedCategory,
   onCategoryClick,
+  searchValue,
+  suggestions,
 }) => {
   return (
     <div className="px-0 py-0">
@@ -28,7 +30,12 @@ const SideBar = ({
           type="text"
           placeholder="Search"
           onChange={Searchlistener}
+          value={searchValue}
+          list="product-search-suggestions"
         />
+        <datalist id="product-search-suggestions">
+          {suggestions.map((item) => <option key={item.id} value={item.name}>{item.brand}</option>)}
+        </datalist>
       </div>
       <div className="font-bold m-2">Brand List</div>
       <div className=" w-full text-start items-start justify-start">
