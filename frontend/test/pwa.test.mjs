@@ -8,3 +8,9 @@ test("web app manifest defines installable application assets", () => {
   assert.equal(manifest.start_url, "/");
   assert.deepEqual(manifest.icons.map((icon) => icon.sizes), ["192x192", "512x512"]);
 });
+
+test("service worker caches only the public shell and static assets", () => {
+  const worker = fs.readFileSync(new URL("../public/sw.js", import.meta.url), "utf8");
+  assert.match(worker, /"\/offline"/);
+  assert.doesNotMatch(worker, /"\/checkout"|"\/orders"|"\/profile"|"\/admin"/);
+});
