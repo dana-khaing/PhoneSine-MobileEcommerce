@@ -143,6 +143,10 @@ The notification outbox supports optional Twilio SMS for order confirmation,
 shipping, delivery, refund, and dispute updates. Configure the Twilio variables
 and set `ENABLE_SMS_NOTIFICATIONS=true`; email remains the default channel.
 
+The production frontend is installable as a PWA. Its service worker caches only
+the public storefront shell and static assets; live inventory, checkout,
+account, admin, and order data always require the network.
+
 Each active product has a public `/products/:id` API and storefront detail page
 with description, price, availability, and add-to-cart support.
 

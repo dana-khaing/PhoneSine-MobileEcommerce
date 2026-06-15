@@ -1,0 +1,13 @@
+{
+  "name": "Phone Sine Mobile Ecommerce",
+  "short_name": "Phone Sine",
+  "description": "Browse phones, manage your cart, and track orders.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#171717",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
