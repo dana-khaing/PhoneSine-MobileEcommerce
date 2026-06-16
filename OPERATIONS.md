@@ -13,6 +13,10 @@
   Reports omit URL query parameters and the backend redacts sensitive context.
 - Monitor `GET /admin/health/payments` and `GET /admin/analytics` with an admin token.
 - Trigger `POST /admin/low-stock-alerts` daily before notification delivery.
+- Run `pnpm run check:production` from `backend/` before launch and before
+  major environment changes. It checks required secrets, HTTPS origins, Stripe
+  live-mode configuration, SMS provider completeness, and monitoring toggles
+  without printing secret values.
 
 ## Database Backups
 
