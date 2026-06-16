@@ -147,6 +147,11 @@ The production frontend is installable as a PWA. Its service worker caches only
 the public storefront shell and static assets; live inventory, checkout,
 account, admin, and order data always require the network.
 
+Optional privacy-safe analytics can be enabled by setting
+`NEXT_PUBLIC_ANALYTICS_DOMAIN` and an HTTPS `NEXT_PUBLIC_ANALYTICS_SCRIPT_URL`.
+Analytics are disabled by default and exclude checkout, admin, account, order,
+payment-method, profile, and security routes.
+
 Each active product has a public `/products/:id` API and storefront detail page
 with description, price, availability, and add-to-cart support.
 

@@ -20,6 +20,10 @@
 - Run `pnpm run launch:runbook` from `backend/` to generate a release checklist
   that combines readiness blockers with provider setup, deployment, and
   post-launch verification tasks.
+- Optional storefront analytics are disabled unless
+  `NEXT_PUBLIC_ANALYTICS_DOMAIN` and an HTTPS `NEXT_PUBLIC_ANALYTICS_SCRIPT_URL`
+  are set. The loader excludes checkout, account, order, payment-method, admin,
+  profile, and security routes from analytics collection.
 
 ## Database Backups
 
