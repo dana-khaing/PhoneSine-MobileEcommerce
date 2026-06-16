@@ -15,6 +15,7 @@
     "job:low-stock": "node src/jobs.js low-stock",
     "job:stock-alerts": "node src/jobs.js stock-alerts",
     "check:production": "node scripts/production-readiness.js",
+    "launch:runbook": "node scripts/launch-runbook.js",
     "db:backup": "sh scripts/backup.sh",
     "db:restore-test": "sh scripts/restore-test.sh",
     "db:migrate": "sequelize-cli db:migrate",

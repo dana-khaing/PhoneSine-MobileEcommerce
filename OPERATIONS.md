@@ -17,6 +17,9 @@
   major environment changes. It checks required secrets, HTTPS origins, Stripe
   live-mode configuration, SMS provider completeness, and monitoring toggles
   without printing secret values.
+- Run `pnpm run launch:runbook` from `backend/` to generate a release checklist
+  that combines readiness blockers with provider setup, deployment, and
+  post-launch verification tasks.
 
 ## Database Backups
 
