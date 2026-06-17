@@ -24,4 +24,5 @@ test("maps admin routes to granular permissions", () => {
   assert.equal(adminRequestPermission("PATCH", "/orders/2/fulfillment"), "fulfillment.manage");
   assert.equal(adminRequestPermission("POST", "/products"), "catalog.manage");
   assert.equal(adminRequestPermission("GET", "/tickets"), "support.manage");
+  assert.equal(adminRequestPermission("GET", "/launch-status"), "operations.manage");
 });
