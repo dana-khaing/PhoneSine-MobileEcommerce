@@ -26,9 +26,9 @@ export default function ProductCard({
       </div>
       <div className="p-2">
         <p className="font-semibold">{brand}</p>
-        <p className=" flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <span className="text-gray-500 text-sm mr-1 flex-1"> {name} </span>
-          <span className=" items-center flex-1">
+          <div className="items-center flex-1">
             <div className="font-medium ml-1 text-center"> £{price}</div>
             <div className="w-full text-center">
               <a href={`/products/${product.id}`} className="mr-2 inline-block underline">Details</a>
@@ -40,8 +40,8 @@ export default function ProductCard({
                 {availableStock === 0 ? "Sold" : "Buy"}
               </button>
             </div>
-          </span>
-        </p>
+          </div>
+        </div>
       </div>
     </div>
   );

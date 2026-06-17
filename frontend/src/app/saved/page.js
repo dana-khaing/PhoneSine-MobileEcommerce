@@ -14,7 +14,7 @@ export default function SavedPage() {
       if (!response.ok) throw new Error(await response.text());
       return response.json();
     }).then(setWishlist).catch((error) => setMessage(error.message));
-  useEffect(loadWishlist, []);
+  useEffect(() => { loadWishlist(); }, []);
   const remove = async (id) => {
     await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/wishlist/${id}`, { method: "DELETE" });
     loadWishlist();
