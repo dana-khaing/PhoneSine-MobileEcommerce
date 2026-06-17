@@ -1,12 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useContext, useEffect, useState } from "react";
+import { use, useContext, useEffect, useState } from "react";
 import { CartContext } from "../../contexts/cartContext";
 import { productImageUrl } from "../productImages.mjs";
 import { authenticatedFetch } from "../../components/auth/session.mjs";
 
+function decimalPrice(item) {
+  const price = Number(item?.price);
+  if (Number.isFinite(price)) return price;
+  const amount = Number(item?.priceAmount ?? item?.priceInPence);
+  return Number.isFinite(amount) ? amount / 100 : 0;
+}
+
+function availableStockFor(item) {
+  const availableStock = Number(item?.availableStock);
+  if (Number.isFinite(availableStock)) return availableStock;
+  const stockQuantity = Number(item?.stockQuantity);
+  const reservedQuantity = Number(item?.reservedQuantity || 0);
+  return Number.isFinite(stockQuantity) ? stockQuantity - reservedQuantity : 0;
+}
+
 export default function ProductDetailPage({ params }) {
+  const { id: productId } = use(params);
   const [product, setProduct] = useState(null);
   const [message, setMessage] = useState("Loading product...");
   const [selectedImage, setSelectedImage] = useState(null);
@@ -18,7 +34,7 @@ export default function ProductDetailPage({ params }) {
   const { addItem } = useContext(CartContext);
 
   useEffect(() => {
-    authenticatedFetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/${params.id}`)
+    authenticatedFetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/${productId}`)
       .then(async (response) => {
         if (!response.ok) throw new Error(await response.text());
         return response.json();
@@ -29,25 +45,30 @@ export default function ProductDetailPage({ params }) {
         setSelectedVariantId(data.variants?.[0]?.id ? String(data.variants[0].id) : "");
         setMessage("");
         const recent = JSON.parse(localStorage.getItem("phone-sine-recent") || "[]").filter((item) => item.id !== data.id);
-        localStorage.setItem("phone-sine-recent", JSON.stringify([{ id: data.id, name: data.name, brand: data.brand, price: data.price, images: data.images }, ...recent].slice(0, 8)));
+        localStorage.setItem("phone-sine-recent", JSON.stringify([{ id: data.id, name: data.name, brand: data.brand, price: decimalPrice(data), images: data.images }, ...recent].slice(0, 8)));
         authenticatedFetch(`${process.env.NEXT_PUBLIC_BACKEND_ORIGIN}/recommendations/views/${data.id}`, { method: "POST", body: "{}" }).catch(() => {});
       })
       .catch((error) => setMessage(error.message));
-  }, [params.id]);
-  const loadReviews = () => authenticatedFetch(`${process.env.NEXT_PUBLIC_API_REVIEWS_URL}/products/${params.id}`).then((response) => response.json()).then(setReviews);
-  useEffect(loadReviews, [params.id]);
-  useEffect(() => { authenticatedFetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/${params.id}/recommendations`).then((response) => response.json()).then(setRecommendations); }, [params.id]);
+  }, [productId]);
+  const loadReviews = () => authenticatedFetch(`${process.env.NEXT_PUBLIC_API_REVIEWS_URL}/products/${productId}`).then((response) => response.json()).then(setReviews);
+  useEffect(() => { loadReviews(); }, [productId]);
+  useEffect(() => {
+    authenticatedFetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}/${productId}/recommendations`)
+      .then((response) => response.json())
+      .then(setRecommendations)
+      .catch(() => setRecommendations([]));
+  }, [productId]);
 
   if (!product) return <main className="mx-auto max-w-5xl px-6 py-20">{message}</main>;
   const selectedVariant = product.variants?.find((variant) => String(variant.id) === selectedVariantId);
-  const price = selectedVariant?.price ?? product.price;
-  const availableStock = selectedVariant?.availableStock ?? product.availableStock;
+  const price = decimalPrice(selectedVariant || product);
+  const availableStock = availableStockFor(selectedVariant || product);
   const addToCart = () => addItem({
     ...product,
     ...(selectedVariant ? {
       variantId: selectedVariant.id,
       variantName: selectedVariant.name,
-      price: selectedVariant.price,
+      price: decimalPrice(selectedVariant),
     } : {}),
   });
   const saveToWishlist = async () => {
@@ -100,7 +121,7 @@ export default function ProductDetailPage({ params }) {
         {product.category && <p className="mt-3 text-sm text-neutral-500">Category: {product.category.name}</p>}
         {product.variants?.length > 0 && (
           <select className="mt-6 w-full rounded border p-3" value={selectedVariantId} onChange={(event) => setSelectedVariantId(event.target.value)}>
-            {product.variants.map((variant) => <option key={variant.id} value={variant.id}>{variant.name} · £{variant.price.toFixed(2)}</option>)}
+            {product.variants.map((variant) => <option key={variant.id} value={variant.id}>{variant.name} · £{decimalPrice(variant).toFixed(2)}</option>)}
           </select>
         )}
         <p className="mt-8 text-2xl font-bold">£{price.toFixed(2)}</p>
@@ -134,7 +155,7 @@ export default function ProductDetailPage({ params }) {
             <button className="rounded border px-4 py-2">Submit review</button>
           </form>
         </section>
-        {recommendations.length > 0 && <section className="mt-10 border-t pt-6"><h2 className="text-xl font-bold">Related products</h2>{recommendations.map((item) => <Link key={item.id} className="mt-2 block underline" href={`/products/${item.id}`}>{item.name} · £{item.price.toFixed(2)}</Link>)}</section>}
+        {recommendations.length > 0 && <section className="mt-10 border-t pt-6"><h2 className="text-xl font-bold">Related products</h2>{recommendations.map((item) => <Link key={item.id} className="mt-2 block underline" href={`/products/${item.id}`}>{item.name} · £{decimalPrice(item).toFixed(2)}</Link>)}</section>}
       </section>
     </main>
   );
