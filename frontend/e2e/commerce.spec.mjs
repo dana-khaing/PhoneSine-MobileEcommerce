@@ -19,6 +19,26 @@ async function mockApi(page) {
     if (path === "/payments/quote") return route.fulfill({ json: { discountAmount: 1000, taxAmount: 2000, taxRate: 20, totalAmount: 12000, currency: "gbp" } });
     if (path === "/admin/analytics") return route.fulfill({ json: { orders: 1, revenue: 129900, lowStock: [] } });
     if (path === "/admin/health/payments") return route.fulfill({ json: { pending: 0, reviews: 0, disputes: 0, failedNotifications: 0 } });
+    if (path === "/admin/launch-status") {
+      return route.fulfill({
+        json: {
+          ready: true,
+          blockers: [],
+          warnings: [],
+          checklist: {
+            completed: 2,
+            total: 2,
+            items: [
+              { key: "readiness", label: "Production readiness", complete: true },
+              { key: "stripe", label: "Stripe configured", complete: true },
+            ],
+          },
+          providers: [
+            { key: "stripe", label: "Stripe", ready: true, configured: 2, total: 2 },
+          ],
+        },
+      });
+    }
     if (path === "/admin/orders") return route.fulfill({ json: [order] });
     if (path === "/admin/returns") return route.fulfill({ json: [{ id: 7, orderId: 42, reason: "Damaged", status: "requested" }] });
     if (path.startsWith("/admin/")) return route.fulfill({ json: [] });

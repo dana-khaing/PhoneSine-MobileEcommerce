@@ -18,6 +18,7 @@ export default function AdminPage() {
   const [reviews, setReviews] = useState([]);
   const [returns, setReturns] = useState([]);
   const [analytics, setAnalytics] = useState(null);
+  const [launchStatus, setLaunchStatus] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [ticketReplies, setTicketReplies] = useState({});
   const [giftCards, setGiftCards] = useState([]);
@@ -75,6 +76,7 @@ export default function AdminPage() {
   const loadReviews = () => authenticatedFetch(`${api}/reviews`, { headers: headers() }).then((response) => response.json()).then(setReviews);
   const loadReturns = () => authenticatedFetch(`${api}/returns`, { headers: headers() }).then((response) => response.json()).then(setReturns);
   const loadAnalytics = () => authenticatedFetch(`${api}/analytics`, { headers: headers() }).then((response) => response.json()).then(setAnalytics);
+  const loadLaunchStatus = () => authenticatedFetch(`${api}/launch-status`, { headers: headers() }).then((response) => response.json()).then(setLaunchStatus);
   const loadTickets = () => authenticatedFetch(`${api}/tickets`, { headers: headers() }).then((response) => response.json()).then(setTickets);
   const loadGiftCards = () => authenticatedFetch(`${api}/gift-cards`, { headers: headers() }).then((response) => response.json()).then(setGiftCards);
   const loadBundles = () => authenticatedFetch(`${api}/bundles`, { headers: headers() }).then((response) => response.json()).then(setBundles);
@@ -92,6 +94,7 @@ export default function AdminPage() {
     loadReviews();
     loadReturns();
     loadAnalytics();
+    loadLaunchStatus();
     loadTickets();
     loadGiftCards();
     loadBundles();
@@ -116,6 +119,7 @@ export default function AdminPage() {
     await loadReviews();
     await loadReturns();
     await loadAnalytics();
+    await loadLaunchStatus();
     await loadTickets();
     await loadGiftCards();
     await loadBundles();
@@ -245,6 +249,22 @@ export default function AdminPage() {
       </div>
       {health && <p className="my-4">Payment health: {health.pending} pending · {health.reviews} reviews · {health.disputes} disputes · {health.failedNotifications} failed notifications</p>}
       {analytics && <div className="my-4 rounded border p-4"><strong>Operations:</strong> {analytics.orders} orders · £{(analytics.revenue / 100).toFixed(2)} paid revenue · {analytics.lowStock.length} low-stock items <div className="mt-3 grid gap-2 sm:grid-cols-3">{[["Orders", analytics.orders], ["Revenue", Math.round(analytics.revenue / 100)], ["Low stock", analytics.lowStock.length]].map(([label, value]) => <div key={label}><p className="text-xs">{label}: {value}</p><div className="mt-1 h-3 rounded bg-neutral-100"><div className="h-3 rounded bg-neutral-900" style={{ width: `${Math.min(100, Math.max(4, Number(value)))}%` }} /></div></div>)}</div><button className="mt-3 rounded border px-3 py-1" onClick={() => action("/low-stock-alerts", "POST", {})}>Queue low-stock alerts</button><button className="ml-3 mt-3 rounded border px-3 py-1" onClick={() => download("/reports/operations.csv", "operations-report.csv")}>Download report</button></div>}
+      {launchStatus && <section className="my-4 rounded border p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-bold">Launch status</h2>
+            <p className="text-sm text-neutral-600">{launchStatus.ready ? "Ready for production launch" : `${launchStatus.blockers.length} launch blockers remain`} · {launchStatus.checklist.completed}/{launchStatus.checklist.total} checklist items complete</p>
+          </div>
+          <button className="rounded border px-3 py-1" onClick={loadLaunchStatus}>Refresh launch status</button>
+        </div>
+        {launchStatus.blockers.length > 0 && <div className="mt-3 rounded bg-red-50 p-3 text-sm"><strong>Blockers:</strong><ul className="mt-2 list-disc pl-5">{launchStatus.blockers.slice(0, 6).map((blocker) => <li key={blocker}>{blocker}</li>)}</ul></div>}
+        <div className="mt-3 grid gap-2 md:grid-cols-2">
+          {launchStatus.providers.map((provider) => <p key={provider.id} className="rounded bg-neutral-100 p-2 text-sm">{provider.ready ? "Ready" : "Missing"} · {provider.label}: {provider.configured}/{provider.total}</p>)}
+        </div>
+        <div className="mt-3 grid gap-2 md:grid-cols-2">
+          {launchStatus.checklist.items.map((item) => <p key={item.id} className="text-sm">{item.done ? "Done" : "Open"} · {item.label}</p>)}
+        </div>
+      </section>}
       {message && <p className="my-4">{message}</p>}
       <section className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Product management</h2>
