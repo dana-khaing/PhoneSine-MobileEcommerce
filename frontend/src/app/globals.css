@@ -4,6 +4,12 @@
 
 @layer base {
   :root {
+    --brand-gold: 43 88% 62%;
+    --brand-gold-strong: 41 65% 42%;
+    --brand-ink: 225 11% 9%;
+    --brand-cream: 42 100% 96%;
+    --brand-mist: 220 20% 97%;
+
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
 
@@ -72,5 +78,26 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .brand-shell {
+    background:
+      radial-gradient(circle at 15% 20%, hsl(var(--brand-gold) / 0.22), transparent 28rem),
+      radial-gradient(circle at 85% 10%, hsl(var(--brand-gold-strong) / 0.18), transparent 22rem),
+      linear-gradient(180deg, hsl(var(--brand-cream)), white 58%);
+  }
+
+  .brand-card {
+    @apply border border-neutral-200 bg-white/90 shadow-sm shadow-neutral-200/70;
+  }
+
+  .brand-button {
+    @apply rounded-full bg-neutral-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-neutral-900/15 transition hover:-translate-y-0.5 hover:bg-neutral-800;
+  }
+
+  .brand-button-outline {
+    @apply rounded-full border border-neutral-300 bg-white/80 px-5 py-3 text-sm font-semibold text-neutral-950 transition hover:-translate-y-0.5 hover:border-neutral-950;
   }
 }
