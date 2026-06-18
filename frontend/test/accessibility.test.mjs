@@ -20,3 +20,11 @@ test("admin page exposes launch status without secret values", () => {
   assert.match(source, /Launch status/);
   assert.doesNotMatch(source, /JWT_SECRET|STRIPE_SECRET_KEY|DATABASE_URL/);
 });
+
+test("storefront exposes branded navigation assets", () => {
+  const navSource = fs.readFileSync(new URL("../src/app/components/nav-bar.js", import.meta.url), "utf8");
+  const brandMark = fs.readFileSync(new URL("../public/brand-mark.svg", import.meta.url), "utf8");
+  assert.match(navSource, /brand-mark\.svg/);
+  assert.match(navSource, /PhoneSine/);
+  assert.match(brandMark, /PhoneSine brand mark/);
+});
