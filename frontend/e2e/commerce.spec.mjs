@@ -79,7 +79,29 @@ async function mockApi(page) {
     if (path === "/customer/tickets") return route.fulfill({ json: [{ id: 1, subject: "Need help", status: "open" }] });
     if (path === "/customer/gift-cards/GIFT") return route.fulfill({ json: { balanceAmount: 2500, currency: "gbp" } });
     if (path === "/payments/quote") return route.fulfill({ json: { discountAmount: 1000, taxAmount: 2000, taxRate: 20, totalAmount: 12000, currency: "gbp" } });
-    if (path === "/admin/analytics") return route.fulfill({ json: { orders: 1, revenue: 129900, lowStock: [] } });
+    if (path === "/admin/analytics") {
+      return route.fulfill({
+        json: {
+          orders: 3,
+          revenue: 329900,
+          lowStock: [{ id: 1, name: "Phone Sine Pro", stockQuantity: 1, reservedQuantity: 1 }],
+          dashboard: {
+            generatedAt: "2026-06-18T09:00:00.000Z",
+            cards: [
+              { id: "orders", label: "Total orders", value: 3, helper: "2 paid" },
+              { id: "revenue", label: "Paid revenue", value: 329900, format: "currency", helper: "25% vs previous 30 days" },
+              { id: "conversion", label: "Order conversion", value: 67, suffix: "%", helper: "1 pending checkout" },
+              { id: "stock", label: "Available stock", value: 18, helper: "1 low-stock items" },
+            ],
+            revenueTrend: { current30Days: 329900, previous30Days: 250000, percentChange: 32 },
+            funnel: { productViews: 41, orders: 3, paidOrders: 2, conversionRate: 67 },
+            orderStatuses: { paid: 2, pending: 1, refunds: 0 },
+            stock: { total: 20, reserved: 2, available: 18, lowStock: [{ id: 1, name: "Phone Sine Pro", stockQuantity: 1, reservedQuantity: 1 }] },
+            topProducts: [{ productId: 1, name: "Phone Sine Pro", units: 4 }],
+          },
+        },
+      });
+    }
     if (path === "/admin/health/payments") return route.fulfill({ json: { pending: 0, reviews: 0, disputes: 0, failedNotifications: 0 } });
     if (path === "/admin/launch-status") {
       return route.fulfill({
@@ -166,6 +188,10 @@ test("renders support with recent products without hydration or effect errors", 
 test("shows admin returns, shipping, and operations controls", async ({ page }) => {
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Commerce admin" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Realtime commerce performance" })).toBeVisible();
+  await expect(page.getByText("Order conversion")).toBeVisible();
+  await expect(page.getByText("41 product views")).toBeVisible();
+  await expect(page.getByText("Phone Sine Pro: 4 units")).toBeVisible();
   await expect(page.getByText("Order #42", { exact: true })).toBeVisible();
   await expect(page.getByText("Damaged")).toBeVisible();
   await expect(page.getByRole("button", { name: "Create shipping label" })).toBeVisible();
