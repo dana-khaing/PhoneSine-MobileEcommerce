@@ -24,6 +24,24 @@ const product = {
   variants: [{ id: 11, name: "Black", sku: "PS-BLK", priceAmount: 99900, stockQuantity: 3, reservedQuantity: 0 }],
 };
 
+const category = { id: 1, name: "Phones" };
+const promotion = { id: 3, code: "SUMMER20", percentOff: 20, useCount: 4, maxUses: 100 };
+const user = { id: 5, email: "admin-customer@example.com", role: "customer", emailVerifiedAt: "2026-06-01T10:00:00.000Z" };
+const review = { id: 8, rating: 2, title: "Needs review", body: "Please moderate this.", status: "pending" };
+const ticket = { id: 9, subject: "Screen issue", message: "The display flickers.", status: "open" };
+const giftCard = { id: 10, code: "GIFT-2026", balanceAmount: 5000, currency: "gbp" };
+const bundle = { id: 11, name: "Starter kit", priceAmount: 109900, active: true };
+const supplier = { id: 12, name: "PhoneSine Supply", email: "supply@example.com", phone: "123" };
+const warehouse = { id: 13, name: "London Hub", code: "LDN", address: { city: "London" }, stocks: [{ id: 1, product, quantity: 20 }] };
+const purchaseOrder = {
+  id: 14,
+  supplier,
+  warehouse,
+  status: "ordered",
+  totalAmount: 50000,
+  items: [{ id: 15, product, quantity: 10, receivedQuantity: 0 }],
+};
+
 function captureRuntimeIssues(page) {
   const issues = [];
   page.on("pageerror", (error) => issues.push(error.message));
@@ -31,6 +49,19 @@ function captureRuntimeIssues(page) {
     if (message.type() === "error" && !message.text().includes("Failed to load resource")) issues.push(message.text());
   });
   return issues;
+}
+
+function trackAdminCalls(page) {
+  const adminCalls = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/admin/")) adminCalls.push({ method: request.method(), path: url.pathname });
+  });
+  return {
+    expectAdminCall: async (method, path) => {
+      await expect.poll(() => adminCalls.some((call) => call.method === method && call.path === path)).toBe(true);
+    },
+  };
 }
 
 async function mockApi(page) {
@@ -71,7 +102,19 @@ async function mockApi(page) {
       });
     }
     if (path === "/admin/orders") return route.fulfill({ json: [order] });
+    if (path === "/admin/products") return route.fulfill({ json: [{ ...product, active: true, categoryId: 1, category }] });
+    if (path === "/admin/categories") return route.fulfill({ json: [category] });
+    if (path === "/admin/promotions") return route.fulfill({ json: [promotion] });
+    if (path === "/admin/users") return route.fulfill({ json: [user] });
+    if (path === "/admin/reviews") return route.fulfill({ json: [review] });
     if (path === "/admin/returns") return route.fulfill({ json: [{ id: 7, orderId: 42, reason: "Damaged", status: "requested" }] });
+    if (path === "/admin/tickets") return route.fulfill({ json: [ticket] });
+    if (path === "/admin/gift-cards") return route.fulfill({ json: [giftCard] });
+    if (path === "/admin/bundles") return route.fulfill({ json: [bundle] });
+    if (path === "/admin/suppliers") return route.fulfill({ json: [supplier] });
+    if (path === "/admin/warehouses") return route.fulfill({ json: [warehouse] });
+    if (path === "/admin/purchase-orders") return route.fulfill({ json: [purchaseOrder] });
+    if (["POST", "PATCH", "DELETE"].includes(route.request().method()) && path.startsWith("/admin/")) return route.fulfill({ json: { ok: true } });
     if (path.startsWith("/admin/")) return route.fulfill({ json: [] });
     return route.fulfill({ status: 404, body: "Not mocked" });
   });
@@ -127,4 +170,87 @@ test("shows admin returns, shipping, and operations controls", async ({ page }) 
   await expect(page.getByText("Damaged")).toBeVisible();
   await expect(page.getByRole("button", { name: "Create shipping label" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Download report" })).toBeVisible();
+});
+
+test("supports admin product, category, and variant management", async ({ page }) => {
+  const { expectAdminCall } = trackAdminCalls(page);
+
+  await page.goto("/admin");
+  const productManagement = page.getByRole("heading", { name: "Product management" }).locator("..");
+  await expect(productManagement.getByText("Phone Sine Pro · 5 stock / 1 reserved · active")).toBeVisible();
+  await expect(productManagement.getByText("Phones").last()).toBeVisible();
+
+  await productManagement.getByRole("button", { name: "Edit" }).click();
+  await expect(productManagement.getByRole("button", { name: "Save product" })).toBeVisible();
+  await productManagement.getByPlaceholder("stockQuantity").first().fill("12");
+  await productManagement.getByRole("button", { name: "Save product" }).click();
+  await expectAdminCall("PATCH", "/admin/products/1");
+
+  await productManagement.getByPlaceholder("New category name").fill("Accessories");
+  await productManagement.getByRole("button", { name: "Create category" }).click();
+  await expectAdminCall("POST", "/admin/categories");
+
+  await productManagement.getByRole("combobox").last().selectOption("1");
+  await productManagement.getByPlaceholder("sku").fill("PS-GOLD");
+  await productManagement.getByPlaceholder("name").last().fill("Gold");
+  await productManagement.getByPlaceholder("priceAmount").last().fill("109900");
+  await productManagement.getByPlaceholder("stockQuantity").last().fill("6");
+  await productManagement.getByPlaceholder(/options JSON/).fill('{"color":"Gold"}');
+  await productManagement.getByRole("button", { name: "Create variant" }).click();
+  await expectAdminCall("POST", "/admin/products/1/variants");
+});
+
+test("supports admin promotion, user role, and review workflows", async ({ page }) => {
+  const { expectAdminCall } = trackAdminCalls(page);
+  await page.goto("/admin");
+
+  const promotions = page.getByRole("heading", { name: "Promotions" }).locator("..");
+  await expect(promotions.getByText("SUMMER20: 20% · 4/100 uses")).toBeVisible();
+  await promotions.getByPlaceholder("code").fill("VIP25");
+  await promotions.getByPlaceholder("percentOff").fill("25");
+  await promotions.getByPlaceholder("maxUses").fill("50");
+  await promotions.getByPlaceholder("perCustomerLimit").fill("2");
+  await promotions.getByRole("button", { name: "Create promotion" }).click();
+  await expectAdminCall("POST", "/admin/promotions");
+
+  const users = page.getByRole("heading", { name: "User roles" }).locator("..");
+  await expect(users.getByText("admin-customer@example.com · customer · verified")).toBeVisible();
+  await users.getByRole("combobox").selectOption("admin");
+  await expectAdminCall("PATCH", "/admin/users/5/role");
+
+  const reviews = page.getByRole("heading", { name: "Review moderation" }).locator("..");
+  await expect(reviews.getByText("2/5 · Needs review")).toBeVisible();
+  await reviews.getByRole("button", { name: "Approve" }).click();
+  await expectAdminCall("PATCH", "/admin/reviews/8");
+});
+
+test("supports admin support, gift card, bundle, and procurement workflows", async ({ page }) => {
+  const { expectAdminCall } = trackAdminCalls(page);
+  await page.goto("/admin");
+
+  const support = page.getByRole("heading", { name: "Support tickets" }).locator("..");
+  await expect(support.getByText("Screen issue · open")).toBeVisible();
+  await support.getByPlaceholder("Reply to customer").fill("We will replace the display.");
+  await support.getByRole("button", { name: "Reply and close" }).click();
+  await expectAdminCall("PATCH", "/admin/tickets/9");
+
+  const giftCards = page.getByRole("heading", { name: "Gift cards" }).locator("..");
+  await expect(giftCards.getByText("GIFT-2026 · GBP 50.00")).toBeVisible();
+  await giftCards.getByPlaceholder("Balance in pence").fill("7500");
+  await giftCards.getByRole("button", { name: "Issue gift card" }).click();
+  await expectAdminCall("POST", "/admin/gift-cards");
+
+  const bundles = page.getByRole("heading", { name: "Product bundles" }).locator("..");
+  await expect(bundles.getByText("Starter kit · £1099.00 · active")).toBeVisible();
+  await bundles.getByRole("button", { name: "Deactivate" }).click();
+  await expectAdminCall("PATCH", "/admin/bundles/11");
+
+  const procurement = page.getByRole("heading", { name: "Inventory procurement" }).locator("..");
+  await expect(procurement.getByText("PO #14 · PhoneSine Supply · ordered")).toBeVisible();
+  await procurement.getByPlaceholder(/^name$/).fill("Backup Supplier");
+  await procurement.getByPlaceholder("email").fill("backup@example.com");
+  await procurement.getByRole("button", { name: "Create supplier" }).click();
+  await expectAdminCall("POST", "/admin/suppliers");
+  await procurement.getByRole("button", { name: "Receive order" }).click();
+  await expectAdminCall("POST", "/admin/purchase-orders/14/receive");
 });
