@@ -24,6 +24,24 @@ const product = {
   variants: [{ id: 11, name: "Black", sku: "PS-BLK", priceAmount: 99900, stockQuantity: 3, reservedQuantity: 0 }],
 };
 
+const category = { id: 1, name: "Phones" };
+const promotion = { id: 3, code: "SUMMER20", percentOff: 20, useCount: 4, maxUses: 100 };
+const user = { id: 5, email: "admin-customer@example.com", role: "customer", emailVerifiedAt: "2026-06-01T10:00:00.000Z" };
+const review = { id: 8, rating: 2, title: "Needs review", body: "Please moderate this.", status: "pending" };
+const ticket = { id: 9, subject: "Screen issue", message: "The display flickers.", status: "open" };
+const giftCard = { id: 10, code: "GIFT-2026", balanceAmount: 5000, currency: "gbp" };
+const bundle = { id: 11, name: "Starter kit", priceAmount: 109900, active: true };
+const supplier = { id: 12, name: "PhoneSine Supply", email: "supply@example.com", phone: "123" };
+const warehouse = { id: 13, name: "London Hub", code: "LDN", address: { city: "London" }, stocks: [{ id: 1, product, quantity: 20 }] };
+const purchaseOrder = {
+  id: 14,
+  supplier,
+  warehouse,
+  status: "ordered",
+  totalAmount: 50000,
+  items: [{ id: 15, product, quantity: 10, receivedQuantity: 0 }],
+};
+
 function captureRuntimeIssues(page) {
   const issues = [];
   page.on("pageerror", (error) => issues.push(error.message));
@@ -71,7 +89,19 @@ async function mockApi(page) {
       });
     }
     if (path === "/admin/orders") return route.fulfill({ json: [order] });
+    if (path === "/admin/products") return route.fulfill({ json: [{ ...product, active: true, categoryId: 1, category }] });
+    if (path === "/admin/categories") return route.fulfill({ json: [category] });
+    if (path === "/admin/promotions") return route.fulfill({ json: [promotion] });
+    if (path === "/admin/users") return route.fulfill({ json: [user] });
+    if (path === "/admin/reviews") return route.fulfill({ json: [review] });
     if (path === "/admin/returns") return route.fulfill({ json: [{ id: 7, orderId: 42, reason: "Damaged", status: "requested" }] });
+    if (path === "/admin/tickets") return route.fulfill({ json: [ticket] });
+    if (path === "/admin/gift-cards") return route.fulfill({ json: [giftCard] });
+    if (path === "/admin/bundles") return route.fulfill({ json: [bundle] });
+    if (path === "/admin/suppliers") return route.fulfill({ json: [supplier] });
+    if (path === "/admin/warehouses") return route.fulfill({ json: [warehouse] });
+    if (path === "/admin/purchase-orders") return route.fulfill({ json: [purchaseOrder] });
+    if (["POST", "PATCH", "DELETE"].includes(route.request().method()) && path.startsWith("/admin/")) return route.fulfill({ json: { ok: true } });
     if (path.startsWith("/admin/")) return route.fulfill({ json: [] });
     return route.fulfill({ status: 404, body: "Not mocked" });
   });
@@ -127,4 +157,39 @@ test("shows admin returns, shipping, and operations controls", async ({ page }) 
   await expect(page.getByText("Damaged")).toBeVisible();
   await expect(page.getByRole("button", { name: "Create shipping label" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Download report" })).toBeVisible();
+});
+
+test("supports admin product, category, and variant management", async ({ page }) => {
+  const adminCalls = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/admin/")) adminCalls.push({ method: request.method(), path: url.pathname });
+  });
+  const expectAdminCall = async (method, path) => {
+    await expect.poll(() => adminCalls.some((call) => call.method === method && call.path === path)).toBe(true);
+  };
+
+  await page.goto("/admin");
+  const productManagement = page.getByRole("heading", { name: "Product management" }).locator("..");
+  await expect(productManagement.getByText("Phone Sine Pro · 5 stock / 1 reserved · active")).toBeVisible();
+  await expect(productManagement.getByText("Phones").last()).toBeVisible();
+
+  await productManagement.getByRole("button", { name: "Edit" }).click();
+  await expect(productManagement.getByRole("button", { name: "Save product" })).toBeVisible();
+  await productManagement.getByPlaceholder("stockQuantity").first().fill("12");
+  await productManagement.getByRole("button", { name: "Save product" }).click();
+  await expectAdminCall("PATCH", "/admin/products/1");
+
+  await productManagement.getByPlaceholder("New category name").fill("Accessories");
+  await productManagement.getByRole("button", { name: "Create category" }).click();
+  await expectAdminCall("POST", "/admin/categories");
+
+  await productManagement.getByRole("combobox").last().selectOption("1");
+  await productManagement.getByPlaceholder("sku").fill("PS-GOLD");
+  await productManagement.getByPlaceholder("name").last().fill("Gold");
+  await productManagement.getByPlaceholder("priceAmount").last().fill("109900");
+  await productManagement.getByPlaceholder("stockQuantity").last().fill("6");
+  await productManagement.getByPlaceholder(/options JSON/).fill('{"color":"Gold"}');
+  await productManagement.getByRole("button", { name: "Create variant" }).click();
+  await expectAdminCall("POST", "/admin/products/1/variants");
 });
