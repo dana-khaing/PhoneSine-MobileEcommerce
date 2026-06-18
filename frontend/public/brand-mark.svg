@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">PhoneSine brand mark</title>
+  <desc id="desc">A rounded mobile phone outline with a signal wave.</desc>
+  <defs>
+    <linearGradient id="phoneSineGold" x1="14" x2="82" y1="12" y2="84" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f9d66a" />
+      <stop offset="1" stop-color="#b38724" />
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="28" fill="#101114" />
+  <rect x="28" y="16" width="40" height="64" rx="11" fill="none" stroke="url(#phoneSineGold)" stroke-width="6" />
+  <path d="M39 27h18" stroke="#fff7df" stroke-width="4" stroke-linecap="round" />
+  <path d="M48 69h.01" stroke="#fff7df" stroke-width="7" stroke-linecap="round" />
+  <path d="M37 48c5-7 17-7 22 0" fill="none" stroke="#fff7df" stroke-width="5" stroke-linecap="round" />
+  <path d="M43 56c2.6-3.4 7.4-3.4 10 0" fill="none" stroke="#f9d66a" stroke-width="5" stroke-linecap="round" />
+</svg>
