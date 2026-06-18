@@ -5,6 +5,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-20-green)](https://nodejs.org/)
 [![Stripe](https://img.shields.io/badge/Payments-Stripe-635bff)](https://stripe.com/)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-b08d2d)](LICENSE)
 
 PhoneSine is a production-oriented mobile ecommerce project with a Next.js
 storefront, Express API, MySQL persistence, Stripe checkout, order operations,
@@ -22,6 +23,7 @@ admin tooling, account security, and launch-readiness automation.
 - [Admin And Operations](#admin-and-operations)
 - [Account Security](#account-security)
 - [Deployment](#deployment)
+- [License](#license)
 
 ## Architecture
 
@@ -312,6 +314,10 @@ cd backend
 pnpm run check:production
 pnpm run launch:runbook
 ```
+
+## License
+
+This project is proprietary. See [LICENSE](LICENSE) for the current usage terms.
 
 ## Repository Map
 
