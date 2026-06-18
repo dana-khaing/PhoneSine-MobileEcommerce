@@ -8,6 +8,7 @@
     "start": "next start",
     "test": "node --test",
     "test:e2e": "playwright test",
+    "test:e2e:mobile": "playwright test e2e/mobile.spec.mjs",
     "audit": "pnpm audit --audit-level critical",
     "lint": "next lint"
   },
