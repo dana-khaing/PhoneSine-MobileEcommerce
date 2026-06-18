@@ -1,160 +1,340 @@
-# To Run Frontend
+# PhoneSine Mobile Ecommerce
 
+[![CI](https://github.com/dana-khaing/PhoneSine-MobileEcommerce/actions/workflows/ci.yml/badge.svg)](https://github.com/dana-khaing/PhoneSine-MobileEcommerce/actions/workflows/ci.yml)
+[![Security](https://github.com/dana-khaing/PhoneSine-MobileEcommerce/actions/workflows/security.yml/badge.svg)](https://github.com/dana-khaing/PhoneSine-MobileEcommerce/actions/workflows/security.yml)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20-green)](https://nodejs.org/)
+[![Stripe](https://img.shields.io/badge/Payments-Stripe-635bff)](https://stripe.com/)
+
+PhoneSine is a production-oriented mobile ecommerce project with a Next.js
+storefront, Express API, MySQL persistence, Stripe checkout, order operations,
+admin tooling, account security, and launch-readiness automation.
+
+## Contents
+
+- [Architecture](#architecture)
+- [Feature Overview](#feature-overview)
+- [Quick Start](#quick-start)
+- [Environment](#environment)
+- [Common Commands](#common-commands)
+- [Testing And Quality](#testing-and-quality)
+- [Payments And Webhooks](#payments-and-webhooks)
+- [Admin And Operations](#admin-and-operations)
+- [Account Security](#account-security)
+- [Deployment](#deployment)
+
+## Architecture
+
+| Area | Stack | Notes |
+| --- | --- | --- |
+| Frontend | Next.js 15, React, Tailwind | Storefront, checkout, profile, orders, admin, PWA |
+| Backend | Node.js, Express 5 | REST API, auth, payments, operations, jobs |
+| Database | MySQL, Sequelize | Migrations, models, transactional commerce flows |
+| Payments | Stripe Checkout and webhooks | Idempotent checkout, refunds, disputes, reconciliation |
+| Quality | Node test runner, Playwright, GitHub Actions | Unit, integration, e2e, audit, staging validation |
+
+## Feature Overview
+
+### Storefront
+
+- Product catalogue with categories, variants, bundles, images, search,
+  suggestions, filters, comparison, and detail pages.
+- Cart, checkout quote, delivery options, VAT/tax, promotion codes, gift cards,
+  and Stripe Checkout session creation.
+- Product reviews, wishlists, saved carts, recently viewed products, and
+  personalized recommendations.
+- English and Burmese storefront locale support.
+- Installable PWA with a network-safe service worker strategy.
+
+### Payments And Commerce
+
+- Database-backed orders, order items, stock, reservations, events, refunds,
+  shipments, returns, promotions, and notification outbox records.
+- Inventory validation before checkout, reservation during payment, settlement
+  after successful payment, and cleanup for failed or abandoned payments.
+- Stripe webhook handling for checkout completion, expiration, asynchronous
+  payment states, refunds, and disputes.
+- Saved Stripe payment-method management.
+- Invoices, customer order timelines, cancellation, return, refund, fulfillment,
+  and shipping workflows.
+
+### Admin And Operations
+
+- Admin dashboard for orders, products, categories, variants, images, bundles,
+  promotions, refunds, returns, users, reviews, support tickets, gift cards,
+  suppliers, warehouses, purchase orders, analytics, and launch status.
+- Granular database-backed staff roles for admin, catalog, fulfillment, support,
+  operations, and customer accounts.
+- Operational reports, low-stock alerts, payment health, reconciliation,
+  audit logs, structured logs, metrics, backups, and launch runbook tooling.
+
+### Account Security
+
+- Email verification, password reset, rotating refresh-token sessions, logout,
+  session revocation, login history, OAuth login, two-factor authentication,
+  recovery codes, bot protection, CSRF protection, secure headers, and
+  privacy export/delete flows.
+
+## Quick Start
+
+### 1. Install Dependencies
+
+```sh
+cd backend
+pnpm install
+
+cd ../frontend
+pnpm install
+```
+
+### 2. Configure Environment
+
+```sh
+cp backend/.env.example backend/.env
+cp frontend/.env.local.example frontend/.env.local
+```
+
+Replace placeholder values before running checkout or production-like flows.
+For local development, the default ports are:
+
+| Service | URL |
+| --- | --- |
+| Frontend | `http://localhost:3000` |
+| Backend API | `http://localhost:8080` |
+| Stripe webhook path | `http://localhost:8080/payments/webhook` |
+
+### 3. Run Database Migrations
+
+```sh
+cd backend
+pnpm run db:migrate
+```
+
+Use a fresh database when applying the initial migration to an older
+`sequelize.sync()` database. The initial migration safely adopts existing tables
+and intentionally cannot be automatically rolled back because that could delete
+pre-migration data.
+
+### 4. Start The Apps
+
+Open two terminals:
+
+```sh
+cd backend
 pnpm run dev
+```
 
-// .env.local is for the frontend and can be request at the groupchat
-
-# To Run Backend
-
+```sh
+cd frontend
 pnpm run dev
+```
 
-// .env is for the backend and can be request at the groupchat
+## Environment
 
-# To Run Database
+### Backend
 
-localhost:8080/showall (to view all userdata api)
-localhost:8080/deleteall (to delete all of the user data)
+Important backend values live in `backend/.env`.
 
-Run `pnpm run db:migrate` from `backend` before starting the API. Use a fresh
-database when applying the initial migration to an older `sequelize.sync()`
-database.
+| Variable | Purpose |
+| --- | --- |
+| `PORT` | API port, usually `8080` locally |
+| `JWT_SECRET` | Access-token signing secret |
+| `BACKEND_ORIGIN` | Public API origin |
+| `FRONTEND_ORIGIN` / `FRONTEND_URL` | Storefront origin for CORS and checkout redirects |
+| `DB_DIALECT`, `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME` | Sequelize database connection |
+| `ADMIN_EMAILS` | Initial admin seed emails used by the role migration |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Stripe API and webhook verification |
+| `EMAIL_WEBHOOK_URL` | Optional email provider webhook |
+| `ENABLE_SMS_NOTIFICATIONS`, `TWILIO_*` | Optional SMS notification channel |
+| `TURNSTILE_SECRET_KEY` | Optional bot protection |
+| `METRICS_TOKEN` | Optional metrics endpoint protection |
+| `CURRENCY_RATES_JSON` | GBP/USD/EUR conversion rates |
 
-The initial migration safely adopts existing tables and intentionally cannot be
-automatically rolled back because doing so could delete pre-migration data.
+### Frontend
 
-# To Run Tests
+Frontend public API URLs live in `frontend/.env.local`.
 
-Run `pnpm test` from both the `frontend` and `backend` directories.
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_BACKEND_ORIGIN` | Backend API origin |
+| `NEXT_PUBLIC_PRODUCT_LIST_URL` | Public product API |
+| `NEXT_PUBLIC_API_PAYMENT_URL` | Checkout session endpoint |
+| `NEXT_PUBLIC_API_PAYMENT_QUOTE_URL` | Checkout quote endpoint |
+| `NEXT_PUBLIC_API_PAYMENT_STATUS_URL` | Checkout success verification endpoint |
+| `NEXT_PUBLIC_API_ORDERS_URL` | Customer orders endpoint |
+| `NEXT_PUBLIC_API_ADMIN_URL` | Admin API base |
+| `NEXT_PUBLIC_API_*` | Auth, saved items, reviews, profile, payment methods |
 
-# Stripe Checkout
+Optional privacy-safe analytics can be enabled with
+`NEXT_PUBLIC_ANALYTICS_DOMAIN` and an HTTPS
+`NEXT_PUBLIC_ANALYTICS_SCRIPT_URL`. Analytics are disabled by default and exclude
+checkout, admin, account, order, payment-method, profile, and security routes.
 
-Set `STRIPE_SECRET_KEY` and `FRONTEND_URL` in `backend/.env`, then set
-`NEXT_PUBLIC_API_PAYMENT_URL` to the backend `/payments/create-checkout-session`
-endpoint in `frontend/.env.local`.
+## Common Commands
 
-Set `NEXT_PUBLIC_API_PAYMENT_STATUS_URL` to the backend
-`/payments/checkout-session` endpoint so the success page verifies payment.
+### Backend
 
-Set `STRIPE_WEBHOOK_SECRET` in `backend/.env` and point Stripe webhooks to
-`/payments/webhook`. Set `NEXT_PUBLIC_API_ORDERS_URL` to the backend `/orders`
-endpoint for authenticated order history.
+```sh
+cd backend
+pnpm run dev
+pnpm test
+pnpm run audit
+pnpm run db:migrate
+pnpm run db:migrate:status
+pnpm run check:production
+pnpm run launch:runbook
+pnpm run job:maintenance
+pnpm run job:stock-alerts
+```
 
-Copy the included `.env.example` files and replace placeholder values before
-running checkout locally.
+### Frontend
 
-## Commerce Operations
+```sh
+cd frontend
+pnpm run dev
+pnpm test
+pnpm run build
+pnpm test:e2e
+pnpm run audit
+```
 
-- Products, stock, reservations, promotions, VAT, order events, and notification
-  outbox records are database-backed.
-- `WELCOME10` is seeded as an example 10% promotion.
-- Set `ADMIN_EMAILS` to a comma-separated list of admin accounts.
-- Set `EMAIL_WEBHOOK_URL` to a provider endpoint accepting
-  `{ to, subject, text }`; without it, notifications are logged locally.
-- Admin operations are available under `/admin` and the frontend `/admin` page.
-- The backend runs reservation cleanup and notification delivery every 10
-  minutes; admins can also trigger both operations manually.
-- Admin refund amounts are expressed in the smallest currency unit (pence).
+## Testing And Quality
 
-## Payment production operations
+Run the full local validation set before opening a production-facing PR:
 
-- Every checkout request must send an `Idempotency-Key` header. Stripe checkout
-  and refund calls also receive deterministic idempotency keys.
-- Supported checkout currencies are GBP, USD, and EUR. Override conversion
-  rates with `CURRENCY_RATES_JSON`; production deployments should update these
-  rates from a trusted source.
-- Configure Stripe to send checkout completion/expiration/asynchronous payment,
-  refund, and `charge.dispute.*` events to `/payments/webhook`.
-- Run `stripe listen --forward-to localhost:8080/payments/webhook` for Stripe CLI
-  webhook testing. The backend integration suite also signs, sends, and retries
-  a webhook through the real HTTP route.
-- `/admin/health/payments`, `/admin/reconcile`, and `/admin/audit-logs` provide
-  payment monitoring, reconciliation, and audit history.
+```sh
+cd backend
+pnpm run audit && pnpm test && pnpm run db:migrate:status
 
-## Account security
+cd ../frontend
+pnpm run audit && pnpm test && pnpm run build && pnpm test:e2e
+```
 
-New accounts receive a verification link through `EMAIL_WEBHOOK_URL`, or in the
-backend console during local development. Users must verify their email before
-signing in. Access tokens are short-lived and backed by rotating, revocable
-refresh sessions. Admin authorization uses the database `role` field; set
-`ADMIN_EMAILS` before the role migration to seed the first admin accounts.
+Quality gates are documented in [QUALITY.md](QUALITY.md). Pull requests run
+backend tests, migrations, frontend tests, production builds, browser tests,
+dependency checks, secret scanning, and staging validation.
 
-Admins can create, edit, archive, restore, price, and stock products from the
-commerce admin page.
+## Payments And Webhooks
 
-Google and Apple sign-in use the authorization-code flow. Configure provider
-credentials in `backend/.env`, set `BACKEND_ORIGIN` to the public API origin,
-and register these provider callback URLs:
+Set these backend values before testing Stripe:
 
-- `${BACKEND_ORIGIN}/auth/oauth/google/callback`
-- `${BACKEND_ORIGIN}/auth/oauth/apple/callback`
+```sh
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+FRONTEND_URL=http://localhost:3000
+```
 
-Apple requires a currently valid signed client-secret JWT. OAuth identities can
-be linked from `/security`, where customers can also review active sessions and
-recent successful or failed login activity.
+Then point Stripe webhooks to:
 
-To require Cloudflare Turnstile on password login and registration, set
-`TURNSTILE_SECRET_KEY` in the backend and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` in
-the frontend. Leave both unset for local development without bot verification.
+```text
+/payments/webhook
+```
 
-### Staff roles
+Useful local Stripe CLI command:
 
-Only `admin` users can assign roles. The available database-backed roles are:
+```sh
+stripe listen --forward-to localhost:8080/payments/webhook
+```
 
-- `admin`: unrestricted administration and role management
-- `catalog`: products, categories, bundles, images, and review moderation
-- `fulfillment`: order visibility, fulfillment, returns, and shipping labels
-- `support`: order visibility, support tickets, and review moderation
-- `operations`: payment operations, reports, promotions, and gift cards
-- `customer`: no staff permissions
+Every checkout request must send an `Idempotency-Key` header. Stripe checkout
+and refund calls also receive deterministic idempotency keys from the backend.
 
-Two-factor recovery codes are single-use. Customers can regenerate them or
-disable two-factor authentication from `/security` after entering a current
-authenticator or recovery code.
+## Admin And Operations
 
-Customers can download a portable JSON copy of their account data or permanently
-delete their account from `/profile`. Deletion removes account-owned data and
-anonymizes retained commerce and security-audit records.
+Admin tools are available in the frontend at:
 
-Out-of-stock product and variant pages accept one-time email alert subscriptions.
-The maintenance job delivers alerts after inventory becomes available; run it
-directly with `pnpm run job:stock-alerts`.
+```text
+/admin
+```
 
-Paid orders earn one loyalty point per whole pound. Customers can view their
-reward ledger and share or apply referral codes from `/profile`; both customers
-receive 500 points after the referred customer's first confirmed payment.
+Important backend admin endpoints include:
 
-The storefront keeps device-local recently viewed products and records
-authenticated viewing history for category-based personalized recommendations.
-Viewing history is included in account exports and removed with the account.
-
-Product search provides debounced autocomplete suggestions and falls back to a
-bounded typo-tolerant matcher when exact name, brand, and description search
-returns no products.
+| Endpoint | Purpose |
+| --- | --- |
+| `/admin/orders` | Order management |
+| `/admin/health/payments` | Payment health summary |
+| `/admin/reconcile` | Payment reconciliation |
+| `/admin/reports/operations.csv` | Operations report export |
+| `/admin/launch-status` | Launch readiness and provider status |
+| `/admin/audit-logs` | Recent admin audit trail |
 
 Catalog and operations staff can manage suppliers, warehouses, warehouse stock,
 and purchase orders from `/admin`. Receiving a purchase order transactionally
 updates the destination warehouse and storefront product stock.
 
-The primary storefront and navigation support persistent English and Burmese
-locales. Customers can switch language from the navigation bar; the preference
-is stored on their device and updates the document language.
+## Account Security
 
-The notification outbox supports optional Twilio SMS for order confirmation,
-shipping, delivery, refund, and dispute updates. Configure the Twilio variables
-and set `ENABLE_SMS_NOTIFICATIONS=true`; email remains the default channel.
+New accounts receive a verification link through `EMAIL_WEBHOOK_URL`, or in the
+backend console during local development. Users must verify email before
+signing in.
 
-The production frontend is installable as a PWA. Its service worker caches only
-the public storefront shell and static assets; live inventory, checkout,
-account, admin, and order data always require the network.
+Available security features:
 
-Optional privacy-safe analytics can be enabled by setting
-`NEXT_PUBLIC_ANALYTICS_DOMAIN` and an HTTPS `NEXT_PUBLIC_ANALYTICS_SCRIPT_URL`.
-Analytics are disabled by default and exclude checkout, admin, account, order,
-payment-method, profile, and security routes.
+- Email verification and resend.
+- Password reset.
+- Rotating refresh sessions and session revocation.
+- Login event history.
+- Google and Apple OAuth authorization-code login.
+- Two-factor authentication with single-use recovery codes.
+- Cloudflare Turnstile bot protection when configured.
+- Customer data export and account deletion from `/profile`.
 
-Each active product has a public `/products/:id` API and storefront detail page
-with description, price, availability, and add-to-cart support.
+OAuth callback URLs:
 
-Admins can upload JPEG, PNG, and WebP product images up to 2 MB. Images are
-stored under the backend public uploads directory and displayed as storefront
-galleries. Set `NEXT_PUBLIC_BACKEND_ORIGIN` to the backend's public origin.
+```text
+${BACKEND_ORIGIN}/auth/oauth/google/callback
+${BACKEND_ORIGIN}/auth/oauth/apple/callback
+```
+
+## Deployment
+
+Deployment details live in [DEPLOYMENT.md](DEPLOYMENT.md).
+
+The staging flow uses Docker Compose:
+
+```sh
+docker compose --env-file .env.staging -f docker-compose.staging.yml config
+docker compose --env-file .env.staging -f docker-compose.staging.yml build
+docker compose --env-file .env.staging -f docker-compose.staging.yml up -d
+```
+
+Production uses published GHCR images and:
+
+```sh
+PRODUCTION_ENV_FILE=.env.production sh scripts/deploy-production.sh
+```
+
+Before production promotion, run the production readiness and launch runbook
+checks:
+
+```sh
+cd backend
+pnpm run check:production
+pnpm run launch:runbook
+```
+
+## Repository Map
+
+```text
+backend/
+  src/           Express routes, services, jobs, payment and auth logic
+  models/        Sequelize models
+  migrations/    Database migrations
+  test/          Backend unit and integration tests
+  scripts/       Backup, readiness, and launch automation
+
+frontend/
+  src/app/       Next.js application routes and UI
+  e2e/           Playwright browser tests
+  test/          Frontend unit tests
+  public/        Static assets, manifest, service worker
+```
+
+## Notes
+
+- Keep real `.env`, `.env.local`, staging, and production files out of version
+  control.
+- Admin refund amounts are expressed in the smallest currency unit.
+- Do not automatically reverse migrations whose `down` operation can delete
+  commerce records.
+- Product images support JPEG, PNG, and WebP uploads up to 2 MB.
