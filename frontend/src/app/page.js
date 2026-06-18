@@ -57,11 +57,11 @@ export default function Home() {
             <div className="mt-10 rounded-[1.5rem] bg-gradient-to-br from-yellow-200 to-yellow-600 p-1">
               <div className="rounded-[1.25rem] bg-neutral-950/90 p-6">
                 <p className="text-sm text-yellow-100">{t("highlights")}</p>
-                <dl className="mt-5 grid grid-cols-2 gap-5">
-                  <div><dt className="text-3xl font-black">{t("live")}</dt><dd className="text-sm text-neutral-300">{t("stockAvailability")}</dd></div>
-                  <div><dt className="text-3xl font-black">{t("secure")}</dt><dd className="text-sm text-neutral-300">{t("stripeCheckout")}</dd></div>
-                  <div><dt className="text-3xl font-black">{t("tracked")}</dt><dd className="text-sm text-neutral-300">{t("orderDelivery")}</dd></div>
-                  <div><dt className="text-3xl font-black">{t("easy")}</dt><dd className="text-sm text-neutral-300">{t("returnsSupport")}</dd></div>
+                <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-4 sm:gap-5">
+                  <div><dt className="text-xl font-black sm:text-3xl">{t("live")}</dt><dd className="text-xs text-neutral-300 sm:text-sm">{t("stockAvailability")}</dd></div>
+                  <div><dt className="text-xl font-black sm:text-3xl">{t("secure")}</dt><dd className="text-xs text-neutral-300 sm:text-sm">{t("stripeCheckout")}</dd></div>
+                  <div><dt className="text-xl font-black sm:text-3xl">{t("tracked")}</dt><dd className="text-xs text-neutral-300 sm:text-sm">{t("orderDelivery")}</dd></div>
+                  <div><dt className="text-xl font-black sm:text-3xl">{t("easy")}</dt><dd className="text-xs text-neutral-300 sm:text-sm">{t("returnsSupport")}</dd></div>
                 </dl>
               </div>
             </div>
