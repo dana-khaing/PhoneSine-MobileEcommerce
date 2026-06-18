@@ -243,9 +243,9 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <h1 className="text-3xl font-bold">Commerce admin</h1>
-      <div className="my-6 flex flex-wrap gap-3">
+      <div className="my-6 grid gap-3 sm:flex sm:flex-wrap">
         <button className="rounded border px-4 py-2" onClick={() => action("/cleanup")}>Clean abandoned orders</button>
         <button className="rounded border px-4 py-2" onClick={() => action("/notifications/deliver")}>Deliver notifications</button>
         <button className="rounded border px-4 py-2" onClick={() => action("/reconcile")}>Reconcile payments</button>
@@ -258,7 +258,7 @@ export default function AdminPage() {
             <h2 className="mt-1 text-2xl font-bold">Realtime commerce performance</h2>
             <p className="text-sm text-neutral-600">Orders, revenue, conversion, product demand, and inventory risk from the live admin analytics endpoint.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="grid w-full gap-2 sm:w-auto sm:grid-flow-col">
             <button className="rounded border px-3 py-1" onClick={() => action("/low-stock-alerts", "POST", {})}>Queue low-stock alerts</button>
             <button className="rounded border px-3 py-1" onClick={() => download("/reports/operations.csv", "operations-report.csv")}>Download report</button>
           </div>
@@ -332,10 +332,10 @@ export default function AdminPage() {
             {editingProductId && <button type="button" className="rounded border px-3 py-2" onClick={() => { setEditingProductId(null); setProductForm(emptyProduct); }}>Cancel edit</button>}
           </div>
         </form>
-        <div className="mt-5 flex gap-2">
+        <div className="mt-5 flex flex-wrap gap-2">
           <button className="rounded border px-3 py-2" onClick={() => download("/products-export.csv", "products.csv")}>Export products CSV</button>
           <label className="cursor-pointer rounded border px-3 py-2">Import products CSV<input className="hidden" type="file" accept=".csv,text/csv" onChange={(event) => importProducts(event.target.files?.[0])} /></label>
-          <input className="rounded border p-2" placeholder="New category name" value={categoryName} onChange={(event) => setCategoryName(event.target.value)} />
+          <input className="min-w-0 flex-1 rounded border p-2" placeholder="New category name" value={categoryName} onChange={(event) => setCategoryName(event.target.value)} />
           <button className="rounded border px-3 py-2" onClick={async () => { await action("/categories", "POST", { name: categoryName }); setCategoryName(""); }}>Create category</button>
         </div>
         <form onSubmit={saveVariant} className="mt-5 grid gap-2 md:grid-cols-3">
