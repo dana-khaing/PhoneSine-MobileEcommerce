@@ -14,7 +14,7 @@ export default function NavBar() {
   const { locale, setLocale, t } = useContext(LocaleContext);
 
   return (
-    <nav className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-5 py-5">
+    <nav className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-5 sm:px-5">
       <Link href="/" className="mr-auto flex flex-none items-center gap-3">
         <img src="/brand-mark.svg" alt="" className="h-11 w-11 rounded-2xl shadow-sm" />
         <span>
@@ -25,7 +25,7 @@ export default function NavBar() {
       <div className="order-3 w-full md:order-none md:w-auto md:flex-auto">
         <NavList />
       </div>
-      <div className="flex flex-wrap items-center justify-end gap-1 rounded-full border bg-white/80 p-1 shadow-sm">
+      <div className="flex w-full flex-wrap items-center justify-between gap-1 rounded-3xl border bg-white/80 p-1 shadow-sm sm:w-auto sm:justify-end sm:rounded-full">
         <Link href="/saved" aria-label="Wishlist" className="rounded-full p-2 hover:bg-neutral-100"><Heart className="h-5 w-5" /></Link>
         <Link href="/profile" className="rounded-full px-3 py-2 text-sm font-medium hover:bg-neutral-100">{t("profile")}</Link>
         <Link href="/security" className="rounded-full px-3 py-2 text-sm font-medium hover:bg-neutral-100">{t("security")}</Link>
