@@ -30,6 +30,7 @@ export default function NavBar() {
         <Link href="/profile" className="rounded-full px-3 py-2 text-sm font-medium hover:bg-neutral-100">{t("profile")}</Link>
         <Link href="/security" className="rounded-full px-3 py-2 text-sm font-medium hover:bg-neutral-100">{t("security")}</Link>
         <Link href="/support" className="rounded-full px-3 py-2 text-sm font-medium hover:bg-neutral-100">{t("support")}</Link>
+        <Link href="/status" className="rounded-full px-3 py-2 text-sm font-medium hover:bg-neutral-100">Status</Link>
         <select aria-label={t("language")} className="rounded-full border border-neutral-200 bg-white px-2 py-1 text-sm" value={locale} onChange={(event) => setLocale(event.target.value)}>
           <option value="en">English</option>
           <option value="my">မြန်မာ</option>
