@@ -6,14 +6,47 @@ function parseCookies(req) {
     return [key, decodeURIComponent(value.join("="))];
   }));
 }
+function configuredOrigins() {
+  return ["FRONTEND_ORIGIN", "FRONTEND_URL", "BACKEND_ORIGIN"]
+    .map((key) => process.env[key])
+    .filter(Boolean)
+    .map((value) => {
+      try {
+        return new URL(value).origin;
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+}
+function contentSecurityPolicy() {
+  const origins = [...new Set(configuredOrigins())];
+  const localApi = process.env.NODE_ENV === "production" ? [] : ["http://localhost:8080"];
+  const connectSources = ["'self'", ...origins, ...localApi].join(" ");
+  const imageSources = ["'self'", "data:", ...origins, ...localApi].join(" ");
+  return [
+    "default-src 'self'",
+    `connect-src ${connectSources}`,
+    `img-src ${imageSources}`,
+    "style-src 'self' 'unsafe-inline'",
+    "script-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+}
 function securityHeaders(_req, res, next) {
-  res.set({
-    "Content-Security-Policy": "default-src 'self'; img-src 'self' data: http://localhost:8080; style-src 'self' 'unsafe-inline'; script-src 'self'",
+  const headers = {
+    "Content-Security-Policy": contentSecurityPolicy(),
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-  });
+  };
+  if (process.env.NODE_ENV === "production") {
+    headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
+  }
+  res.set(headers);
   next();
 }
 function csrfProtection(req, res, next) {
@@ -37,4 +70,4 @@ function clearSessionCookies(res) {
   res.append("Set-Cookie", `access_token=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`);
   res.append("Set-Cookie", `csrf_token=; SameSite=Strict; Path=/; Max-Age=0${secure}`);
 }
-module.exports = { clearSessionCookies, csrfProtection, parseCookies, securityHeaders, setSessionCookies };
+module.exports = { clearSessionCookies, contentSecurityPolicy, csrfProtection, parseCookies, securityHeaders, setSessionCookies };
