@@ -15,6 +15,10 @@ test("generates a phased launch runbook with readiness results", () => {
     STRIPE_WEBHOOK_SECRET: "whsec_real",
     ADMIN_EMAILS: "admin@phonesine.com",
     DATABASE_URL: "mysql://user:pass@db.example.com:3306/phone_sine",
+    EMAIL_WEBHOOK_URL: "https://email.phonesine.com/send",
+    OPERATIONS_ALERT_WEBHOOK_URL: "https://ops.phonesine.com/hook",
+    ERROR_TRACKING_WEBHOOK_URL: "https://errors.phonesine.com/ingest",
+    TURNSTILE_SECRET_KEY: "turnstile-secret",
     RUN_IN_PROCESS_JOBS: "true",
   });
   assert.match(runbook, /Production readiness: ready/);
