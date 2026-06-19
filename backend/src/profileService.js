@@ -1,5 +1,13 @@
 const { CustomerAddress, sequelize } = require("../models");
 
+const defaultNotificationPreferences = {
+  email: true,
+  sms: false,
+  orderUpdates: true,
+  promotions: false,
+  security: true,
+};
+
 function normalizeAddress(input) {
   const required = ["label", "recipientName", "line1", "city", "postalCode", "country"];
   if (required.some((field) => !String(input?.[field] || "").trim())) {
@@ -36,4 +44,10 @@ async function saveAddress(userId, input, address) {
   });
 }
 
-module.exports = { normalizeAddress, saveAddress };
+function normalizeNotificationPreferences(input = {}) {
+  return Object.fromEntries(
+    Object.entries(defaultNotificationPreferences).map(([key, fallback]) => [key, typeof input[key] === "boolean" ? input[key] : fallback])
+  );
+}
+
+module.exports = { defaultNotificationPreferences, normalizeAddress, normalizeNotificationPreferences, saveAddress };

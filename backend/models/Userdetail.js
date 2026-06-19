@@ -33,6 +33,11 @@ module.exports = (sequelize, DataTypes) => {
     twoFactorSecret: { type: DataTypes.STRING },
     twoFactorEnabled: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     twoFactorRecoveryCodes: { type: DataTypes.JSON, allowNull: false, defaultValue: [] },
+    notificationPreferences: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: { email: true, sms: false, orderUpdates: true, promotions: false, security: true },
+    },
   });
 
   Userdetail.associate = ({ CustomerAddress, LoginEvent, OAuthIdentity, Order, SavedCart, WishlistItem }) => {
