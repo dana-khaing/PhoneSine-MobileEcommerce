@@ -28,3 +28,12 @@ test("storefront exposes branded navigation assets", () => {
   assert.match(navSource, /PhoneSine/);
   assert.match(brandMark, /PhoneSine brand mark/);
 });
+
+test("status page exposes production health probes", () => {
+  const statusSource = fs.readFileSync(new URL("../src/app/status/page.js", import.meta.url), "utf8");
+  const navSource = fs.readFileSync(new URL("../src/app/components/nav-bar.js", import.meta.url), "utf8");
+  assert.match(statusSource, /NEXT_PUBLIC_BACKEND_ORIGIN/);
+  assert.match(statusSource, /\/health/);
+  assert.match(statusSource, /\/health\/ready/);
+  assert.match(navSource, /\/status/);
+});
