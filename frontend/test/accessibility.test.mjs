@@ -37,3 +37,15 @@ test("status page exposes production health probes", () => {
   assert.match(statusSource, /\/health\/ready/);
   assert.match(navSource, /\/status/);
 });
+
+test("customer account pages expose tracking and notification controls", () => {
+  const profileSource = fs.readFileSync(new URL("../src/app/profile/page.js", import.meta.url), "utf8");
+  const ordersSource = fs.readFileSync(new URL("../src/app/orders/page.js", import.meta.url), "utf8");
+  const checkoutSource = fs.readFileSync(new URL("../src/app/checkout/page.js", import.meta.url), "utf8");
+  assert.match(profileSource, /Notification preferences/);
+  assert.match(profileSource, /\/notifications/);
+  assert.match(ordersSource, /Order tracking/);
+  assert.match(ordersSource, /timelineSteps/);
+  assert.match(checkoutSource, /Manage addresses/);
+  assert.match(checkoutSource, /Saved address applied/);
+});
