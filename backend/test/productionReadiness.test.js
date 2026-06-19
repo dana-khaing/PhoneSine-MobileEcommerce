@@ -14,6 +14,10 @@ const validEnv = {
   STRIPE_WEBHOOK_SECRET: "whsec_real",
   ADMIN_EMAILS: "admin@phonesine.com",
   DATABASE_URL: "mysql://user:pass@db.example.com:3306/phone_sine",
+  EMAIL_WEBHOOK_URL: "https://email.phonesine.com/send",
+  OPERATIONS_ALERT_WEBHOOK_URL: "https://ops.phonesine.com/hook",
+  ERROR_TRACKING_WEBHOOK_URL: "https://errors.phonesine.com/ingest",
+  TURNSTILE_SECRET_KEY: "turnstile-secret",
   RUN_IN_PROCESS_JOBS: "true",
 };
 
@@ -42,4 +46,17 @@ test("requires Twilio credentials only when SMS is enabled", () => {
   const result = checkProductionReadiness({ ...validEnv, ENABLE_SMS_NOTIFICATIONS: "true" });
   assert.equal(result.ready, false);
   assert(result.blockers.some((item) => item.includes("TWILIO_ACCOUNT_SID")));
+});
+
+test("requires production monitoring and matching storefront origins", () => {
+  const result = checkProductionReadiness({
+    ...validEnv,
+    FRONTEND_URL: "https://checkout.phonesine.com",
+    OPERATIONS_ALERT_WEBHOOK_URL: "",
+    ERROR_TRACKING_WEBHOOK_URL: "replace-error-tracking",
+  });
+  assert.equal(result.ready, false);
+  assert(result.blockers.some((item) => item.includes("FRONTEND_ORIGIN and FRONTEND_URL")));
+  assert(result.blockers.some((item) => item.includes("OPERATIONS_ALERT_WEBHOOK_URL")));
+  assert(result.blockers.some((item) => item.includes("ERROR_TRACKING_WEBHOOK_URL")));
 });

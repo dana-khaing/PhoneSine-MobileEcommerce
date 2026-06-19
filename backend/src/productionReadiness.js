@@ -20,6 +20,13 @@ const optionalProviders = [
   ["TURNSTILE_SECRET_KEY", "bot protection"],
 ];
 
+const productionRecommended = [
+  ["EMAIL_WEBHOOK_URL", "email delivery provider"],
+  ["OPERATIONS_ALERT_WEBHOOK_URL", "operations alert webhook"],
+  ["ERROR_TRACKING_WEBHOOK_URL", "error tracking collector"],
+  ["TURNSTILE_SECRET_KEY", "bot protection"],
+];
+
 function present(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
@@ -40,6 +47,14 @@ function checkUrl(env, key, issues) {
   }
 }
 
+function sameOrigin(left, right) {
+  try {
+    return new URL(left).origin === new URL(right).origin;
+  } catch {
+    return false;
+  }
+}
+
 function checkProductionReadiness(env = process.env) {
   const issues = { blockers: [], warnings: [] };
   for (const [key, label] of required) {
@@ -49,6 +64,12 @@ function checkProductionReadiness(env = process.env) {
   checkUrl(env, "BACKEND_ORIGIN", issues);
   checkUrl(env, "FRONTEND_ORIGIN", issues);
   checkUrl(env, "FRONTEND_URL", issues);
+  if (present(env.FRONTEND_ORIGIN) && present(env.FRONTEND_URL) && !sameOrigin(env.FRONTEND_ORIGIN, env.FRONTEND_URL)) {
+    issues.blockers.push("FRONTEND_ORIGIN and FRONTEND_URL must resolve to the same origin");
+  }
+  if (present(env.BACKEND_ORIGIN) && present(env.FRONTEND_ORIGIN) && sameOrigin(env.BACKEND_ORIGIN, env.FRONTEND_ORIGIN)) {
+    issues.warnings.push("BACKEND_ORIGIN matches FRONTEND_ORIGIN; confirm API and storefront routing are intentionally shared");
+  }
 
   if (present(env.JWT_SECRET) && present(env.MFA_ENCRYPTION_KEY) && env.JWT_SECRET === env.MFA_ENCRYPTION_KEY) {
     issues.blockers.push("MFA_ENCRYPTION_KEY must differ from JWT_SECRET");
@@ -68,6 +89,11 @@ function checkProductionReadiness(env = process.env) {
   }
   for (const [key, label] of optionalProviders) {
     if (!present(env[key])) issues.warnings.push(`${key} is not configured; ${label} will be disabled`);
+  }
+  if (env.NODE_ENV === "production") {
+    for (const [key, label] of productionRecommended) {
+      if (!present(env[key]) || hasPlaceholder(env[key])) issues.blockers.push(`${key} must be configured for production ${label}`);
+    }
   }
   if (env.RUN_IN_PROCESS_JOBS !== "true") {
     issues.warnings.push("RUN_IN_PROCESS_JOBS is disabled; ensure scheduled maintenance runs elsewhere");
