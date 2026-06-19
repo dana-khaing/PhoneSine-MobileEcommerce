@@ -1,7 +1,7 @@
 const express = require("express");
 const { CustomerAddress, Userdetail } = require("../models");
 const { requireAuth } = require("./authMiddleware");
-const { saveAddress } = require("./profileService");
+const { defaultNotificationPreferences, normalizeNotificationPreferences, saveAddress } = require("./profileService");
 const { deleteAccount, exportAccountData } = require("./privacyService");
 
 const router = express.Router();
@@ -9,10 +9,12 @@ router.use(requireAuth);
 
 router.get("/", async (req, res) => {
   const user = await Userdetail.findByPk(req.user.userId, {
-    attributes: ["id", "firstname", "lastname", "email", "emailVerifiedAt"],
+    attributes: ["id", "firstname", "lastname", "email", "emailVerifiedAt", "notificationPreferences"],
     include: [{ association: "addresses", order: [["isDefault", "DESC"], ["createdAt", "DESC"]] }],
   });
-  return res.json(user);
+  const profile = user.toJSON();
+  profile.notificationPreferences = { ...defaultNotificationPreferences, ...(profile.notificationPreferences || {}) };
+  return res.json(profile);
 });
 
 router.patch("/", async (req, res) => {
@@ -22,6 +24,13 @@ router.patch("/", async (req, res) => {
   const user = await Userdetail.findByPk(req.user.userId);
   await user.update({ firstname, lastname });
   return res.json({ firstname: user.firstname, lastname: user.lastname, email: user.email });
+});
+
+router.patch("/notifications", async (req, res) => {
+  const user = await Userdetail.findByPk(req.user.userId);
+  const notificationPreferences = normalizeNotificationPreferences(req.body);
+  await user.update({ notificationPreferences });
+  return res.json({ notificationPreferences });
 });
 
 router.post("/addresses", async (req, res) => {

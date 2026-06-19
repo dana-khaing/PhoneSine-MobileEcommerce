@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { normalizeAddress } = require("../src/profileService");
+const { normalizeAddress, normalizeNotificationPreferences } = require("../src/profileService");
 
 test("normalizes international address-book entries", () => {
   assert.deepEqual(normalizeAddress({
@@ -28,4 +28,14 @@ test("normalizes international address-book entries", () => {
 test("rejects incomplete or invalid address-book entries", () => {
   assert.throws(() => normalizeAddress({ country: "GB" }), /required/);
   assert.throws(() => normalizeAddress({ label: "Home", recipientName: "Dana", line1: "1 Main", city: "London", postalCode: "123", country: "United Kingdom" }), /two-letter ISO/);
+});
+
+test("normalizes notification preferences with safe defaults", () => {
+  assert.deepEqual(normalizeNotificationPreferences({ sms: true, promotions: true, security: "yes" }), {
+    email: true,
+    sms: true,
+    orderUpdates: true,
+    promotions: true,
+    security: true,
+  });
 });
