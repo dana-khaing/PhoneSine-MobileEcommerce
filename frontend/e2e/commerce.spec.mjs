@@ -126,6 +126,19 @@ async function mockApi(page) {
       });
     }
     if (path === "/admin/health/payments") return route.fulfill({ json: { pending: 0, reviews: 0, disputes: 0, failedNotifications: 0 } });
+    if (path === "/admin/observability") {
+      return route.fulfill({
+        json: {
+          uptimeSeconds: 123,
+          unhandledErrors: 1,
+          requests: [
+            { method: "GET", path: "/products", status: 200, count: 8, durationMs: 320, averageDurationMs: 40 },
+            { method: "POST", path: "/create-checkout-session", status: 200, count: 2, durationMs: 180, averageDurationMs: 90 },
+          ],
+          operationalEvents: [{ name: "unhandled_request_error", severity: "error", count: 1, lastSeenAt: "2026-06-19T02:00:00.000Z" }],
+        },
+      });
+    }
     if (path === "/admin/launch-status") {
       return route.fulfill({
         json: {
@@ -224,6 +237,9 @@ test("shows admin returns, shipping, and operations controls", async ({ page }) 
   await expect(page.getByRole("link", { name: "Catalog" })).toBeVisible();
   await expect(page.getByPlaceholder("Search orders, products, users...")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Realtime commerce performance" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Operational telemetry" })).toBeVisible();
+  await expect(page.getByText("POST /create-checkout-session · 200 · 90ms avg · 2 hits")).toBeVisible();
+  await expect(page.getByText("error · unhandled_request_error · 1 events")).toBeVisible();
   await expect(page.getByText("Order conversion")).toBeVisible();
   await expect(page.getByText("41 product views")).toBeVisible();
   await expect(page.getByText("Phone Sine Pro: 4 units")).toBeVisible();

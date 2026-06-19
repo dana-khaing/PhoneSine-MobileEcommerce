@@ -16,6 +16,7 @@ const { operationsSummary, operationsSummaryToCsv, queueLowStockAlerts } = requi
 const { parseProductCsv, productsToCsv } = require("./catalogueService");
 const { createPurchaseOrder, receivePurchaseOrder } = require("./procurementService");
 const { launchStatus } = require("./launchStatusService");
+const { metricsSnapshot } = require("./metricsService");
 
 const router = express.Router();
 router.use(requireStaff);
@@ -233,6 +234,7 @@ router.get("/health/payments", async (_req, res) => {
   res.json({ pending, reviews, disputes, failedNotifications });
 });
 router.get("/analytics", async (_req, res) => res.json(await operationsSummary()));
+router.get("/observability", async (_req, res) => res.json(metricsSnapshot()));
 router.get("/launch-status", async (_req, res) => res.json(launchStatus()));
 router.get("/reports/operations.csv", async (_req, res) => {
   res.type("text/csv").send(operationsSummaryToCsv(await operationsSummary()));

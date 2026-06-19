@@ -13,7 +13,10 @@
   identifier so reports can be correlated with deployments.
 - Browser crashes are submitted to the rate-limited `/client-errors` endpoint.
   Reports omit URL query parameters and the backend redacts sensitive context.
-- Monitor `GET /admin/health/payments` and `GET /admin/analytics` with an admin token.
+- Monitor `GET /admin/health/payments`, `GET /admin/analytics`, and
+  `GET /admin/observability` with an admin token. The observability endpoint
+  exposes the same in-process counters as `/metrics` in JSON form for the admin
+  console.
 - Trigger `POST /admin/low-stock-alerts` daily before notification delivery.
 - Run `pnpm run check:production` from `backend/` before launch and before
   major environment changes. It checks required secrets, HTTPS origins, Stripe
