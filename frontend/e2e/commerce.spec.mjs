@@ -52,6 +52,17 @@ const purchaseOrder = {
   items: [{ id: 15, product, quantity: 10, receivedQuantity: 0 }],
 };
 
+const profile = {
+  firstname: "Dana",
+  lastname: "Khaing",
+  email: "buyer@example.com",
+  emailVerifiedAt: "2026-06-01T10:00:00.000Z",
+  notificationPreferences: { email: true, sms: false, orderUpdates: true, promotions: false, security: true },
+  addresses: [
+    { id: 21, label: "Home", recipientName: "Dana Khaing", line1: "1 High Street", city: "London", postalCode: "SW1A 1AA", country: "GB", isDefault: true },
+  ],
+};
+
 function captureRuntimeIssues(page) {
   const issues = [];
   page.on("pageerror", (error) => issues.push(error.message));
@@ -86,6 +97,8 @@ async function mockApi(page) {
     if (path === "/recommendations/views/1") return route.fulfill({ json: { recorded: true } });
     if (path === "/reviews/products/1") return route.fulfill({ json: { averageRating: 4.5, reviewCount: 2, reviews: [] } });
     if (path === "/saved/wishlist") return route.fulfill({ json: { id: 1 } });
+    if (path === "/profile" && route.request().method() === "GET") return route.fulfill({ json: profile });
+    if (path === "/profile/notifications") return route.fulfill({ json: { notificationPreferences: { ...profile.notificationPreferences, sms: true } } });
     if (path === "/customer/tickets") return route.fulfill({ json: [{ id: 1, subject: "Need help", status: "open" }] });
     if (path === "/customer/gift-cards/GIFT") return route.fulfill({ json: { balanceAmount: 2500, currency: "gbp" } });
     if (path === "/payments/quote") return route.fulfill({ json: { discountAmount: 1000, taxAmount: 2000, taxRate: 20, totalAmount: 12000, currency: "gbp" } });
@@ -159,6 +172,7 @@ test.beforeEach(async ({ page }) => {
 test("calculates a checkout quote from the browser flow", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("phone-sine-cart", JSON.stringify([{ id: 1, name: "Phone Sine Pro", price: 100, quantity: 1 }])));
   await page.goto("/checkout");
+  await expect(page.getByText("Saved address applied to checkout.")).toBeVisible();
   await page.getByPlaceholder("Email").fill("buyer@example.com");
   await page.getByPlaceholder("First name").fill("Dana");
   await page.getByPlaceholder("Last name").fill("Khaing");
@@ -168,6 +182,15 @@ test("calculates a checkout quote from the browser flow", async ({ page }) => {
   await page.getByRole("button", { name: "Update tax and promotion" }).click();
   await expect(page.getByText("Tax (20%)")).toBeVisible();
   await expect(page.getByText("GBP 120.00")).toBeVisible();
+});
+
+test("updates customer notification preferences from profile", async ({ page }) => {
+  await page.goto("/profile");
+  await expect(page.getByRole("heading", { name: "Your profile" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Notification preferences" })).toBeVisible();
+  await page.getByLabel("SMS notifications").check();
+  await page.getByRole("button", { name: "Save notification preferences" }).click();
+  await expect(page.getByText("Notification preferences saved.")).toBeVisible();
 });
 
 test("verifies an email token", async ({ page }) => {
