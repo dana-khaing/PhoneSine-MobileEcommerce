@@ -4,6 +4,8 @@
 
 - Probe `GET /health` every minute and alert on non-200 responses.
 - Probe `GET /health/ready` before routing traffic.
+- Open the storefront `/status` page after every deploy or rollback to confirm
+  the browser can reach the configured API origin.
 - Scrape `GET /metrics` with `Authorization: Bearer $METRICS_TOKEN`.
 - Set `OPERATIONS_ALERT_WEBHOOK_URL` to receive unhandled-error alerts.
 - Set `ERROR_TRACKING_WEBHOOK_URL` to send sanitized application error reports to
@@ -63,3 +65,16 @@ Use the reproducible staging stack and promotion checklist in
 [`DEPLOYMENT.md`](DEPLOYMENT.md). The staging workflow validates the Compose
 configuration and builds both application images on deployment-related pull
 requests.
+
+## Incident Rollback Notes
+
+During a production incident, prefer image rollback first and database restore
+only when needed. Capture these fields in the incident record:
+
+| Field | Example |
+| --- | --- |
+| Failed release | `v1.7.0` |
+| Rollback release | `v1.6.3` |
+| Backup used | `phone-sine-2026-06-19.sql.gz` or `not required` |
+| Verification | `/status`, checkout smoke, admin payment health |
+| Jobs | paused at `10:05 UTC`, resumed at `10:22 UTC` |

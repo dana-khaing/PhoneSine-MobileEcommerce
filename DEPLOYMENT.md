@@ -59,6 +59,29 @@ external managed MySQL database. Copy `.env.production.example` to
 `.env.production` on a TLS-terminating production host and replace every
 placeholder.
 
+## Production Environment Checklist
+
+Before publishing a release tag, confirm every item below is complete:
+
+| Area | Check |
+| --- | --- |
+| Domains | `FRONTEND_ORIGIN`, `FRONTEND_URL`, `BACKEND_ORIGIN`, and `PUBLIC_API_ORIGIN` use HTTPS production origins |
+| Database | Managed MySQL is reachable from the production host and a fresh encrypted backup exists |
+| Secrets | `JWT_SECRET`, `MFA_ENCRYPTION_KEY`, database password, Stripe secret, webhook secret, and provider tokens are unique production values |
+| Stripe | Live-mode checkout key and webhook endpoint point to `/payments/webhook` |
+| Email/SMS | Notification provider credentials are configured or intentionally disabled |
+| Monitoring | `/health`, `/health/ready`, `/metrics`, payment health, and browser error reports are monitored |
+| Jobs | External scheduler or GitHub scheduled maintenance is enabled; `RUN_IN_PROCESS_JOBS` is only used for single-instance deployments |
+| Rollback | Previous backend/frontend image tags and the latest database backup are known before migration |
+
+Run the backend readiness check before changing traffic:
+
+```sh
+cd backend
+pnpm run check:production
+pnpm run launch:runbook
+```
+
 Deploy a published release:
 
 ```sh
@@ -70,6 +93,33 @@ starts the services, and blocks until API readiness and the storefront respond.
 Back up the database before changing release tags. Roll back by restoring the
 previous image tags in `.env.production` and rerunning the script; restore the
 database backup only when a migration changed incompatible data.
+
+## Post-Deploy Verification
+
+After the deploy script succeeds:
+
+1. Open `/status` on the production storefront and confirm both API health and
+   readiness show healthy.
+2. Run a Stripe live-mode low-value checkout and confirm the webhook marks the
+   order paid.
+3. Open `/admin`, confirm payment health, analytics, low-stock count, and launch
+   status render without errors.
+4. Run `POST /admin/reconcile` and notification delivery from the admin console
+   or scheduled job.
+5. Confirm the monitoring stack can reach `/health`, `/health/ready`, and
+   `/metrics` with the configured token.
+
+## Rollback Procedure
+
+1. Stop promotions and pause scheduled maintenance jobs.
+2. Replace `BACKEND_IMAGE` and `FRONTEND_IMAGE` in `.env.production` with the
+   previous release tags.
+3. Run `PRODUCTION_ENV_FILE=.env.production sh scripts/deploy-production.sh`.
+4. Restore the pre-deploy database backup only when the release applied an
+   incompatible migration or corrupted production data.
+5. Reopen `/status`, run the Stripe checkout smoke test, and re-enable jobs.
+6. Record the failed release tag, rollback tag, backup identifier, and customer
+   impact in the incident notes.
 
 ## Release Automation
 
