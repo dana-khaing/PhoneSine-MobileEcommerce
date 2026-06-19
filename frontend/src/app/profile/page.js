@@ -7,7 +7,7 @@ const emptyAddress = { label: "", recipientName: "", line1: "", line2: "", city:
 const api = () => `${process.env.NEXT_PUBLIC_BACKEND_ORIGIN}/profile`;
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState({ firstname: "", lastname: "", email: "", addresses: [] });
+  const [profile, setProfile] = useState({ firstname: "", lastname: "", email: "", addresses: [], notificationPreferences: {} });
   const [address, setAddress] = useState(emptyAddress);
   const [editingId, setEditingId] = useState(null);
   const [deletionConfirmation, setDeletionConfirmation] = useState("");
@@ -69,11 +69,32 @@ export default function ProfilePage() {
     setMessage(response.ok ? "Referral code applied. Rewards unlock after your first paid order." : await response.text());
     if (response.ok) { setLoyalty(await response.json()); setReferralCode(""); }
   };
+  const saveNotificationPreferences = async () => {
+    const response = await authenticatedFetch(`${api()}/notifications`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile.notificationPreferences || {}),
+    });
+    if (!response.ok) return setMessage(await response.text());
+    const result = await response.json();
+    setProfile((current) => ({ ...current, notificationPreferences: result.notificationPreferences }));
+    setMessage("Notification preferences saved.");
+  };
+  const updatePreference = (key, value) => setProfile((current) => ({
+    ...current,
+    notificationPreferences: { ...(current.notificationPreferences || {}), [key]: value },
+  }));
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
-      <h1 className="text-3xl font-bold">Your profile</h1>
+      <p className="text-sm font-semibold uppercase tracking-[0.28em] text-amber-700">Account dashboard</p>
+      <h1 className="mt-2 text-3xl font-bold">Your profile</h1>
       {message && <p className="mt-4">{message}</p>}
+      <section className="mt-8 grid gap-4 md:grid-cols-3">
+        <article className="rounded-2xl border bg-white p-5 shadow-sm"><p className="text-sm text-neutral-500">Saved addresses</p><strong className="mt-2 block text-3xl">{profile.addresses?.length || 0}</strong></article>
+        <article className="rounded-2xl border bg-white p-5 shadow-sm"><p className="text-sm text-neutral-500">Rewards balance</p><strong className="mt-2 block text-3xl">{loyalty.pointsBalance}</strong></article>
+        <article className="rounded-2xl border bg-white p-5 shadow-sm"><p className="text-sm text-neutral-500">Email verification</p><strong className="mt-2 block text-lg">{profile.emailVerifiedAt ? "Verified" : "Pending"}</strong></article>
+      </section>
       <form onSubmit={saveProfile} className="mt-8 grid gap-3 rounded border p-5 sm:grid-cols-2">
         <h2 className="text-xl font-bold sm:col-span-2">Personal details</h2>
         <input className="rounded border p-2" placeholder="First name" value={profile.firstname || ""} onChange={(event) => setProfile((current) => ({ ...current, firstname: event.target.value }))} required />
@@ -93,6 +114,26 @@ export default function ProfilePage() {
           </form>
         )}
         {loyalty.transactions?.length > 0 && <ul className="mt-5 space-y-2 text-sm">{loyalty.transactions.slice(0, 5).map((entry) => <li key={entry.id} className="flex justify-between border-t pt-2"><span>{entry.description}</span><strong>+{entry.points}</strong></li>)}</ul>}
+      </section>
+
+      <section className="mt-8 rounded border p-5">
+        <h2 className="text-xl font-bold">Notification preferences</h2>
+        <p className="mt-2 text-sm text-neutral-600">Choose which customer updates PhoneSine should send. Security notifications stay enabled by default.</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {[
+            ["email", "Email notifications"],
+            ["sms", "SMS notifications"],
+            ["orderUpdates", "Order and delivery updates"],
+            ["promotions", "Promotions and rewards"],
+            ["security", "Security alerts"],
+          ].map(([key, label]) => (
+            <label key={key} className="flex items-center justify-between rounded border p-3">
+              <span>{label}</span>
+              <input type="checkbox" checked={profile.notificationPreferences?.[key] !== false} onChange={(event) => updatePreference(key, event.target.checked)} />
+            </label>
+          ))}
+        </div>
+        <button className="mt-4 rounded bg-neutral-900 px-4 py-2 text-white" type="button" onClick={saveNotificationPreferences}>Save notification preferences</button>
       </section>
 
       <section className="mt-8 rounded border p-5"><h2 className="text-xl font-bold">Address book</h2><div className="mt-4 grid gap-3 sm:grid-cols-2">{profile.addresses?.map((item) => <article key={item.id} className="rounded border p-4"><strong>{item.label}{item.isDefault ? " · Default" : ""}</strong><p className="mt-2 text-sm">{item.recipientName}<br />{item.line1}{item.line2 ? <><br />{item.line2}</> : null}<br />{item.city}{item.region ? `, ${item.region}` : ""} {item.postalCode}<br />{item.country}</p><div className="mt-3 flex gap-2"><button className="rounded border px-3 py-1" onClick={() => editAddress(item)}>Edit</button><button className="rounded border px-3 py-1" onClick={() => removeAddress(item.id)}>Delete</button></div></article>)}</div></section>
