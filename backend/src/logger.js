@@ -1,6 +1,6 @@
 const { sendOperationalAlert } = require("./alertService");
 const { reportError } = require("./errorTrackingService");
-const { recordError, recordRequest } = require("./metricsService");
+const { recordError, recordOperationalEvent, recordRequest } = require("./metricsService");
 
 function log(level, message, fields = {}) {
   const entry = { timestamp: new Date().toISOString(), level, message, ...fields };
@@ -17,6 +17,7 @@ function requestLogger(req, res, next) {
 }
 function errorHandler(error, req, res, _next) {
   recordError();
+  recordOperationalEvent("unhandled_request_error", { severity: "error" });
   const context = { method: req.method, path: req.path };
   log("error", "unhandled_request_error", { ...context, error: error.message });
   sendOperationalAlert("unhandled_request_error", { ...context, error: error.message }).catch(() => {});
