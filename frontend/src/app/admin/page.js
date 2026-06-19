@@ -6,6 +6,22 @@ import { authenticatedFetch } from "../components/auth/session.mjs";
 const formatCurrency = (amount, currency = "GBP") =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency }).format((amount || 0) / 100);
 
+const adminSections = [
+  ["overview", "Overview"],
+  ["catalog", "Catalog"],
+  ["procurement", "Procurement"],
+  ["support", "Support"],
+  ["promotions", "Promotions"],
+  ["people", "People"],
+  ["orders", "Orders"],
+];
+
+const matchesSearch = (item, query, fields) => {
+  if (!query) return true;
+  const normalized = query.toLowerCase();
+  return fields.some((field) => String(field(item) || "").toLowerCase().includes(normalized));
+};
+
 export default function AdminPage() {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
@@ -37,6 +53,8 @@ export default function AdminPage() {
   const emptyProduct = { name: "", brand: "", description: "", priceAmount: "", stockQuantity: "", categoryId: "", specifications: "{}", allowBackorder: false, preorderDate: "" };
   const [productForm, setProductForm] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
+  const [adminSearch, setAdminSearch] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState("all");
   const [message, setMessage] = useState("Loading admin orders...");
   const api = process.env.NEXT_PUBLIC_API_ADMIN_URL;
   const headers = () => ({
@@ -242,9 +260,45 @@ export default function AdminPage() {
     await loadProducts();
   };
 
+  const query = adminSearch.trim();
+  const visibleProducts = products.filter((product) => matchesSearch(product, query, [
+    (item) => item.name,
+    (item) => item.brand,
+    (item) => item.category?.name,
+  ]));
+  const visiblePromotions = promotions.filter((item) => matchesSearch(item, query, [(promotion) => promotion.code]));
+  const visibleUsers = users.filter((user) => matchesSearch(user, query, [(item) => item.email, (item) => item.role]));
+  const visibleReviews = reviews.filter((review) => matchesSearch(review, query, [(item) => item.title, (item) => item.body]));
+  const visibleReturns = returns.filter((item) => matchesSearch(item, query, [(request) => request.orderId, (request) => request.reason, (request) => request.status]));
+  const visibleTickets = tickets.filter((ticket) => matchesSearch(ticket, query, [(item) => item.subject, (item) => item.message, (item) => item.status]));
+  const visibleGiftCards = giftCards.filter((card) => matchesSearch(card, query, [(item) => item.code, (item) => item.currency]));
+  const visibleBundles = bundles.filter((item) => matchesSearch(item, query, [(bundle) => bundle.name]));
+  const visibleSuppliers = suppliers.filter((item) => matchesSearch(item, query, [(supplier) => supplier.name, (supplier) => supplier.email]));
+  const visibleWarehouses = warehouses.filter((item) => matchesSearch(item, query, [(warehouse) => warehouse.name, (warehouse) => warehouse.code]));
+  const visiblePurchaseOrders = purchaseOrders.filter((order) => matchesSearch(order, query, [(item) => item.id, (item) => item.supplier?.name, (item) => item.warehouse?.code, (item) => item.status]));
+  const visibleOrders = orders
+    .filter((order) => orderStatusFilter === "all" || order.status === orderStatusFilter)
+    .filter((order) => matchesSearch(order, query, [(item) => item.id, (item) => item.email, (item) => item.status, (item) => item.trackingNumber]));
+  const orderStatuses = ["all", ...Array.from(new Set(orders.map((order) => order.status).filter(Boolean)))];
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
-      <h1 className="text-3xl font-bold">Commerce admin</h1>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.28em] text-amber-700">Operations console</p>
+          <h1 className="text-3xl font-bold">Commerce admin</h1>
+        </div>
+        <label className="w-full sm:max-w-sm">
+          <span className="sr-only">Search admin records</span>
+          <input className="w-full rounded-full border px-4 py-2" placeholder="Search orders, products, users..." value={adminSearch} onChange={(event) => setAdminSearch(event.target.value)} />
+        </label>
+      </div>
+      <nav className="sticky top-0 z-10 -mx-4 mt-6 overflow-x-auto border-y bg-white/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-full sm:border">
+        <div className="flex min-w-max gap-2">
+          {adminSections.map(([id, label]) => <a key={id} className="rounded-full px-3 py-1 text-sm font-semibold hover:bg-neutral-100" href={`#${id}`}>{label}</a>)}
+        </div>
+      </nav>
+      <section id="overview">
       <div className="my-6 grid gap-3 sm:flex sm:flex-wrap">
         <button className="rounded border px-4 py-2" onClick={() => action("/cleanup")}>Clean abandoned orders</button>
         <button className="rounded border px-4 py-2" onClick={() => action("/notifications/deliver")}>Deliver notifications</button>
@@ -313,8 +367,10 @@ export default function AdminPage() {
         </div>
       </section>}
       {message && <p className="my-4">{message}</p>}
-      <section className="mb-8 rounded border p-5">
+      </section>
+      <section id="catalog" className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Product management</h2>
+        <p className="mt-1 text-sm text-neutral-500">{visibleProducts.length} of {products.length} products shown</p>
         <form onSubmit={saveProduct} className="mt-3 grid gap-2 md:grid-cols-2">
           {["name", "brand", "priceAmount", "stockQuantity"].map((field) => (
             <input key={field} className="rounded border p-2" type={field.includes("Amount") || field.includes("Quantity") ? "number" : "text"} placeholder={field} value={productForm[field]} onChange={(event) => setProductForm((current) => ({ ...current, [field]: event.target.value }))} required />
@@ -341,7 +397,7 @@ export default function AdminPage() {
         <form onSubmit={saveVariant} className="mt-5 grid gap-2 md:grid-cols-3">
           <select className="rounded border p-2" value={variantForm.productId} onChange={(event) => setVariantForm((current) => ({ ...current, productId: event.target.value }))} required>
             <option value="">Select product for variant</option>
-            {products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}
+            {visibleProducts.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}
           </select>
           {["sku", "name", "priceAmount", "stockQuantity", "options"].map((field) => (
             <input key={field} className="rounded border p-2" type={field.includes("Amount") || field.includes("Quantity") ? "number" : "text"} placeholder={field === "options" ? 'options JSON, e.g. {"color":"Blue"}' : field} value={variantForm[field]} onChange={(event) => setVariantForm((current) => ({ ...current, [field]: event.target.value }))} required />
@@ -349,7 +405,7 @@ export default function AdminPage() {
           <button className="rounded border px-3 py-2">Create variant</button>
         </form>
         <div className="mt-3 grid gap-3 md:grid-cols-2">
-          {products.map((product) => (
+          {visibleProducts.map((product) => (
             <div key={product.id} className="border p-3">
               <p>{product.name} · {product.stockQuantity} stock / {product.reservedQuantity} reserved · {product.active ? "active" : "archived"}</p>
               <p className="text-sm text-neutral-500">{product.category?.name || "Uncategorized"}</p>
@@ -379,43 +435,43 @@ export default function AdminPage() {
           ))}
         </div>
       </section>
-      <section className="mb-8 rounded border p-5">
+      <section id="procurement" className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Inventory procurement</h2>
         <div className="mt-4 grid gap-6 lg:grid-cols-3">
           <div>
             <h3 className="font-bold">Suppliers</h3>
             <div className="mt-2 grid gap-2">{["name", "email", "phone"].map((field) => <input key={field} className="rounded border p-2" placeholder={field} value={supplier[field]} onChange={(event) => setSupplier((current) => ({ ...current, [field]: event.target.value }))} />)}<button className="rounded border p-2" onClick={async () => { await action("/suppliers", "POST", supplier); setSupplier({ name: "", email: "", phone: "" }); }}>Create supplier</button></div>
-            {suppliers.map((item) => <p key={item.id} className="mt-2 text-sm">{item.name} · {item.email || "No email"}</p>)}
+            {visibleSuppliers.map((item) => <p key={item.id} className="mt-2 text-sm">{item.name} · {item.email || "No email"}</p>)}
           </div>
           <div>
             <h3 className="font-bold">Warehouses</h3>
             <div className="mt-2 grid gap-2"><input className="rounded border p-2" placeholder="Name" value={warehouse.name} onChange={(event) => setWarehouse((current) => ({ ...current, name: event.target.value }))} /><input className="rounded border p-2" placeholder="Code" value={warehouse.code} onChange={(event) => setWarehouse((current) => ({ ...current, code: event.target.value }))} /><textarea className="rounded border p-2" placeholder='Address JSON, e.g. {"city":"London"}' value={warehouse.address} onChange={(event) => setWarehouse((current) => ({ ...current, address: event.target.value }))} /><button className="rounded border p-2" onClick={createWarehouse}>Create warehouse</button></div>
-            {warehouses.map((item) => <div key={item.id} className="mt-2 text-sm"><strong>{item.code} · {item.name}</strong>{item.stocks?.map((stock) => <p key={stock.id}>{stock.product?.name}: {stock.quantity}</p>)}</div>)}
+            {visibleWarehouses.map((item) => <div key={item.id} className="mt-2 text-sm"><strong>{item.code} · {item.name}</strong>{item.stocks?.map((stock) => <p key={stock.id}>{stock.product?.name}: {stock.quantity}</p>)}</div>)}
           </div>
           <div>
             <h3 className="font-bold">New purchase order</h3>
-            <div className="mt-2 grid gap-2"><select className="rounded border p-2" value={purchaseOrder.supplierId} onChange={(event) => setPurchaseOrder((current) => ({ ...current, supplierId: event.target.value }))}><option value="">Supplier</option>{suppliers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><select className="rounded border p-2" value={purchaseOrder.warehouseId} onChange={(event) => setPurchaseOrder((current) => ({ ...current, warehouseId: event.target.value }))}><option value="">Warehouse</option>{warehouses.map((item) => <option key={item.id} value={item.id}>{item.code}</option>)}</select><input className="rounded border p-2" type="date" value={purchaseOrder.expectedAt} onChange={(event) => setPurchaseOrder((current) => ({ ...current, expectedAt: event.target.value }))} /><textarea className="rounded border p-2" placeholder='Items JSON, e.g. [{"productId":1,"quantity":10,"unitCostAmount":50000}]' value={purchaseOrder.items} onChange={(event) => setPurchaseOrder((current) => ({ ...current, items: event.target.value }))} /><button className="rounded border p-2" onClick={createPurchaseOrder}>Create purchase order</button></div>
+            <div className="mt-2 grid gap-2"><select className="rounded border p-2" value={purchaseOrder.supplierId} onChange={(event) => setPurchaseOrder((current) => ({ ...current, supplierId: event.target.value }))}><option value="">Supplier</option>{visibleSuppliers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><select className="rounded border p-2" value={purchaseOrder.warehouseId} onChange={(event) => setPurchaseOrder((current) => ({ ...current, warehouseId: event.target.value }))}><option value="">Warehouse</option>{visibleWarehouses.map((item) => <option key={item.id} value={item.id}>{item.code}</option>)}</select><input className="rounded border p-2" type="date" value={purchaseOrder.expectedAt} onChange={(event) => setPurchaseOrder((current) => ({ ...current, expectedAt: event.target.value }))} /><textarea className="rounded border p-2" placeholder='Items JSON, e.g. [{"productId":1,"quantity":10,"unitCostAmount":50000}]' value={purchaseOrder.items} onChange={(event) => setPurchaseOrder((current) => ({ ...current, items: event.target.value }))} /><button className="rounded border p-2" onClick={createPurchaseOrder}>Create purchase order</button></div>
           </div>
         </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-2">{purchaseOrders.map((order) => <article key={order.id} className="rounded border p-3"><strong>PO #{order.id} · {order.supplier?.name} · {order.status}</strong><p className="text-sm">{order.warehouse?.code} · £{(order.totalAmount / 100).toFixed(2)}</p>{order.items?.map((item) => <p key={item.id} className="text-sm">{item.product?.name}: {item.quantity} ordered / {item.receivedQuantity} received</p>)}{order.status !== "received" && <button className="mt-2 rounded border px-3 py-1" onClick={() => action(`/purchase-orders/${order.id}/receive`)}>Receive order</button>}</article>)}</div>
+        <div className="mt-5 grid gap-3 md:grid-cols-2">{visiblePurchaseOrders.map((order) => <article key={order.id} className="rounded border p-3"><strong>PO #{order.id} · {order.supplier?.name} · {order.status}</strong><p className="text-sm">{order.warehouse?.code} · £{(order.totalAmount / 100).toFixed(2)}</p>{order.items?.map((item) => <p key={item.id} className="text-sm">{item.product?.name}: {item.quantity} ordered / {item.receivedQuantity} received</p>)}{order.status !== "received" && <button className="mt-2 rounded border px-3 py-1" onClick={() => action(`/purchase-orders/${order.id}/receive`)}>Receive order</button>}</article>)}</div>
       </section>
-      <section className="mb-8 rounded border p-5">
+      <section id="support" className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Support tickets</h2>
-        {tickets.map((ticket) => <div key={ticket.id} className="mt-3 rounded border p-3"><strong>{ticket.subject} · {ticket.status}</strong><p>{ticket.message}</p><div className="mt-2 flex gap-2"><input className="flex-1 rounded border p-2" placeholder="Reply to customer" value={ticketReplies[ticket.id] || ""} onChange={(event) => setTicketReplies((current) => ({ ...current, [ticket.id]: event.target.value }))} /><button className="rounded border px-3" onClick={() => action(`/tickets/${ticket.id}`, "PATCH", { adminReply: ticketReplies[ticket.id], status: "closed" })}>Reply and close</button></div></div>)}
+        {visibleTickets.map((ticket) => <div key={ticket.id} className="mt-3 rounded border p-3"><strong>{ticket.subject} · {ticket.status}</strong><p>{ticket.message}</p><div className="mt-2 flex gap-2"><input className="flex-1 rounded border p-2" placeholder="Reply to customer" value={ticketReplies[ticket.id] || ""} onChange={(event) => setTicketReplies((current) => ({ ...current, [ticket.id]: event.target.value }))} /><button className="rounded border px-3" onClick={() => action(`/tickets/${ticket.id}`, "PATCH", { adminReply: ticketReplies[ticket.id], status: "closed" })}>Reply and close</button></div></div>)}
       </section>
       <section className="mb-8 grid gap-6 rounded border p-5 md:grid-cols-2">
-        <div><h2 className="text-xl font-bold">Gift cards</h2><div className="mt-3 flex flex-wrap gap-2"><input className="rounded border p-2" type="number" placeholder="Balance in pence" value={giftCard.balanceAmount} onChange={(event) => setGiftCard((current) => ({ ...current, balanceAmount: event.target.value }))} /><select className="rounded border p-2" value={giftCard.currency} onChange={(event) => setGiftCard((current) => ({ ...current, currency: event.target.value }))}><option>gbp</option><option>usd</option><option>eur</option></select><input className="rounded border p-2" type="date" value={giftCard.expiresAt} onChange={(event) => setGiftCard((current) => ({ ...current, expiresAt: event.target.value }))} /><button className="rounded border px-3" onClick={() => action("/gift-cards", "POST", { ...giftCard, balanceAmount: Number(giftCard.balanceAmount), expiresAt: giftCard.expiresAt || null })}>Issue gift card</button></div>{giftCards.map((card) => <p key={card.id} className="mt-2 text-sm">{card.code} · {card.currency.toUpperCase()} {(card.balanceAmount / 100).toFixed(2)}</p>)}</div>
-        <div><h2 className="text-xl font-bold">Product bundles</h2><div className="mt-3 grid gap-2"><input className="rounded border p-2" placeholder="Bundle name" value={bundle.name} onChange={(event) => setBundle((current) => ({ ...current, name: event.target.value }))} /><input className="rounded border p-2" type="number" placeholder="Price in pence" value={bundle.priceAmount} onChange={(event) => setBundle((current) => ({ ...current, priceAmount: event.target.value }))} /><textarea className="rounded border p-2" placeholder='Items JSON, e.g. [{"productId":1,"quantity":2}]' value={bundle.items} onChange={(event) => setBundle((current) => ({ ...current, items: event.target.value }))} /><button className="rounded border p-2" onClick={createBundle}>Create bundle</button></div>{bundles.map((item) => <div key={item.id} className="mt-2 flex justify-between text-sm"><span>{item.name} · £{(item.priceAmount / 100).toFixed(2)} · {item.active ? "active" : "inactive"}</span>{item.active && <button className="underline" onClick={() => action(`/bundles/${item.id}`, "PATCH", { active: false })}>Deactivate</button>}</div>)}</div>
+        <div><h2 className="text-xl font-bold">Gift cards</h2><div className="mt-3 flex flex-wrap gap-2"><input className="rounded border p-2" type="number" placeholder="Balance in pence" value={giftCard.balanceAmount} onChange={(event) => setGiftCard((current) => ({ ...current, balanceAmount: event.target.value }))} /><select className="rounded border p-2" value={giftCard.currency} onChange={(event) => setGiftCard((current) => ({ ...current, currency: event.target.value }))}><option>gbp</option><option>usd</option><option>eur</option></select><input className="rounded border p-2" type="date" value={giftCard.expiresAt} onChange={(event) => setGiftCard((current) => ({ ...current, expiresAt: event.target.value }))} /><button className="rounded border px-3" onClick={() => action("/gift-cards", "POST", { ...giftCard, balanceAmount: Number(giftCard.balanceAmount), expiresAt: giftCard.expiresAt || null })}>Issue gift card</button></div>{visibleGiftCards.map((card) => <p key={card.id} className="mt-2 text-sm">{card.code} · {card.currency.toUpperCase()} {(card.balanceAmount / 100).toFixed(2)}</p>)}</div>
+        <div><h2 className="text-xl font-bold">Product bundles</h2><div className="mt-3 grid gap-2"><input className="rounded border p-2" placeholder="Bundle name" value={bundle.name} onChange={(event) => setBundle((current) => ({ ...current, name: event.target.value }))} /><input className="rounded border p-2" type="number" placeholder="Price in pence" value={bundle.priceAmount} onChange={(event) => setBundle((current) => ({ ...current, priceAmount: event.target.value }))} /><textarea className="rounded border p-2" placeholder='Items JSON, e.g. [{"productId":1,"quantity":2}]' value={bundle.items} onChange={(event) => setBundle((current) => ({ ...current, items: event.target.value }))} /><button className="rounded border p-2" onClick={createBundle}>Create bundle</button></div>{visibleBundles.map((item) => <div key={item.id} className="mt-2 flex justify-between text-sm"><span>{item.name} · £{(item.priceAmount / 100).toFixed(2)} · {item.active ? "active" : "inactive"}</span>{item.active && <button className="underline" onClick={() => action(`/bundles/${item.id}`, "PATCH", { active: false })}>Deactivate</button>}</div>)}</div>
       </section>
       <section className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Returns</h2>
-        {returns.map((item) => <div key={item.id} className="mt-3 border p-3"><p>Order #{item.orderId} · {item.reason} · {item.status}</p><div className="mt-2 flex flex-wrap gap-2">{({ requested: ["approved", "rejected"], approved: ["in_transit"], in_transit: ["received"], received: ["refunded"] }[item.status] || []).map((status) => <button key={status} className="rounded border px-3 py-1" onClick={() => action(`/returns/${item.id}`, "PATCH", { status })}>{status}</button>)}</div></div>)}
+        {visibleReturns.map((item) => <div key={item.id} className="mt-3 border p-3"><p>Order #{item.orderId} · {item.reason} · {item.status}</p><div className="mt-2 flex flex-wrap gap-2">{({ requested: ["approved", "rejected"], approved: ["in_transit"], in_transit: ["received"], received: ["refunded"] }[item.status] || []).map((status) => <button key={status} className="rounded border px-3 py-1" onClick={() => action(`/returns/${item.id}`, "PATCH", { status })}>{status}</button>)}</div></div>)}
       </section>
       <section className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Review moderation</h2>
-        {reviews.map((review) => <div key={review.id} className="mt-3 border p-3"><p>{review.rating}/5 · {review.title}</p><p>{review.body}</p><div className="mt-2 flex gap-2"><button className="rounded border px-3 py-1" onClick={() => action(`/reviews/${review.id}`, "PATCH", { status: "approved" })}>Approve</button><button className="rounded border px-3 py-1" onClick={() => action(`/reviews/${review.id}`, "PATCH", { status: "rejected" })}>Reject</button></div></div>)}
+        {visibleReviews.map((review) => <div key={review.id} className="mt-3 border p-3"><p>{review.rating}/5 · {review.title}</p><p>{review.body}</p><div className="mt-2 flex gap-2"><button className="rounded border px-3 py-1" onClick={() => action(`/reviews/${review.id}`, "PATCH", { status: "approved" })}>Approve</button><button className="rounded border px-3 py-1" onClick={() => action(`/reviews/${review.id}`, "PATCH", { status: "rejected" })}>Reject</button></div></div>)}
       </section>
-      <section className="mb-8 rounded border p-5">
+      <section id="promotions" className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Promotions</h2>
         <div className="mt-3 flex flex-wrap gap-2">
           {["code", "percentOff", "maxUses", "perCustomerLimit"].map((field) => (
@@ -423,11 +479,11 @@ export default function AdminPage() {
           ))}
           <button className="rounded border px-3 py-2" onClick={() => action("/promotions", "POST", promotion)}>Create promotion</button>
         </div>
-        {promotions.map((item) => <p key={item.id} className="mt-2 text-sm">{item.code}: {item.percentOff}% · {item.useCount}/{item.maxUses || "unlimited"} uses</p>)}
+        {visiblePromotions.map((item) => <p key={item.id} className="mt-2 text-sm">{item.code}: {item.percentOff}% · {item.useCount}/{item.maxUses || "unlimited"} uses</p>)}
       </section>
-      <section className="mb-8 rounded border p-5">
+      <section id="people" className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">User roles</h2>
-        {users.map((user) => (
+        {visibleUsers.map((user) => (
           <div key={user.id} className="mt-3 flex items-center justify-between border p-3">
             <span>{user.email} · {user.role} · {user.emailVerifiedAt ? "verified" : "unverified"}</span>
             <select className="rounded border px-3 py-2" value={user.role} onChange={(event) => action(`/users/${user.id}/role`, "PATCH", { role: event.target.value })}>
@@ -436,8 +492,19 @@ export default function AdminPage() {
           </div>
         ))}
       </section>
-      <div className="space-y-5">
-        {orders.map((order) => (
+      <section id="orders" className="space-y-5">
+        <div className="rounded border p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-bold">Orders</h2>
+              <p className="text-sm text-neutral-500">{visibleOrders.length} of {orders.length} orders shown</p>
+            </div>
+            <select className="rounded border px-3 py-2" aria-label="Filter orders by status" value={orderStatusFilter} onChange={(event) => setOrderStatusFilter(event.target.value)}>
+              {orderStatuses.map((status) => <option key={status} value={status}>{status === "all" ? "All statuses" : status}</option>)}
+            </select>
+          </div>
+        </div>
+        {visibleOrders.map((order) => (
           <article key={order.id} className="rounded border p-5">
             <div className="flex justify-between"><strong>Order #{order.id}</strong><span>{order.status}</span></div>
             <p>{order.email} · {(order.currency || "gbp").toUpperCase()} {(order.totalAmount / 100).toFixed(2)}</p>
@@ -456,7 +523,7 @@ export default function AdminPage() {
             {order.refunds?.map((refund) => <p key={refund.id} className="mt-2 text-sm">Refund {refund.stripeRefundId}: {refund.amount} · {refund.status}</p>)}
           </article>
         ))}
-      </div>
+      </section>
     </main>
   );
 }
