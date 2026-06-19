@@ -14,6 +14,7 @@ const adminSections = [
   ["promotions", "Promotions"],
   ["people", "People"],
   ["orders", "Orders"],
+  ["observability", "Observability"],
 ];
 
 const matchesSearch = (item, query, fields) => {
@@ -38,6 +39,7 @@ export default function AdminPage() {
   const [returns, setReturns] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [launchStatus, setLaunchStatus] = useState(null);
+  const [observability, setObservability] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [ticketReplies, setTicketReplies] = useState({});
   const [giftCards, setGiftCards] = useState([]);
@@ -98,6 +100,7 @@ export default function AdminPage() {
   const loadReturns = () => authenticatedFetch(`${api}/returns`, { headers: headers() }).then((response) => response.json()).then(setReturns);
   const loadAnalytics = () => authenticatedFetch(`${api}/analytics`, { headers: headers() }).then((response) => response.json()).then(setAnalytics);
   const loadLaunchStatus = () => authenticatedFetch(`${api}/launch-status`, { headers: headers() }).then((response) => response.json()).then(setLaunchStatus);
+  const loadObservability = () => authenticatedFetch(`${api}/observability`, { headers: headers() }).then((response) => response.json()).then(setObservability);
   const loadTickets = () => authenticatedFetch(`${api}/tickets`, { headers: headers() }).then((response) => response.json()).then(setTickets);
   const loadGiftCards = () => authenticatedFetch(`${api}/gift-cards`, { headers: headers() }).then((response) => response.json()).then(setGiftCards);
   const loadBundles = () => authenticatedFetch(`${api}/bundles`, { headers: headers() }).then((response) => response.json()).then(setBundles);
@@ -116,6 +119,7 @@ export default function AdminPage() {
     loadReturns();
     loadAnalytics();
     loadLaunchStatus();
+    loadObservability();
     loadTickets();
     loadGiftCards();
     loadBundles();
@@ -364,6 +368,53 @@ export default function AdminPage() {
         </div>
         <div className="mt-3 grid gap-2 md:grid-cols-2">
           {launchStatus.checklist.items.map((item) => <p key={item.id} className="text-sm">{item.done ? "Done" : "Open"} · {item.label}</p>)}
+        </div>
+      </section>}
+      {observability && <section id="observability" className="my-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-700">Observability</p>
+            <h2 className="mt-1 text-2xl font-bold">Operational telemetry</h2>
+            <p className="text-sm text-neutral-600">Live application counters from the protected metrics snapshot endpoint.</p>
+          </div>
+          <button className="rounded border px-3 py-1" onClick={loadObservability}>Refresh telemetry</button>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <article className="rounded-xl border bg-neutral-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Uptime</p>
+            <p className="mt-2 text-2xl font-bold">{observability.uptimeSeconds}s</p>
+            <p className="mt-1 text-xs text-neutral-500">Current backend process</p>
+          </article>
+          <article className="rounded-xl border bg-neutral-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Unhandled errors</p>
+            <p className="mt-2 text-2xl font-bold">{observability.unhandledErrors || 0}</p>
+            <p className="mt-1 text-xs text-neutral-500">Since process start</p>
+          </article>
+          <article className="rounded-xl border bg-neutral-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Tracked routes</p>
+            <p className="mt-2 text-2xl font-bold">{observability.requests?.length || 0}</p>
+            <p className="mt-1 text-xs text-neutral-500">Request/status combinations</p>
+          </article>
+        </div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-xl border p-4">
+            <h3 className="font-bold">Slowest request paths</h3>
+            <div className="mt-2 space-y-2">
+              {(observability.requests || []).slice().sort((a, b) => b.averageDurationMs - a.averageDurationMs).slice(0, 5).map((item) => (
+                <p key={`${item.method}-${item.path}-${item.status}`} className="text-sm">{item.method} {item.path} · {item.status} · {item.averageDurationMs}ms avg · {item.count} hits</p>
+              ))}
+              {!observability.requests?.length && <p className="text-sm text-neutral-500">No request metrics recorded yet.</p>}
+            </div>
+          </div>
+          <div className="rounded-xl border p-4">
+            <h3 className="font-bold">Operational events</h3>
+            <div className="mt-2 space-y-2">
+              {(observability.operationalEvents || []).slice(0, 5).map((event) => (
+                <p key={`${event.name}-${event.severity}`} className="text-sm">{event.severity} · {event.name} · {event.count} events</p>
+              ))}
+              {!observability.operationalEvents?.length && <p className="text-sm text-neutral-500">No operational events recorded yet.</p>}
+            </div>
+          </div>
         </div>
       </section>}
       {message && <p className="my-4">{message}</p>}
