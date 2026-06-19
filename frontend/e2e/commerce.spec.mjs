@@ -10,6 +10,16 @@ const order = {
   events: [],
 };
 
+const pendingOrder = {
+  id: 43,
+  status: "pending",
+  email: "waiting@example.com",
+  currency: "gbp",
+  totalAmount: 69900,
+  refunds: [],
+  events: [],
+};
+
 const product = {
   id: 1,
   name: "Phone Sine Pro",
@@ -123,7 +133,7 @@ async function mockApi(page) {
         },
       });
     }
-    if (path === "/admin/orders") return route.fulfill({ json: [order] });
+    if (path === "/admin/orders") return route.fulfill({ json: [order, pendingOrder] });
     if (path === "/admin/products") return route.fulfill({ json: [{ ...product, active: true, categoryId: 1, category }] });
     if (path === "/admin/categories") return route.fulfill({ json: [category] });
     if (path === "/admin/promotions") return route.fulfill({ json: [promotion] });
@@ -188,14 +198,31 @@ test("renders support with recent products without hydration or effect errors", 
 test("shows admin returns, shipping, and operations controls", async ({ page }) => {
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Commerce admin" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Catalog" })).toBeVisible();
+  await expect(page.getByPlaceholder("Search orders, products, users...")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Realtime commerce performance" })).toBeVisible();
   await expect(page.getByText("Order conversion")).toBeVisible();
   await expect(page.getByText("41 product views")).toBeVisible();
   await expect(page.getByText("Phone Sine Pro: 4 units")).toBeVisible();
   await expect(page.getByText("Order #42", { exact: true })).toBeVisible();
   await expect(page.getByText("Damaged")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Create shipping label" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Create shipping label" }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Download report" })).toBeVisible();
+});
+
+test("filters admin records with search and order status controls", async ({ page }) => {
+  await page.goto("/admin");
+  await expect(page.getByText("2 of 2 orders shown")).toBeVisible();
+  await page.getByPlaceholder("Search orders, products, users...").fill("waiting@example.com");
+  await expect(page.getByText("1 of 2 orders shown")).toBeVisible();
+  await expect(page.getByText("Order #43", { exact: true })).toBeVisible();
+  await expect(page.getByText("Order #42", { exact: true })).toBeHidden();
+
+  await page.getByPlaceholder("Search orders, products, users...").fill("");
+  await page.getByLabel("Filter orders by status").selectOption("paid");
+  await expect(page.getByText("1 of 2 orders shown")).toBeVisible();
+  await expect(page.getByText("Order #42", { exact: true })).toBeVisible();
+  await expect(page.getByText("Order #43", { exact: true })).toBeHidden();
 });
 
 test("supports admin product, category, and variant management", async ({ page }) => {
