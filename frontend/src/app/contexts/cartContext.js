@@ -48,6 +48,7 @@ export function CartProvider({ children }) {
       body: JSON.stringify({ items }),
     });
     if (!response.ok) throw new Error(await response.text());
+    return response.json();
   };
   const loadSavedCart = async () => {
     const response = await authenticatedFetch(`${process.env.NEXT_PUBLIC_API_SAVED_URL}/cart`, {

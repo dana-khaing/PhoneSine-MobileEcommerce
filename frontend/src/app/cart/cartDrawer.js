@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { Minus, Plus, Trash2, X } from "lucide-react";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { CartContext } from "../contexts/cartContext";
 import { cartItemKey } from "./cart.mjs";
 
 export default function CartDrawer() {
+  const [message, setMessage] = useState("");
   const {
     items,
     subtotal,
@@ -16,6 +17,16 @@ export default function CartDrawer() {
     removeItem,
     saveCart,
   } = useContext(CartContext);
+
+  const handleSaveCart = async () => {
+    setMessage("");
+    try {
+      await saveCart();
+      setMessage("Cart saved to your account.");
+    } catch (error) {
+      setMessage(error.message || "Unable to save cart.");
+    }
+  };
 
   if (!isCartOpen) return null;
 
@@ -75,7 +86,8 @@ export default function CartDrawer() {
           >
             Checkout
           </Link>
-          <button onClick={() => saveCart().catch(() => {})} className="mt-2 w-full rounded border py-3">Save cart to account</button>
+          <button onClick={handleSaveCart} className="mt-2 w-full rounded border py-3">Save cart to account</button>
+          {message && <p role="status" className="mt-2 text-sm text-neutral-600">{message}</p>}
         </div>
       </aside>
     </div>
