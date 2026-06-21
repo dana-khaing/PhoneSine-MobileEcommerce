@@ -16,6 +16,7 @@ export default function ProductsPage() {
   const [detailsProduct, setDetailsProduct] = useState([]);
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
+  const [pageInfo, setPageInfo] = useState({ totalCount: 0, pageSize: 12, page: 1 });
   const [categories, setCategories] = useState([]);
   const [categoryId, setCategoryId] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -102,8 +103,12 @@ export default function ProductsPage() {
               sort={sort}
               page={page}
               categoryId={categoryId}
+              onPageInfo={setPageInfo}
             />
-            <div className="my-6 flex justify-center gap-2"><button className="rounded border px-4 py-2" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Previous</button><button className="rounded border px-4 py-2" onClick={() => setPage((value) => value + 1)}>Next</button></div>
+            <div className="my-6 flex justify-center gap-2">
+              <button className="rounded border px-4 py-2 disabled:opacity-40" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Previous</button>
+              <button className="rounded border px-4 py-2 disabled:opacity-40" disabled={page * pageInfo.pageSize >= pageInfo.totalCount} onClick={() => setPage((value) => value + 1)}>Next</button>
+            </div>
           </div>
         </div>
       )}

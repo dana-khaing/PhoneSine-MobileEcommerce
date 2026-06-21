@@ -51,3 +51,21 @@ test("customer account pages expose tracking and notification controls", () => {
   assert.match(checkoutSource, /Manage addresses/);
   assert.match(checkoutSource, /Saved address applied/);
 });
+
+test("visible actions do not use dead links or silent failures", () => {
+  const files = [
+    "src/app/admin/page.js",
+    "src/app/cart/cartDrawer.js",
+    "src/app/components/auth/actionBtn.js",
+    "src/app/support/page.js",
+    "src/app/products/page.js",
+  ];
+  for (const file of files) {
+    const source = fs.readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /href=["'](?:#|javascript:|)["']/i, `${file} should not contain dead hrefs`);
+    assert.doesNotMatch(source, /\.catch\(\(\) => \{\}\)/, `${file} should not silently swallow user-action failures`);
+  }
+  const adminSource = fs.readFileSync(new URL("../src/app/admin/page.js", import.meta.url), "utf8");
+  assert.match(adminSource, /\/shipping\/orders\/\$\{order\.id\}/);
+  assert.doesNotMatch(adminSource, /\.\.\/shipping/);
+});

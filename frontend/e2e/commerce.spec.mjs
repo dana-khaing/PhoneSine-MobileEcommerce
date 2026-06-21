@@ -25,9 +25,11 @@ const product = {
   name: "Phone Sine Pro",
   brand: "PhoneSine",
   description: "Flagship phone",
+  price: 999,
   priceAmount: 99900,
   stockQuantity: 5,
   reservedQuantity: 1,
+  availableStock: 4,
   specifications: { screen: "6.1 inch" },
   category: { id: 1, name: "Phones" },
   images: [{ id: 1, url: "/uploads/phone.png", altText: "Phone Sine Pro" }],
@@ -76,7 +78,7 @@ function trackAdminCalls(page) {
   const adminCalls = [];
   page.on("request", (request) => {
     const url = new URL(request.url());
-    if (url.pathname.startsWith("/admin/")) adminCalls.push({ method: request.method(), path: url.pathname });
+    if (url.pathname.startsWith("/admin/") || url.pathname.startsWith("/shipping/")) adminCalls.push({ method: request.method(), path: url.pathname });
   });
   return {
     expectAdminCall: async (method, path) => {
@@ -92,11 +94,14 @@ async function mockApi(page) {
     if (path === "/auth/verify-email") return route.fulfill({ json: { verified: true } });
     if (path === "/auth/refresh") return route.fulfill({ status: 401, body: "No session" });
     if (path === "/uploads/phone.png") return route.fulfill({ contentType: "image/png", body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/l9Jv8wAAAABJRU5ErkJggg==", "base64") });
+    if (path === "/products" && route.request().method() === "GET") return route.fulfill({ headers: { "X-Total-Count": "1", "Content-Type": "application/json" }, json: [product] });
+    if (path === "/products/suggestions") return route.fulfill({ json: [{ id: 1, name: "Phone Sine Pro", brand: "PhoneSine" }] });
     if (path === "/products/1") return route.fulfill({ json: product });
-    if (path === "/products/1/recommendations") return route.fulfill({ json: [{ ...product, id: 2, name: "Phone Sine Mini", priceAmount: 69900, variants: [] }] });
+    if (path === "/products/1/recommendations") return route.fulfill({ json: [{ ...product, id: 2, name: "Phone Sine Mini", price: 699, priceAmount: 69900, variants: [] }] });
     if (path === "/recommendations/views/1") return route.fulfill({ json: { recorded: true } });
     if (path === "/reviews/products/1") return route.fulfill({ json: { averageRating: 4.5, reviewCount: 2, reviews: [] } });
     if (path === "/saved/wishlist") return route.fulfill({ json: { id: 1 } });
+    if (path === "/saved/cart") return route.fulfill({ json: { id: 2, items: [] } });
     if (path === "/profile" && route.request().method() === "GET") return route.fulfill({ json: profile });
     if (path === "/profile/notifications") return route.fulfill({ json: { notificationPreferences: { ...profile.notificationPreferences, sms: true } } });
     if (path === "/customer/tickets") return route.fulfill({ json: [{ id: 1, subject: "Need help", status: "open" }] });
@@ -173,6 +178,7 @@ async function mockApi(page) {
     if (path === "/admin/warehouses") return route.fulfill({ json: [warehouse] });
     if (path === "/admin/purchase-orders") return route.fulfill({ json: [purchaseOrder] });
     if (["POST", "PATCH", "DELETE"].includes(route.request().method()) && path.startsWith("/admin/")) return route.fulfill({ json: { ok: true } });
+    if (path.startsWith("/shipping/")) return route.fulfill({ status: 201, json: { trackingNumber: "TRACK-42", carrier: "PhoneSine Shipping" } });
     if (path.startsWith("/admin/")) return route.fulfill({ json: [] });
     return route.fulfill({ status: 404, body: "Not mocked" });
   });
@@ -231,7 +237,30 @@ test("renders support with recent products without hydration or effect errors", 
   expect(issues).toEqual([]);
 });
 
+test("blocks empty support and gift-card actions with visible feedback", async ({ page }) => {
+  await page.goto("/support");
+  await page.getByRole("button", { name: "Open support ticket" }).click();
+  await expect(page.getByText("Subject and message are required.")).toBeVisible();
+  await page.getByRole("button", { name: "Check" }).click();
+  await expect(page.getByText("Gift card code is required.")).toBeVisible();
+});
+
+test("saves the cart with visible account feedback", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("phone-sine-cart", JSON.stringify([{ id: 1, name: "Phone Sine Pro", price: 100, quantity: 1 }])));
+  await page.goto("/");
+  await page.getByLabel(/Open cart/).click();
+  await page.getByRole("button", { name: "Save cart to account" }).click();
+  await expect(page.getByText("Cart saved to your account.")).toBeVisible();
+});
+
+test("disables product pagination when no next page exists", async ({ page }) => {
+  await page.goto("/products");
+  await expect(page.getByText("Phone Sine Pro")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next", exact: true })).toBeDisabled();
+});
+
 test("shows admin returns, shipping, and operations controls", async ({ page }) => {
+  const { expectAdminCall } = trackAdminCalls(page);
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Commerce admin" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Catalog" })).toBeVisible();
@@ -246,6 +275,8 @@ test("shows admin returns, shipping, and operations controls", async ({ page }) 
   await expect(page.getByText("Order #42", { exact: true })).toBeVisible();
   await expect(page.getByText("Damaged")).toBeVisible();
   await expect(page.getByRole("button", { name: "Create shipping label" }).first()).toBeVisible();
+  await page.getByRole("button", { name: "Create shipping label" }).first().click();
+  await expectAdminCall("POST", "/shipping/orders/42");
   await expect(page.getByRole("button", { name: "Download report" })).toBeVisible();
 });
 
