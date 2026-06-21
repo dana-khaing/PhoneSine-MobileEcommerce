@@ -11,6 +11,7 @@ export default function ProductList({
   sort,
   page,
   categoryId,
+  onPageInfo,
 }) {
   const [products, setProducts] = useState([]);
   const [items, setItems] = useState([]);
@@ -31,6 +32,8 @@ export default function ProductList({
       const response = await fetch(`${process.env.NEXT_PUBLIC_PRODUCT_LIST_URL}?${params}`);
       if (!response.ok) throw new Error("Unable to load products");
       const jsonData = await response.json();
+      const totalCount = Number(response.headers.get("X-Total-Count") || jsonData.length);
+      onPageInfo?.({ totalCount, pageSize: 12, page });
       setProducts(jsonData);
       setStatus("ready");
     } catch (error) {

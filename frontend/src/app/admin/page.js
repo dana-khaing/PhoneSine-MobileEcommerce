@@ -59,9 +59,16 @@ export default function AdminPage() {
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
   const [message, setMessage] = useState("Loading admin orders...");
   const api = process.env.NEXT_PUBLIC_API_ADMIN_URL;
+  const backendOrigin = process.env.NEXT_PUBLIC_BACKEND_ORIGIN || api?.replace(/\/admin\/?$/, "");
   const headers = () => ({
     "Content-Type": "application/json",
   });
+  const actionUrl = (path) => {
+    if (/^https?:\/\//.test(path)) return path;
+    if (path.startsWith("/admin/")) return `${backendOrigin}${path}`;
+    if (path.startsWith("/shipping/")) return `${backendOrigin}${path}`;
+    return `${api}${path}`;
+  };
 
   const loadOrders = () =>
     authenticatedFetch(`${api}/orders`, { headers: headers() })
@@ -129,7 +136,7 @@ export default function AdminPage() {
   }, []);
 
   const action = async (path, method = "POST", body) => {
-    const response = await authenticatedFetch(`${api}${path}`, {
+    const response = await authenticatedFetch(actionUrl(path), {
       method,
       headers: headers(),
       ...(body ? { body: JSON.stringify(body) } : {}),
@@ -569,7 +576,7 @@ export default function AdminPage() {
                 <button key={status} className="rounded border px-3 py-2" onClick={() => action(`/orders/${order.id}/fulfillment`, "PATCH", { status, ...tracking[order.id] })}>{status}</button>
               ))}
               <button className="rounded border px-3 py-2" onClick={() => action(`/orders/${order.id}/refund`, "POST", refunds[order.id] ? { amount: Number(refunds[order.id]) } : {})}>Refund</button>
-              <button className="rounded border px-3 py-2" onClick={() => action(`/../shipping/orders/${order.id}`, "POST", { carrier: tracking[order.id]?.carrier || "PhoneSine Shipping", service: "standard" })}>Create shipping label</button>
+              <button className="rounded border px-3 py-2" onClick={() => action(`/shipping/orders/${order.id}`, "POST", { carrier: tracking[order.id]?.carrier || "PhoneSine Shipping", service: "standard" })}>Create shipping label</button>
             </div>
             {order.refunds?.map((refund) => <p key={refund.id} className="mt-2 text-sm">Refund {refund.stripeRefundId}: {refund.amount} · {refund.status}</p>)}
           </article>
