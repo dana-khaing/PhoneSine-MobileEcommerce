@@ -19,6 +19,7 @@ admin tooling, account security, and launch-readiness automation.
 - [Environment](#environment)
 - [Common Commands](#common-commands)
 - [Testing And Quality](#testing-and-quality)
+- [Testing, QA, And Delivery](#testing-qa-and-delivery)
 - [Payments And Webhooks](#payments-and-webhooks)
 - [Admin And Operations](#admin-and-operations)
 - [Account Security](#account-security)
@@ -39,36 +40,56 @@ admin tooling, account security, and launch-readiness automation.
 
 ### Storefront
 
-- Product catalogue with categories, variants, bundles, images, search,
-  suggestions, filters, comparison, and detail pages.
-- Cart, checkout quote, delivery options, VAT/tax, promotion codes, gift cards,
-  and Stripe Checkout session creation.
-- Product reviews, wishlists, saved carts, recently viewed products, and
-  personalized recommendations.
+- Branded landing page, responsive navigation, product discovery, category
+  pages, comparison, product detail pages, and mobile-friendly layouts.
+- Product catalogue with categories, variants, bundles, image galleries,
+  optimized uploads, search, suggestions, filters, typo-tolerant matching,
+  pagination, and backend-driven total counts.
+- Cart, saved cart, checkout quote, delivery options, VAT/tax, promotion
+  codes, gift cards, and Stripe Checkout session creation.
+- Product reviews, wishlists, recently viewed products, back-in-stock alerts,
+  loyalty/referral rewards, and personalized recommendations.
+- Customer profile, saved addresses, notification preferences, order history,
+  order timelines, support tickets, returns, cancellations, refunds, saved
+  payment methods, and privacy controls.
 - English and Burmese storefront locale support.
-- Installable PWA with a network-safe service worker strategy.
+- Installable PWA with an offline page and network-safe service worker strategy.
+- Visible feedback for customer actions so save, support, gift-card, OAuth, and
+  pagination controls do not fail silently or point to placeholder links.
 
 ### Payments And Commerce
 
 - Database-backed orders, order items, stock, reservations, events, refunds,
-  shipments, returns, promotions, and notification outbox records.
+  shipments, returns, promotions, gift cards, bundles, suppliers, warehouses,
+  purchase orders, audit logs, and notification outbox records.
 - Inventory validation before checkout, reservation during payment, settlement
   after successful payment, and cleanup for failed or abandoned payments.
 - Stripe webhook handling for checkout completion, expiration, asynchronous
-  payment states, refunds, and disputes.
-- Saved Stripe payment-method management.
+  payment states, refunds, disputes, duplicate events, and late successful
+  payments that need manual review.
+- Saved Stripe payment-method management and customer payment-method cleanup.
 - Invoices, customer order timelines, cancellation, return, refund, fulfillment,
   and shipping workflows.
+- Idempotency keys for checkout and refund calls, payment health reporting,
+  reconciliation, and production readiness checks for live Stripe settings.
 
 ### Admin And Operations
 
 - Admin dashboard for orders, products, categories, variants, images, bundles,
   promotions, refunds, returns, users, reviews, support tickets, gift cards,
-  suppliers, warehouses, purchase orders, analytics, and launch status.
+  suppliers, warehouses, purchase orders, analytics, observability, payment
+  health, launch status, and provider readiness.
 - Granular database-backed staff roles for admin, catalog, fulfillment, support,
   operations, and customer accounts.
 - Operational reports, low-stock alerts, payment health, reconciliation,
   audit logs, structured logs, metrics, backups, and launch runbook tooling.
+- Admin workflows for product CRUD, category/variant management, review
+  moderation, support replies, gift-card issuing, procurement receiving, and
+  real shipping-label creation through the backend shipping route.
+- Privacy-safe analytics dashboard integration with account, checkout, admin,
+  order, payment-method, profile, and security routes excluded from collection.
+- Maintenance automation for stock alerts, abandoned-order cleanup,
+  notification delivery, payment reconciliation, and scheduled commerce jobs.
 
 ### Account Security
 
@@ -76,6 +97,26 @@ admin tooling, account security, and launch-readiness automation.
   session revocation, login history, OAuth login, two-factor authentication,
   recovery codes, bot protection, CSRF protection, secure headers, and
   privacy export/delete flows.
+- Database-backed role and permission checks for customers and staff.
+- Production hardening for HTTPS origins, live Stripe keys, monitoring, email
+  delivery, operations alerting, error tracking, Turnstile, CSP, HSTS, and
+  sanitized browser/server error reports.
+- OAuth buttons are guarded when the backend origin is not configured, avoiding
+  broken sign-in links in incomplete environments.
+
+### Testing, QA, And Delivery
+
+- Backend unit and integration tests for commerce, auth, payments, inventory,
+  operations, security, recommendations, privacy, and production readiness.
+- Frontend source tests for accessibility, checkout calculations, product
+  filtering, session helpers, PWA assets, analytics configuration, and dead
+  action regressions.
+- Playwright browser tests for checkout, profile preferences, support, product
+  details, cart saving, admin orders, returns, products, promotions, support,
+  gift cards, procurement, and mobile screenshots.
+- GitHub Actions for CI, browser tests, dependency audits, dependency review,
+  secret scanning, staging image validation, scheduled maintenance, backup
+  restore verification, and production image release.
 
 ## Quick Start
 
@@ -215,6 +256,13 @@ pnpm run audit && pnpm test && pnpm run build && pnpm test:e2e
 Quality gates are documented in [QUALITY.md](QUALITY.md). Pull requests run
 backend tests, migrations, frontend tests, production builds, browser tests,
 dependency checks, secret scanning, and staging validation.
+The browser suite covers customer checkout, profile, support, saved cart,
+product detail, admin order, product, promotion, support, gift-card, and
+procurement workflows. Mobile screenshot coverage is available through the
+Playwright mobile suite and records phone-width home, checkout, and admin views.
+
+Source-level tests also guard against dead links, placeholder action URLs, and
+silent user-action failures in high-traffic storefront and admin screens.
 
 ## Payments And Webhooks
 
