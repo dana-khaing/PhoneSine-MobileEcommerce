@@ -45,13 +45,14 @@ admin tooling, account security, and launch-readiness automation.
 - Product catalogue with categories, variants, bundles, image galleries,
   optimized uploads, search, suggestions, filters, typo-tolerant matching,
   pagination, and backend-driven total counts.
-- Cart, saved cart, checkout quote, delivery options, VAT/tax, promotion
-  codes, gift cards, and Stripe Checkout session creation.
+- Cart, saved cart, checkout quote, delivery options, GBP/USD/EUR currency
+  conversion, VAT/tax, promotion codes, gift cards, and Stripe Checkout session
+  creation.
 - Product reviews, wishlists, recently viewed products, back-in-stock alerts,
   loyalty/referral rewards, and personalized recommendations.
 - Customer profile, saved addresses, notification preferences, order history,
-  order timelines, support tickets, returns, cancellations, refunds, saved
-  payment methods, and privacy controls.
+  order timelines, PDF invoice downloads, reorder actions, support tickets,
+  returns, cancellations, refunds, saved payment methods, and privacy controls.
 - English and Burmese storefront locale support.
 - Installable PWA with an offline page and network-safe service worker strategy.
 - Visible feedback for customer actions so save, support, gift-card, OAuth, and
@@ -70,6 +71,9 @@ admin tooling, account security, and launch-readiness automation.
 - Saved Stripe payment-method management and customer payment-method cleanup.
 - Invoices, customer order timelines, cancellation, return, refund, fulfillment,
   and shipping workflows.
+- Domestic and international shipping rates, carrier label creation, tracking
+  updates from shipping webhooks, and protected label lookup for fulfillment
+  staff.
 - Idempotency keys for checkout and refund calls, payment health reporting,
   reconciliation, and production readiness checks for live Stripe settings.
 
@@ -83,12 +87,13 @@ admin tooling, account security, and launch-readiness automation.
   operations, and customer accounts.
 - Operational reports, low-stock alerts, payment health, reconciliation,
   audit logs, structured logs, metrics, backups, and launch runbook tooling.
-- Admin workflows for product CRUD, category/variant management, review
-  moderation, support replies, gift-card issuing, procurement receiving, and
-  real shipping-label creation through the backend shipping route.
+- Admin workflows for product CRUD, product CSV import/export, product archive
+  and restore, category/variant management, review moderation, support replies,
+  gift-card issuing, procurement receiving, and real shipping-label creation
+  through the backend shipping route.
 - Privacy-safe analytics dashboard integration with account, checkout, admin,
   order, payment-method, profile, and security routes excluded from collection.
-- Maintenance automation for stock alerts, abandoned-order cleanup,
+- Maintenance automation for stock alerts, abandoned-order cleanup, email/SMS
   notification delivery, payment reconciliation, and scheduled commerce jobs.
 
 ### Account Security
@@ -101,6 +106,7 @@ admin tooling, account security, and launch-readiness automation.
 - Production hardening for HTTPS origins, live Stripe keys, monitoring, email
   delivery, operations alerting, error tracking, Turnstile, CSP, HSTS, and
   sanitized browser/server error reports.
+- Rate limiting for sensitive browser error reporting and request flows.
 - OAuth buttons are guarded when the backend origin is not configured, avoiding
   broken sign-in links in incomplete environments.
 
@@ -227,7 +233,13 @@ pnpm run db:migrate:status
 pnpm run check:production
 pnpm run launch:runbook
 pnpm run job:maintenance
+pnpm run job:cleanup
+pnpm run job:notifications
+pnpm run job:reconcile
+pnpm run job:low-stock
 pnpm run job:stock-alerts
+pnpm run db:backup -- backup.sql.gz
+RESTORE_DB_NAME=phone_sine_restore_test pnpm run db:restore-test -- backup.sql.gz
 ```
 
 ### Frontend
@@ -238,6 +250,7 @@ pnpm run dev
 pnpm test
 pnpm run build
 pnpm test:e2e
+pnpm test:e2e:mobile
 pnpm run audit
 ```
 
@@ -339,6 +352,10 @@ ${BACKEND_ORIGIN}/auth/oauth/apple/callback
 ## Deployment
 
 Deployment details live in [DEPLOYMENT.md](DEPLOYMENT.md).
+
+The storefront `/status` page verifies API health and readiness from the
+browser and includes a short deployment checklist for backup, webhook, and
+admin payment-health checks after releases, rollbacks, or DNS changes.
 
 The staging flow uses Docker Compose:
 
