@@ -1,11 +1,13 @@
 {
-  "name": "frontend",
+  "name": "phone-sine-api",
   "version": "1.0.0",
-  "description": "",
+  "description": "PhoneSine ecommerce REST API and operations service",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
   "engines": {
     "node": ">=24 <25"
   },
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
@@ -24,9 +26,13 @@
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:status": "sequelize-cli db:migrate:status"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "ecommerce",
+    "express",
+    "mysql"
+  ],
+  "author": "Dana Khaing",
+  "license": "UNLICENSED",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
