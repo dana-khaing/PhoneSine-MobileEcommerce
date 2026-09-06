@@ -3,7 +3,7 @@
 [![CI](https://github.com/dana-khaing/PhoneSine-MobileEcommerce/actions/workflows/ci.yml/badge.svg)](https://github.com/dana-khaing/PhoneSine-MobileEcommerce/actions/workflows/ci.yml)
 [![Security](https://github.com/dana-khaing/PhoneSine-MobileEcommerce/actions/workflows/security.yml/badge.svg)](https://github.com/dana-khaing/PhoneSine-MobileEcommerce/actions/workflows/security.yml)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-20-green)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-24-green)](https://nodejs.org/)
 [![Stripe](https://img.shields.io/badge/Payments-Stripe-635bff)](https://stripe.com/)
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-b08d2d)](LICENSE)
 
