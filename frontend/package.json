@@ -1,7 +1,10 @@
 {
-  "name": "frontend",
+  "name": "phone-sine-storefront",
   "version": "0.1.0",
+  "description": "PhoneSine mobile ecommerce storefront and admin console",
   "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "license": "UNLICENSED",
   "engines": {
     "node": ">=24 <25"
   },
