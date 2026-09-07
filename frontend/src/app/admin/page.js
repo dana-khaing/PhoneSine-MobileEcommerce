@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { authenticatedFetch } from "../components/auth/session.mjs";
-
-const formatCurrency = (amount, currency = "GBP") =>
-  new Intl.NumberFormat("en-GB", { style: "currency", currency }).format((amount || 0) / 100);
+import OrdersSection from "./components/OrdersSection";
+import OverviewSection from "./components/OverviewSection";
 
 const adminSections = [
   ["overview", "Overview"],
@@ -29,8 +28,8 @@ export default function AdminPage() {
   const [categories, setCategories] = useState([]);
   const [categoryName, setCategoryName] = useState("");
   const [variantForm, setVariantForm] = useState({ productId: "", sku: "", name: "", priceAmount: "", stockQuantity: "", options: "{}" });
-  const [tracking, setTracking] = useState({});
-  const [refunds, setRefunds] = useState({});
+
+
   const [health, setHealth] = useState(null);
   const [promotions, setPromotions] = useState([]);
   const [promotion, setPromotion] = useState({ code: "", percentOff: 10, maxUses: 100, perCustomerLimit: 1 });
@@ -56,7 +55,7 @@ export default function AdminPage() {
   const [productForm, setProductForm] = useState(emptyProduct);
   const [editingProductId, setEditingProductId] = useState(null);
   const [adminSearch, setAdminSearch] = useState("");
-  const [orderStatusFilter, setOrderStatusFilter] = useState("all");
+
   const [message, setMessage] = useState("Loading admin orders...");
   const api = process.env.NEXT_PUBLIC_API_ADMIN_URL;
   const backendOrigin = process.env.NEXT_PUBLIC_BACKEND_ORIGIN || api?.replace(/\/admin\/?$/, "");
@@ -287,11 +286,6 @@ export default function AdminPage() {
   const visibleSuppliers = suppliers.filter((item) => matchesSearch(item, query, [(supplier) => supplier.name, (supplier) => supplier.email]));
   const visibleWarehouses = warehouses.filter((item) => matchesSearch(item, query, [(warehouse) => warehouse.name, (warehouse) => warehouse.code]));
   const visiblePurchaseOrders = purchaseOrders.filter((order) => matchesSearch(order, query, [(item) => item.id, (item) => item.supplier?.name, (item) => item.warehouse?.code, (item) => item.status]));
-  const visibleOrders = orders
-    .filter((order) => orderStatusFilter === "all" || order.status === orderStatusFilter)
-    .filter((order) => matchesSearch(order, query, [(item) => item.id, (item) => item.email, (item) => item.status, (item) => item.trackingNumber]));
-  const orderStatuses = ["all", ...Array.from(new Set(orders.map((order) => order.status).filter(Boolean)))];
-
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -309,123 +303,17 @@ export default function AdminPage() {
           {adminSections.map(([id, label]) => <a key={id} className="rounded-full px-3 py-1 text-sm font-semibold hover:bg-neutral-100" href={`#${id}`}>{label}</a>)}
         </div>
       </nav>
-      <section id="overview">
-      <div className="my-6 grid gap-3 sm:flex sm:flex-wrap">
-        <button className="rounded border px-4 py-2" onClick={() => action("/cleanup")}>Clean abandoned orders</button>
-        <button className="rounded border px-4 py-2" onClick={() => action("/notifications/deliver")}>Deliver notifications</button>
-        <button className="rounded border px-4 py-2" onClick={() => action("/reconcile")}>Reconcile payments</button>
-      </div>
-      {health && <p className="my-4">Payment health: {health.pending} pending · {health.reviews} reviews · {health.disputes} disputes · {health.failedNotifications} failed notifications</p>}
-      {analytics && <section className="my-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-700">Analytics dashboard</p>
-            <h2 className="mt-1 text-2xl font-bold">Realtime commerce performance</h2>
-            <p className="text-sm text-neutral-600">Orders, revenue, conversion, product demand, and inventory risk from the live admin analytics endpoint.</p>
-          </div>
-          <div className="grid w-full gap-2 sm:w-auto sm:grid-flow-col">
-            <button className="rounded border px-3 py-1" onClick={() => action("/low-stock-alerts", "POST", {})}>Queue low-stock alerts</button>
-            <button className="rounded border px-3 py-1" onClick={() => download("/reports/operations.csv", "operations-report.csv")}>Download report</button>
-          </div>
-        </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {(analytics.dashboard?.cards || [
-            { id: "orders", label: "Total orders", value: analytics.orders, helper: "All order statuses" },
-            { id: "revenue", label: "Paid revenue", value: analytics.revenue, format: "currency", helper: "Paid order revenue" },
-            { id: "stock", label: "Low-stock items", value: analytics.lowStock.length, helper: "Needs action" },
-          ]).map((card) => <article key={card.id} className="rounded-xl border bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{card.label}</p>
-            <p className="mt-2 text-2xl font-bold">{card.format === "currency" ? formatCurrency(card.value) : `${card.value}${card.suffix || ""}`}</p>
-            <p className="mt-1 text-xs text-neutral-500">{card.helper}</p>
-          </article>)}
-        </div>
-        {analytics.dashboard && <div className="mt-5 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-xl border p-4">
-            <h3 className="font-bold">Revenue trend</h3>
-            <p className="mt-2 text-sm text-neutral-600">Last 30 days: {formatCurrency(analytics.dashboard.revenueTrend.current30Days)}</p>
-            <p className="text-sm text-neutral-600">Previous 30 days: {formatCurrency(analytics.dashboard.revenueTrend.previous30Days)}</p>
-            <div className="mt-3 h-3 rounded bg-neutral-100"><div className="h-3 rounded bg-amber-500" style={{ width: `${Math.min(100, Math.max(5, Math.abs(analytics.dashboard.revenueTrend.percentChange)))}%` }} /></div>
-            <p className="mt-2 text-sm font-semibold">{analytics.dashboard.revenueTrend.percentChange}% revenue change</p>
-          </div>
-          <div className="rounded-xl border p-4">
-            <h3 className="font-bold">Checkout funnel</h3>
-            <p className="mt-2 text-sm text-neutral-600">{analytics.dashboard.funnel.productViews} product views</p>
-            <p className="text-sm text-neutral-600">{analytics.dashboard.funnel.orders} orders · {analytics.dashboard.funnel.paidOrders} paid</p>
-            <p className="mt-2 text-2xl font-bold">{analytics.dashboard.funnel.conversionRate}%</p>
-          </div>
-          <div className="rounded-xl border p-4">
-            <h3 className="font-bold">Top products</h3>
-            <div className="mt-2 space-y-2">
-              {analytics.dashboard.topProducts.length ? analytics.dashboard.topProducts.map((item) => <p key={`${item.productId}-${item.name}`} className="text-sm">{item.name}: {item.units} units</p>) : <p className="text-sm text-neutral-500">No paid product demand yet.</p>}
-            </div>
-          </div>
-        </div>}
-      </section>}
-      {launchStatus && <section className="my-4 rounded border p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-bold">Launch status</h2>
-            <p className="text-sm text-neutral-600">{launchStatus.ready ? "Ready for production launch" : `${launchStatus.blockers.length} launch blockers remain`} · {launchStatus.checklist.completed}/{launchStatus.checklist.total} checklist items complete</p>
-          </div>
-          <button className="rounded border px-3 py-1" onClick={loadLaunchStatus}>Refresh launch status</button>
-        </div>
-        {launchStatus.blockers.length > 0 && <div className="mt-3 rounded bg-red-50 p-3 text-sm"><strong>Blockers:</strong><ul className="mt-2 list-disc pl-5">{launchStatus.blockers.slice(0, 6).map((blocker) => <li key={blocker}>{blocker}</li>)}</ul></div>}
-        <div className="mt-3 grid gap-2 md:grid-cols-2">
-          {launchStatus.providers.map((provider) => <p key={provider.id} className="rounded bg-neutral-100 p-2 text-sm">{provider.ready ? "Ready" : "Missing"} · {provider.label}: {provider.configured}/{provider.total}</p>)}
-        </div>
-        <div className="mt-3 grid gap-2 md:grid-cols-2">
-          {launchStatus.checklist.items.map((item) => <p key={item.id} className="text-sm">{item.done ? "Done" : "Open"} · {item.label}</p>)}
-        </div>
-      </section>}
-      {observability && <section id="observability" className="my-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-700">Observability</p>
-            <h2 className="mt-1 text-2xl font-bold">Operational telemetry</h2>
-            <p className="text-sm text-neutral-600">Live application counters from the protected metrics snapshot endpoint.</p>
-          </div>
-          <button className="rounded border px-3 py-1" onClick={loadObservability}>Refresh telemetry</button>
-        </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <article className="rounded-xl border bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Uptime</p>
-            <p className="mt-2 text-2xl font-bold">{observability.uptimeSeconds}s</p>
-            <p className="mt-1 text-xs text-neutral-500">Current backend process</p>
-          </article>
-          <article className="rounded-xl border bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Unhandled errors</p>
-            <p className="mt-2 text-2xl font-bold">{observability.unhandledErrors || 0}</p>
-            <p className="mt-1 text-xs text-neutral-500">Since process start</p>
-          </article>
-          <article className="rounded-xl border bg-neutral-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Tracked routes</p>
-            <p className="mt-2 text-2xl font-bold">{observability.requests?.length || 0}</p>
-            <p className="mt-1 text-xs text-neutral-500">Request/status combinations</p>
-          </article>
-        </div>
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-xl border p-4">
-            <h3 className="font-bold">Slowest request paths</h3>
-            <div className="mt-2 space-y-2">
-              {(observability.requests || []).slice().sort((a, b) => b.averageDurationMs - a.averageDurationMs).slice(0, 5).map((item) => (
-                <p key={`${item.method}-${item.path}-${item.status}`} className="text-sm">{item.method} {item.path} · {item.status} · {item.averageDurationMs}ms avg · {item.count} hits</p>
-              ))}
-              {!observability.requests?.length && <p className="text-sm text-neutral-500">No request metrics recorded yet.</p>}
-            </div>
-          </div>
-          <div className="rounded-xl border p-4">
-            <h3 className="font-bold">Operational events</h3>
-            <div className="mt-2 space-y-2">
-              {(observability.operationalEvents || []).slice(0, 5).map((event) => (
-                <p key={`${event.name}-${event.severity}`} className="text-sm">{event.severity} · {event.name} · {event.count} events</p>
-              ))}
-              {!observability.operationalEvents?.length && <p className="text-sm text-neutral-500">No operational events recorded yet.</p>}
-            </div>
-          </div>
-        </div>
-      </section>}
-      {message && <p className="my-4">{message}</p>}
-      </section>
+      <OverviewSection
+        action={action}
+        analytics={analytics}
+        download={download}
+        health={health}
+        launchStatus={launchStatus}
+        loadLaunchStatus={loadLaunchStatus}
+        loadObservability={loadObservability}
+        message={message}
+        observability={observability}
+      />
       <section id="catalog" className="mb-8 rounded border p-5">
         <h2 className="text-xl font-bold">Product management</h2>
         <p className="mt-1 text-sm text-neutral-500">{visibleProducts.length} of {products.length} products shown</p>
@@ -550,38 +438,7 @@ export default function AdminPage() {
           </div>
         ))}
       </section>
-      <section id="orders" className="space-y-5">
-        <div className="rounded border p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-bold">Orders</h2>
-              <p className="text-sm text-neutral-500">{visibleOrders.length} of {orders.length} orders shown</p>
-            </div>
-            <select className="rounded border px-3 py-2" aria-label="Filter orders by status" value={orderStatusFilter} onChange={(event) => setOrderStatusFilter(event.target.value)}>
-              {orderStatuses.map((status) => <option key={status} value={status}>{status === "all" ? "All statuses" : status}</option>)}
-            </select>
-          </div>
-        </div>
-        {visibleOrders.map((order) => (
-          <article key={order.id} className="rounded border p-5">
-            <div className="flex justify-between"><strong>Order #{order.id}</strong><span>{order.status}</span></div>
-            <p>{order.email} · {(order.currency || "gbp").toUpperCase()} {(order.totalAmount / 100).toFixed(2)}</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              <input className="rounded border p-2" placeholder="Carrier" value={tracking[order.id]?.carrier || ""} onChange={(event) => setTracking((current) => ({ ...current, [order.id]: { ...current[order.id], carrier: event.target.value } }))} />
-              <input className="rounded border p-2" placeholder="Tracking number" value={tracking[order.id]?.trackingNumber || ""} onChange={(event) => setTracking((current) => ({ ...current, [order.id]: { ...current[order.id], trackingNumber: event.target.value } }))} />
-              <input className="rounded border p-2" type="number" min="1" placeholder="Partial refund in smallest currency unit" value={refunds[order.id] || ""} onChange={(event) => setRefunds((current) => ({ ...current, [order.id]: event.target.value }))} />
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {["processing", "shipped", "delivered"].map((status) => (
-                <button key={status} className="rounded border px-3 py-2" onClick={() => action(`/orders/${order.id}/fulfillment`, "PATCH", { status, ...tracking[order.id] })}>{status}</button>
-              ))}
-              <button className="rounded border px-3 py-2" onClick={() => action(`/orders/${order.id}/refund`, "POST", refunds[order.id] ? { amount: Number(refunds[order.id]) } : {})}>Refund</button>
-              <button className="rounded border px-3 py-2" onClick={() => action(`/shipping/orders/${order.id}`, "POST", { carrier: tracking[order.id]?.carrier || "PhoneSine Shipping", service: "standard" })}>Create shipping label</button>
-            </div>
-            {order.refunds?.map((refund) => <p key={refund.id} className="mt-2 text-sm">Refund {refund.stripeRefundId}: {refund.amount} · {refund.status}</p>)}
-          </article>
-        ))}
-      </section>
+      <OrdersSection action={action} orders={orders} query={query} />
     </main>
   );
 }

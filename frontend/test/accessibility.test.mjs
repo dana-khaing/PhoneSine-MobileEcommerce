@@ -15,7 +15,9 @@ test("interactive product images include alternative text", () => {
 });
 
 test("admin page exposes launch status without secret values", () => {
-  const source = fs.readFileSync(new URL("../src/app/admin/page.js", import.meta.url), "utf8");
+  const page = fs.readFileSync(new URL("../src/app/admin/page.js", import.meta.url), "utf8");
+  const overview = fs.readFileSync(new URL("../src/app/admin/components/OverviewSection.js", import.meta.url), "utf8");
+  const source = `${page}\n${overview}`;
   assert.match(source, /\/launch-status/);
   assert.match(source, /Launch status/);
   assert.match(source, /\/observability/);
@@ -65,7 +67,9 @@ test("visible actions do not use dead links or silent failures", () => {
     assert.doesNotMatch(source, /href=["'](?:#|javascript:|)["']/i, `${file} should not contain dead hrefs`);
     assert.doesNotMatch(source, /\.catch\(\(\) => \{\}\)/, `${file} should not silently swallow user-action failures`);
   }
-  const adminSource = fs.readFileSync(new URL("../src/app/admin/page.js", import.meta.url), "utf8");
+  const adminPage = fs.readFileSync(new URL("../src/app/admin/page.js", import.meta.url), "utf8");
+  const ordersSection = fs.readFileSync(new URL("../src/app/admin/components/OrdersSection.js", import.meta.url), "utf8");
+  const adminSource = `${adminPage}\n${ordersSection}`;
   assert.match(adminSource, /\/shipping\/orders\/\$\{order\.id\}/);
   assert.doesNotMatch(adminSource, /\.\.\/shipping/);
 });
