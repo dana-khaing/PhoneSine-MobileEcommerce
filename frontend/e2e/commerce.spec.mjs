@@ -259,7 +259,7 @@ test("disables product pagination when no next page exists", async ({ page }) =>
   await expect(page.getByRole("button", { name: "Next", exact: true })).toBeDisabled();
 });
 
-test("shows admin returns, shipping, and operations controls", async ({ page }) => {
+test("shows admin returns, shipping, and operations controls", async ({ page }, testInfo) => {
   const { expectAdminCall } = trackAdminCalls(page);
   await page.goto("/admin");
   await expect(page.getByRole("heading", { name: "Commerce admin" })).toBeVisible();
@@ -278,6 +278,7 @@ test("shows admin returns, shipping, and operations controls", async ({ page }) 
   await page.getByRole("button", { name: "Create shipping label" }).first().click();
   await expectAdminCall("POST", "/shipping/orders/42");
   await expect(page.getByRole("button", { name: "Download report" })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("desktop-admin.png"), fullPage: true });
 });
 
 test("filters admin records with search and order status controls", async ({ page }) => {
