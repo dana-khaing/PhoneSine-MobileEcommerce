@@ -10,22 +10,12 @@ not include credentials, customer data, or exploit details in a public issue.
 Run the dependency audit for each application before release:
 
 ```sh
-cd backend && pnpm audit
-cd frontend && pnpm audit
+cd backend && pnpm run audit
+cd frontend && pnpm run audit
 ```
 
-CI blocks critical dependency vulnerabilities. The frontend currently has no
-known dependency advisories.
-
-The backend has two accepted transitive advisories:
-
-- Express 4 pins `path-to-regexp` below the patched version. The application
-  does not define routes with three or more parameters in one path segment,
-  which is the vulnerable route shape. Upgrade to Express 5 when its middleware
-  compatibility has been validated.
-- Sequelize 6 uses an older `uuid` package. The affected buffer-writing UUID
-  APIs are not called by this application. Upgrade when Sequelize supports a
-  patched CommonJS-compatible dependency.
-
-Do not force dependency overrides for these packages. Both overrides have been
-tested and break the current framework runtime.
+CI blocks high and critical dependency vulnerabilities. Both application
+lockfiles should report no known advisories before release. Review and refresh
+the documented pnpm overrides whenever direct dependencies are upgraded so an
+obsolete compatibility pin cannot silently reintroduce a vulnerable transitive
+version.
